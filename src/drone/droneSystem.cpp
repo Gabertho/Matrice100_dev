@@ -493,10 +493,54 @@ namespace DRONE {
 	  	flagEnable = false;
 	  }
 	}
+   
+  void System::velCallback(const geometry_msgs::Vector3Stamped::ConstPtr& vel) {
+    current_vel = vel->vector;
+  }
+  
 
   	void System::poseCallback(const geometry_msgs::PoseStamped::ConstPtr& pose)	{
           ROS_INFO("poseCallback:");
           if(sensorSelect.compare("GPS") == 0) {
+            Vector3axes position, positionLocal, angularVel, linearVel, rpy;
+			
+            VectorQuat  orientation, orientationLocal;
+
+            double 		timeNow, yawOdom;
+
+            position 	<< pose->pose.position.x, pose->pose.position.y, pose->pose.position.z;
+            linearVel 	<< current_vel.x, current_vel.y, current_vel.z;
+            orientation << pose->pose.orientation.w, 
+              pose->pose.orientation.x, 
+              pose->pose.orientation.y, 
+              pose->pose.orientation.z;
+            /// angularVel 	<< odom->twist.twist.angular.x, odom->twist.twist.angular.y, odom->twist.twist.angular.z;
+			
+            timeNow 	= pose->header.stamp.toSec();
+
+            /*Reset frame location*/
+            if (!drone.getIsOdomStarted()) {
+              Conversion::quat2angleZYX(rpy,orientation);
+              yawOdom = angles::normalize_angle(rpy(2));				//Added normalize...check if it works!!!
+              drone.setPosition0(position,yawOdom);
+            }
+			
+            drone.setPosition(position);
+            drone.setOrientation(orientation);
+            /// drone.setAngularVel(angularVel);
+            drone.setLinearVel(linearVel);
+            drone.setTimeNow(timeNow);
+			
+            cout << "Pose updated (GPS)" << endl;
+            /// cout << "angular Velocity: twist: " << angularVel.transpose() << endl;
+
+            /*Envia mensagens de position corrigidas toda vez que uma nova mensagem de odom chega*/
+            /*nav_msgs::Odometry*/
+
+            positionLocal 	 = drone.getPosition();
+            orientationLocal = drone.getOrientation();
+
+            /// globalToLocalPosition(positionLocal, orientationLocal, linearVel, angularVel);
 
           }
         }
