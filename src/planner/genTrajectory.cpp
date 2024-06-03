@@ -63,11 +63,11 @@ namespace DRONE {
 		
 		m_parameters.amplitude = 0.4F;
 		m_parameters.averageLinearSpeed = 0.5F;
-		m_parameters.updateAngularSpeed();
+		/// m_parameters.updateAngularSpeed();
 		m_parameters.trajectory = circleXY;
 		m_startTime = ros::Time::now().toSec();
-		poseDesired	= poseDesired.Zero();
-		setIsControlStarted(false);
+		m_parameters.poseDesired	= m_parameters.poseDesired.Zero();
+		setIsControlStarted(true);
 		m_isFirstTimePass = true;
 
 		loadTopics(n);
@@ -75,6 +75,8 @@ namespace DRONE {
 
 		m_parameters.setTrajectoryCoefficients();
 		m_parameters.updateAngularFrequency();
+
+                cout << "PARAMETERS:" << m_parameters << std::endl;
 	}	
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -123,7 +125,7 @@ namespace DRONE {
 		string trajectory;
 		if (n.getParam("/drone/trajectory",trajectory)) 
 		{
-			setTrajectory(trajectory);
+			m_parameters.setTrajectory(trajectory);
 			cout << "trajectory = " << trajectory << endl;
 
 		}
@@ -253,7 +255,7 @@ namespace DRONE {
 			goal.pose.pose.position.x = 0.F;
 			goal.pose.pose.position.y = 0.F;
 			goal.pose.pose.position.z = 0.5F * m_parameters.amplitude * (sin(m_parameters.angularFrequency * timeSpent + sin(timeSpent)));
-f
+
 			goal.twist.twist.linear.x = 0.F;
 			goal.twist.twist.linear.y = 0.F;
 			goal.twist.twist.linear.z = 0.5F * m_parameters.amplitude * (m_parameters.angularFrequency * cos(m_parameters.angularFrequency * timeSpent) + cos(timeSpent));
@@ -282,7 +284,7 @@ f
 			goal.twist.twist.linear.y = 0.F;
 			goal.twist.twist.linear.z = 0.F;
 
-			yaw_desired = angles::normalize_angle(0.5F * 1.05F * (sin(m_parameters.angularFrequency * timeSpent) + sin(timeSpent)));
+			double yaw_desired = angles::normalize_angle(0.5F * 1.05F * (sin(m_parameters.angularFrequency * timeSpent) + sin(timeSpent)));
 
 			angle2quatZYX(quatDesired, yaw_desired, 0.0F, 0.0F);
 
@@ -302,27 +304,27 @@ f
 #if PRINT_LOG
 			std::cout << "straightLine - Trajectory" << std::endl;
 #endif
-		if (timeSpent <= poseDesired(4)) {
+		if (timeSpent <= m_parameters.poseDesired(4)) {
 
 			float t2 = timeSpent * timeSpent;
 			float t3 = t2 * timeSpent;
 			float t4 = t3 * timeSpent;
 			float t5 = t4 * timeSpent;
 
-			goal.pose.pose.position.x = cTx(0) * t3 + cTx(1) * t4 + cTx(2) * t5;
-			goal.pose.pose.position.y = cTy(0) * t3 + cTy(1) * t4 + cTy(2) * t5;
-			goal.pose.pose.position.z = cTz(0) * t3 + cTz(1) * t4 + cTz(2) * t5;
+			goal.pose.pose.position.x = m_parameters.cTx(0) * t3 + m_parameters.cTx(1) * t4 + m_parameters.cTx(2) * t5;
+			goal.pose.pose.position.y = m_parameters.cTy(0) * t3 + m_parameters.cTy(1) * t4 + m_parameters.cTy(2) * t5;
+			goal.pose.pose.position.z = m_parameters.cTz(0) * t3 + m_parameters.cTz(1) * t4 + m_parameters.cTz(2) * t5;
 
-			goal.twist.twist.linear.x = 3.F * cTx(0) * t2 + 4 * cTx(1) * t3 + 5 * cTx(2) * t4;
-			goal.twist.twist.linear.y = 3.F * cTy(0) * t2 + 4 * cTy(1) * t3 + 5 * cTy(2) * t4;
-			goal.twist.twist.linear.z = 3.F * cTz(0) * t2 + 4 * cTz(1) * t3 + 5 * cTz(2) * t4;
+			goal.twist.twist.linear.x = 3.F * m_parameters.cTx(0) * t2 + 4 * m_parameters.cTx(1) * t3 + 5 * m_parameters.cTx(2) * t4;
+			goal.twist.twist.linear.y = 3.F * m_parameters.cTy(0) * t2 + 4 * m_parameters.cTy(1) * t3 + 5 * m_parameters.cTy(2) * t4;
+			goal.twist.twist.linear.z = 3.F * m_parameters.cTz(0) * t2 + 4 * m_parameters.cTz(1) * t3 + 5 * m_parameters.cTz(2) * t4;
 
 		}
 		else {
 
-			goal.pose.pose.position.x = poseDesired(0);
-			goal.pose.pose.position.y = poseDesired(1);
-			goal.pose.pose.position.z = poseDesired(2);
+			goal.pose.pose.position.x = m_parameters.poseDesired(0);
+			goal.pose.pose.position.y = m_parameters.poseDesired(1);
+			goal.pose.pose.position.z = m_parameters.poseDesired(2);
 
 			goal.twist.twist.linear.x = 0.F;
 			goal.twist.twist.linear.y = 0.F;
@@ -344,9 +346,9 @@ f
 		std::cout << "wayPoint - Trajectory" << std::endl;
 #endif
 		// Position Desired
-		mGoal.pose.pose.position.x = poseDesired(0);
-		goal.pose.pose.position.y = poseDesired(1);
-		goal.pose.pose.position.z = poseDesired(2);
+		goal.pose.pose.position.x = m_parameters.poseDesired(0);
+		goal.pose.pose.position.y = m_parameters.poseDesired(1);
+		goal.pose.pose.position.z = m_parameters.poseDesired(2);
 
 		// Linear Velocity Desired
 		goal.twist.twist.linear.x = 0.F;
@@ -367,10 +369,12 @@ f
 	
 	void Planner::TrajPlanner(void)
 	{
+          cout << "TrajPlanner" << endl;
 		nav_msgs::Odometry desiredGoal;
 
 		if (getIsControlStarted())
 		{
+                  cout << "ControlStarted" << endl;
 			if (m_isFirstTimePass)
 			{
 				cout << "Starting Clock Now..." << endl;
@@ -411,17 +415,18 @@ f
 		}
 		else 
 		{
+                  cout << "Controller Not Started" << endl;                  
 			m_isFirstTimePass = true;
 			desiredGoal.pose.pose.position.x = 0.0F;
 			desiredGoal.pose.pose.position.y = 0.0F;
 		}
 
-#if PRINT_LOG
-		std::cout << "Current Time: " << t << std::endl;
-		std::cout << "Trajectory: " << trajectory << std::endl;
-		std::cout << "mGoal.pose.pose.position.x: " << mGoal.pose.pose.position.x << std::endl;
+#if 1
+                //		std::cout << "Current Time: " << t << std::endl;
+		std::cout << "Trajectory: " << m_parameters.trajectory << std::endl;
+		std::cout << "desiredGoal.pose.pose.position.x: " << desiredGoal.pose.pose.position.x << std::endl;
 #endif
-		waypoint_publisher.publish(mGoal);
+		waypoint_publisher.publish(desiredGoal);
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

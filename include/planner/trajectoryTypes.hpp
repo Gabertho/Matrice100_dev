@@ -129,11 +129,25 @@ private:
 	/*
 	* @brief Compares the content of a string and a char pointer
 	*/
-	static bool isStringEqual(const string& stringInput, const uint8* word)
+	static bool isStringEqual(const string& stringInput, const char* word)
 	{
 		return (stringInput.compare(word) == 0);
 	}
 }; // TrajectoryParameters
+
+
+std::ostream& operator<<(std::ostream &out, TrajectoryParameters const& data) {
+  out << "trajectory: " << data.trajectory << endl;
+  out << "angularFrequency: " << data.angularFrequency << endl;
+  out << "amplitude: " << data.amplitude << endl;
+  out << "averageLinearSpeed: " << data.averageLinearSpeed << endl;
+  out << "poseDesired: " << data.poseDesired << endl;
+  out << "cTx: " << data.cTx << endl;
+  out << "cTy: " << data.cTy << endl;
+  out << "cTz: " << data.cTz << endl;
+  out << "cTyaw: " << data.cTyaw << endl;
+  return out;
+}  
 
 } // namespace DRONE
 #endif // TRAJECTORYTYPES_HPP_
