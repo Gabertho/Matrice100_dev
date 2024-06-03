@@ -67,7 +67,7 @@ namespace DRONE {
 		m_parameters.trajectory = circleXY;
 		m_startTime = ros::Time::now().toSec();
 		m_parameters.poseDesired	= m_parameters.poseDesired.Zero();
-		setIsControlStarted(true);
+		setIsControlStarted(false);
 		m_isFirstTimePass = true;
 
 		loadTopics(n);
@@ -369,12 +369,10 @@ namespace DRONE {
 	
 	void Planner::TrajPlanner(void)
 	{
-          cout << "TrajPlanner" << endl;
 		nav_msgs::Odometry desiredGoal;
 
 		if (getIsControlStarted())
 		{
-                  cout << "ControlStarted" << endl;
 			if (m_isFirstTimePass)
 			{
 				cout << "Starting Clock Now..." << endl;
@@ -412,16 +410,19 @@ namespace DRONE {
 				//TODO: planFollowTruck()
 				break;
 			}
+                        std::cout << "desiredGoal.pose.pose.position: "
+                                  << desiredGoal.pose.pose.position.x << " "
+                                  << desiredGoal.pose.pose.position.y << " "
+                                  << desiredGoal.pose.pose.position.z <<  std::endl;                        
 		}
 		else 
 		{
-                  cout << "Controller Not Started" << endl;                  
 			m_isFirstTimePass = true;
 			desiredGoal.pose.pose.position.x = 0.0F;
 			desiredGoal.pose.pose.position.y = 0.0F;
 		}
 
-#if 1
+#if 0
                 //		std::cout << "Current Time: " << t << std::endl;
 		std::cout << "Trajectory: " << m_parameters.trajectory << std::endl;
 		std::cout << "desiredGoal.pose.pose.position.x: " << desiredGoal.pose.pose.position.x << std::endl;
