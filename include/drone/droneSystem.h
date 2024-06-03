@@ -18,6 +18,7 @@
 
 #include "geometry_msgs/Twist.h"
 #include "geometry_msgs/TransformStamped.h"
+#include "geometry_msgs/PoseStamped.h"
 #include "sensor_msgs/Joy.h"
 #include "nav_msgs/Odometry.h"
 #include "sensor_msgs/NavSatFix.h"
@@ -36,6 +37,7 @@ class System {
 	ros::Publisher cmd_vel_publisher;
 	ros::Publisher transfPosition_publisher;
 
+	ros::Subscriber pose_subscriber;
 	ros::Subscriber odom_subscriber;
 	ros::Subscriber waypoint_subscriber;
 	ros::Subscriber fix_subscriber;
@@ -77,6 +79,7 @@ class System {
 
 
 	void joyCallback(const sensor_msgs::Joy::ConstPtr& joy);
+	void poseCallback(const geometry_msgs::PoseStamped::ConstPtr& pose);
 	void odomCallback(const nav_msgs::Odometry::ConstPtr& odom);
 	void waypointCallback(const nav_msgs::Odometry::ConstPtr& waypoint); //alterado
 	void viconCallback(const geometry_msgs::TransformStamped::ConstPtr& vicon);
