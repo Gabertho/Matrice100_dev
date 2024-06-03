@@ -1268,7 +1268,7 @@ namespace DRONE {
 
 	void Drone::initDroneParam(void){
 
-		isOdomStarted 			= false;
+		isOdomStarted 			= true;
 		isControllerStarted 	= true;
 		isEKFonline				= false;
 		isFirstEKFit			= true;

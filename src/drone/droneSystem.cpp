@@ -482,10 +482,10 @@ namespace DRONE {
 	{
       // geometry_msgs::Twist twist;
 
-      if (joy->buttons[14]) {
-        cout << "setIsOdomStarted to false" << endl;
+      //if (joy->buttons[14]) {
+          //        cout << "setIsOdomStarted to false" << endl;
 		drone.setIsOdomStarted(false);
-      } 
+                //} 
 
 	  if(joy->buttons[6]){
             cout << "flagEnable true" << endl;
