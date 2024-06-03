@@ -48,6 +48,7 @@ public:
 		{
 			angularFrequency = averageLinearSpeed / amplitude;
 		}
+                return angularFrequency;
 	}
 
 	/*
