@@ -174,7 +174,7 @@ namespace DRONE {
 		count 	   		= 0;
 		countEKF		= 1;
 		PI 		 		= 3.141592653589793;
-		flagEnable 		= false;
+		flagEnable 		= true;
 		vxAmpl 			= 0;
 		vyAmpl 			= 0;
 		vzAmpl 			= 0;
@@ -483,13 +483,16 @@ namespace DRONE {
       // geometry_msgs::Twist twist;
 
       if (joy->buttons[14]) {
+        cout << "setIsOdomStarted to false" << endl;
 		drone.setIsOdomStarted(false);
       } 
 
 	  if(joy->buttons[6]){
+            cout << "flagEnable true" << endl;
 	    flagEnable = true;
 	  }
 	  else{
+            cout << "flagEnable false" << endl;            
 	  	flagEnable = false;
 	  }
 	}
@@ -515,6 +518,7 @@ namespace DRONE {
               pose->pose.orientation.y, 
               pose->pose.orientation.z;
             /// angularVel 	<< odom->twist.twist.angular.x, odom->twist.twist.angular.y, odom->twist.twist.angular.z;
+            angularVel << 0.0, 0.0, 0.0;
 			
             timeNow 	= pose->header.stamp.toSec();
 
@@ -540,7 +544,7 @@ namespace DRONE {
             positionLocal 	 = drone.getPosition();
             orientationLocal = drone.getOrientation();
 
-            /// globalToLocalPosition(positionLocal, orientationLocal, linearVel, angularVel);
+            globalToLocalPosition(positionLocal, orientationLocal, linearVel, angularVel);
 
           }
         }

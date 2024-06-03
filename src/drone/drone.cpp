@@ -40,8 +40,9 @@ namespace DRONE {
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	void Drone::setPosition(const Vector3axes& positionValue) {
-		position 		= RotGlobal.transpose()*(positionValue - position0);
-		positionError 	= position - positionDesired;
+          // position 		= RotGlobal.transpose()*(positionValue - position0);
+          position = positionValue;
+          positionError = position - positionDesired;
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
