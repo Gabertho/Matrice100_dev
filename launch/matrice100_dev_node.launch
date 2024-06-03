@@ -1,5 +1,5 @@
 <!-- This will start bebop_dev_node. -->
 <launch>
     <rosparam command="load" file="$(find drone_dev)/config/matrice100Parameters.yaml" ns="drone" />
-    <node name="drone_dev" pkg="drone_dev" type="drone_dev_node" args="/drone/cmd_vel:=/matrice100/cmd_vel  /drone/vicon:=/matrics100/vicon /drone/transf_position:=/matrics100/transf_position /drone/joy:=/matrics100/joy  /drone/odom:=/matrics100/odom /drone/waypoint:=/matrics100/waypoint" output="screen"/>
+    <node name="drone_dev" pkg="drone_dev" type="drone_dev_node" args="/drone/cmd_vel:=/matrice100/cmd_vel  /drone/vicon:=/matrics100/vicon /drone/transf_position:=/matrics100/transf_position /drone/odom:=/matrics100/odom /drone/waypoint:=/matrics100/waypoint" output="screen"/>
 </launch>

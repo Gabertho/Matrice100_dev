@@ -417,7 +417,7 @@ namespace DRONE {
 
 		} else if(controlSelect.compare("RLQR") == 0){
 
-			cout << "### Robust LQR ###" << endl;
+                  /// cout << "### Robust LQR ###" << endl;
 
 			input = drone.getRobustControlLaw();
 
@@ -503,7 +503,7 @@ namespace DRONE {
   
 
   	void System::poseCallback(const geometry_msgs::PoseStamped::ConstPtr& pose)	{
-          ROS_INFO("poseCallback:");
+          /// ROS_INFO("poseCallback:");
           if(sensorSelect.compare("GPS") == 0) {
             Vector3axes position, positionLocal, angularVel, linearVel, rpy;
 			
