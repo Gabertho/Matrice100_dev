@@ -18,7 +18,7 @@ roslaunch drone_dev planner_node.launch
 
 Controller:
 ```bash
-roslaunch drone_dev matrice100_dev_node.launchroslaunch drone_dev matrice100_dev_node.launch
+roslaunch drone_dev matrice100_dev_node.launch
 ```
 
 Simulator:
