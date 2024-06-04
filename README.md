@@ -1,6 +1,11 @@
 # Matrice100_dev
 Control repository for the DJI Matrice 100 UAV.
 
+Joystick:
+```bash
+rosrun joy joy_node __ns:=/drone
+```
+
 Planner:
 ```bash
 roslaunch drone_dev planner_node.launch
