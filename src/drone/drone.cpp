@@ -12,7 +12,6 @@
  *
  */
 
-
 #include "drone/drone.h"
 
 namespace DRONE {
@@ -361,11 +360,10 @@ namespace DRONE {
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	void Drone::setTimeNow(const double& timeValue){
-		
-		timeNow 	= timeValue;
-		deltaTime 	= timeNow - timePast;
-		timePast  	= timeNow;
-		
+          boost::mutex::scoped_lock lock(mutex);    		
+          timeNow 	= timeValue;
+          deltaTime 	= timeNow - timePast;
+          timePast  	= timeNow;
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -672,7 +670,12 @@ namespace DRONE {
 	}
 
 	double Drone::getDeltaTimeNow(void){
-		return deltaTime;
+          double res;
+          {
+            boost::mutex::scoped_lock lock(mutex);    
+            res = deltaTime;
+          }
+          return res;
 	}
 
 	double Drone::getTimeOrigin(void){

@@ -13,6 +13,7 @@
 #include "angles/angles.h"
 #include "tf/transform_datatypes.h"
 #include "tf_conversions/tf_eigen.h"
+#include <boost/thread.hpp>
 
 
 #include "drone/definitions.h"
@@ -109,6 +110,7 @@ namespace DRONE {
 		public:
 
 			Drone();
+          boost::mutex mutex;    
 			void 		setPosition(const Vector3axes& positionValue);
 			void 		setPosition0(const Vector3axes& positionValue, const double& yawValue);
 			void 		setPositionDesired(const Vector3axes& positionValue);
