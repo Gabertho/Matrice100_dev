@@ -33,6 +33,7 @@ class Planner {
 	public:
 
 	ros::NodeHandle n;
+	ros::Publisher  waypoint_pose_publisher;
 	ros::Publisher  waypoint_publisher;
 	ros::Subscriber joy_subscriber;
 		

@@ -199,6 +199,7 @@ namespace DRONE {
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	void System::loadTopics(ros::NodeHandle &n) {
+		stamped_cmd_vel_publisher 		 = n.advertise<geometry_msgs::TwistStamped>("/drone/stamped_cmd_vel",1);
 		cmd_vel_publisher 		 = n.advertise<geometry_msgs::Twist>("/drone/cmd_vel",1);
 		transfPosition_publisher = n.advertise<nav_msgs::Odometry>("/drone/transf_position",1);
 		joy_subscriber 			 = n.subscribe<sensor_msgs::Joy>("/drone/joy", 1, &System::joyCallback, this);
@@ -450,6 +451,12 @@ namespace DRONE {
 
 	     // Publish input controller
 	     cmd_vel_publisher.publish(cmd_vel_msg);
+
+             geometry_msgs::TwistStamped stamped_cmd_vel_msg;
+             
+             stamped_cmd_vel_msg.header.frame_id = "world";
+             stamped_cmd_vel_msg.twist = cmd_vel_msg;
+             stamped_cmd_vel_publisher.publish(stamped_cmd_vel_msg);
 	  }
 	  else{
 
@@ -685,7 +692,9 @@ namespace DRONE {
 
 		Conversion::quat2angleZYX(eulerAngles,quatAngles);
 
-		yawDesired  = eulerAngles(2);						 
+		yawDesired  = eulerAngles(2);
+
+                cout << "waypoint: yawDesired: " << yawDesired*180.0/M_PI << endl;
 
 
 		if(trajectory.compare("eightShape") == 0){	//Lemniscate of Gerono					 

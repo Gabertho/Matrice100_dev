@@ -146,6 +146,7 @@ std::ostream& operator<<(std::ostream &out, TrajectoryParameters const& data) {
   out << "cTy: " << data.cTy << endl;
   out << "cTz: " << data.cTz << endl;
   out << "cTyaw: " << data.cTyaw << endl;
+  out << "*******************";
   return out;
 }  
 

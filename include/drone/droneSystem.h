@@ -17,6 +17,7 @@
 #include "drone/drone.h"
 
 #include "geometry_msgs/Twist.h"
+#include "geometry_msgs/TwistStamped.h"
 #include "geometry_msgs/TransformStamped.h"
 #include "geometry_msgs/PoseStamped.h"
 #include "geometry_msgs/Vector3Stamped.h"
@@ -37,6 +38,7 @@ class System {
 
 	ros::NodeHandle n;
 
+	ros::Publisher stamped_cmd_vel_publisher;
 	ros::Publisher cmd_vel_publisher;
 	ros::Publisher transfPosition_publisher;
 

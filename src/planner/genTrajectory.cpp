@@ -7,6 +7,7 @@
  */
 
 #include "planner/genTrajectory.h"
+#include "geometry_msgs/PoseStamped.h"
 
 namespace DRONE {
 
@@ -76,7 +77,8 @@ namespace DRONE {
 		m_parameters.setTrajectoryCoefficients();
 		m_parameters.updateAngularFrequency();
 
-                cout << "PARAMETERS:" << m_parameters << std::endl;
+                // cout << "PARAMETERS:" << m_parameters << std::endl;
+                cout << "RETURN FROM INIT" << endl;
 	}	
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -91,6 +93,7 @@ namespace DRONE {
 	void Planner::loadTopics(ros::NodeHandle &n)
 	{
 
+                waypoint_pose_publisher = n.advertise<geometry_msgs::PoseStamped>("/drone/waypoint_pose", 1);
 		waypoint_publisher = n.advertise<nav_msgs::Odometry>("/drone/waypoint", 1);
 		joy_subscriber 	   = n.subscribe<sensor_msgs::Joy>("/drone/joy", 1, &Planner::joyCallback, this);
 	}
@@ -194,8 +197,8 @@ namespace DRONE {
 
 	void Planner::planCircle(nav_msgs::Odometry& goal, float32 timeSpent)
 	{
-#if PRINT_LOG
-		if (m_parameters.trajectory & circleZXY)
+#if 1
+		if (m_parameters.trajectory == circleZXY)
 		{
 			std::cout << "circle ZXY- Trajectory" << std::endl;
 		}
@@ -206,11 +209,11 @@ namespace DRONE {
 #endif
 		goal.pose.pose.position.x = m_parameters.amplitude * cos(m_parameters.angularFrequency * timeSpent);
 		goal.pose.pose.position.y = m_parameters.amplitude * sin(m_parameters.angularFrequency * timeSpent);
-		goal.pose.pose.position.z = (m_parameters.trajectory & circleZXY) ? goal.pose.pose.position.y : 0.F;
+		goal.pose.pose.position.z = (m_parameters.trajectory == circleZXY) ? goal.pose.pose.position.y : 2.F;
 
 		goal.twist.twist.linear.x = -1.F * m_parameters.angularFrequency * m_parameters.amplitude * sin(m_parameters.angularFrequency * timeSpent);
 		goal.twist.twist.linear.y = m_parameters.angularFrequency * m_parameters.amplitude * cos(m_parameters.angularFrequency * timeSpent);
-		goal.twist.twist.linear.z = (m_parameters.trajectory & circleZXY) ? goal.twist.twist.linear.y : 0.F;
+		goal.twist.twist.linear.z = (m_parameters.trajectory == circleZXY) ? goal.twist.twist.linear.y : 0.F;
 
 		goal.pose.pose.orientation.x = 0.0F;
 		goal.pose.pose.orientation.y = 0.0F;
@@ -314,10 +317,13 @@ namespace DRONE {
 			goal.pose.pose.position.x = m_parameters.cTx(0) * t3 + m_parameters.cTx(1) * t4 + m_parameters.cTx(2) * t5;
 			goal.pose.pose.position.y = m_parameters.cTy(0) * t3 + m_parameters.cTy(1) * t4 + m_parameters.cTy(2) * t5;
 			goal.pose.pose.position.z = m_parameters.cTz(0) * t3 + m_parameters.cTz(1) * t4 + m_parameters.cTz(2) * t5;
+                        /// goal.pose.pose.position.y = 0.0;
 
 			goal.twist.twist.linear.x = 3.F * m_parameters.cTx(0) * t2 + 4 * m_parameters.cTx(1) * t3 + 5 * m_parameters.cTx(2) * t4;
 			goal.twist.twist.linear.y = 3.F * m_parameters.cTy(0) * t2 + 4 * m_parameters.cTy(1) * t3 + 5 * m_parameters.cTy(2) * t4;
 			goal.twist.twist.linear.z = 3.F * m_parameters.cTz(0) * t2 + 4 * m_parameters.cTz(1) * t3 + 5 * m_parameters.cTz(2) * t4;
+
+                        /// goal.twist.twist.linear.y = 0.0;                        
 
 		}
 		else {
@@ -370,7 +376,6 @@ namespace DRONE {
 	void Planner::TrajPlanner(void)
 	{
 		nav_msgs::Odometry desiredGoal;
-
 		if (getIsControlStarted())
 		{
 			if (m_isFirstTimePass)
@@ -428,6 +433,16 @@ namespace DRONE {
 		std::cout << "desiredGoal.pose.pose.position.x: " << desiredGoal.pose.pose.position.x << std::endl;
 #endif
 		waypoint_publisher.publish(desiredGoal);
+
+                geometry_msgs::PoseStamped ps;
+                ps.header.frame_id = "world";
+                ps.pose.position = desiredGoal.pose.pose.position;
+                ps.pose.orientation.x = 0.0;
+                ps.pose.orientation.y = 0.0;
+                ps.pose.orientation.z = 0.0;
+                ps.pose.orientation.w = 1.0;
+
+                waypoint_pose_publisher.publish(ps);
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -445,6 +460,7 @@ namespace DRONE {
 	void Planner::joyCallback(const sensor_msgs::Joy::ConstPtr& joy)
 	{
 	  /*Enables "Automatic Control Mode" while pressing this button*/
+          cout << "joyCallback" << endl;
 	  if(joy->buttons[6]) //TODO: Map controller according to input (xbox360 or logitech)
 	  { 
 	    setIsControlStarted(true);
@@ -465,14 +481,16 @@ int main(int argc, char **argv)
  	try {
 
 		DRONE::Planner wptNode;
-
+                cerr << "Before loop" << endl;
+                
 		ros::Rate loop_rate(50);
 
+                cerr << "Before loop" << endl;
 		while (ros::ok())
 	   	{
 		    wptNode.TrajPlanner();
-			ros::spinOnce(); 
-			loop_rate.sleep();
+                    ros::spinOnce(); 
+                    loop_rate.sleep();
 	   	}
 		
 		ros::spin();

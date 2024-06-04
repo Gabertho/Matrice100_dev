@@ -123,9 +123,11 @@ Kd: [-1.50, -1.50, -2.00, 0]
 # "ident"           = Identification Flight = circleXY (30s) + sinus Z(30s) + sinus Yaw (remaining time)
 
 trajectory: "circleXY"
+#trajectory: "straightLine"
+#trajectory: "eightShape"
 velMed: 0.2
 
-amplitude: 0.4
+amplitude: 2.5
 
 # In case we select "straightLine", poseDesired is defined as: [Xd[m], Yd[m], Zd[m], Yawd[rad], Time[s]]
 poseDesired: [0.75, 0.75, 0.75, 0.0, 6.0]
