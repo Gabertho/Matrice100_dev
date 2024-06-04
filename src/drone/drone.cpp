@@ -928,7 +928,7 @@ namespace DRONE {
 
 	Vector4d Drone::getPIDControlLaw (void) {
 
-		Vector4d xError, xIntError;
+		Vector4d xError, xIntError, dxDesired, d2xDesired;
 		Vector4d dx;
 		Vector4d dxError;
 
@@ -943,36 +943,31 @@ namespace DRONE {
 		dx.head(3) = dPosition;
 		dx(3) = dYaw;
 
+		dxDesired.head(3) = dPositionDesired;
+		dxDesired(3) 	  = dYawDesired;
+
+		d2xDesired.head(3) = d2PositionDesired;
+		d2xDesired(3) = d2YawDesired;
+
 		dxError.head(3) = dPositionError;
 		dxError(3) = dYawError;
 
 		deltaTAtual	  = getDeltaTimeNow();
+		cout << "DeltaT: " << deltaTAtual << endl;
 		xIntError = getXIntError();
+		cout << "Previous Integral Error: " << xIntError.transpose() << endl;
 		xIntError = xIntError + xError*deltaTAtual;
+		cout << "Integral Error: " << xIntError.transpose() << endl;
 		
 		setXIntError(xIntError);
 
 		u = Kp*xError + Kd*dxError + Ki*xIntError;
+		cout << "Control Output u: " << u.transpose() << endl;
 
+        input = F1.inverse()*(u + d2xDesired + F2*Rotation.transpose()*dxDesired);
 
-                for(int i=0; i < 4;i++){
-                  
-                  if(abs(xError(i)) < threshold(i)){
-                    input(i) = 0.0;
-                  }
-                  else {
-                    input(i) = u(i);
-                  }
-                  
-                  if(abs(input(i)) > inputRange(i)){
-                    if(input(i) > 0){
-                      input(i) = inputRange(i);
-                    } else {
-                      input(i) = -inputRange(i);
-                    }
-                  }
-                }
-                
+		cout << "Input: " << input.transpose() << endl;
+
 		return input;
 	}
 
