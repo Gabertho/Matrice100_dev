@@ -204,7 +204,7 @@ namespace DRONE {
 		transfPosition_publisher = n.advertise<nav_msgs::Odometry>("/drone/transf_position",1);
 		joy_subscriber 			 = n.subscribe<sensor_msgs::Joy>("/drone/joy", 1, &System::joyCallback, this);
 		odom_subscriber 		 = n.subscribe<nav_msgs::Odometry>("/drone/odom", 1, &System::odomCallback, this);
-		pose_subscriber 		 = n.subscribe<geometry_msgs::PoseStamped>("/dji2/pose", 1, &System::poseCallback, this);
+		pose_subscriber 		 = n.subscribe<geometry_msgs::PoseStamped>("/drone/pose", 1, &System::poseCallback, this);
 		waypoint_subscriber 	 = n.subscribe<nav_msgs::Odometry>("/drone/waypoint", 1, &System::waypointCallback, this);
 		vicon_subscriber 	 	 = n.subscribe<geometry_msgs::TransformStamped>("/vicon/bebop/bebop", 1, &System::viconCallback, this);
 //		fix_subscriber = n.subscribe<sensor_msgs::NavSatFix>("/drone/fix", 10, &System::fixCallback, this);

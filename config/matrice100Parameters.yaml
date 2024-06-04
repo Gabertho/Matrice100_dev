@@ -25,7 +25,9 @@ inputRange: [1.0, 1.0, 1.0, 0.5]
 #"RecursiveLQR" = Recursive LQR
 #"Hinfinite"    = H-Infinite Controller
 
-controlSelect: "RLQR"
+#controlSelect: "RLQR"
+controlSelect: "SLQR"
+#controlSelect: "PID"
 
 ####################################################################################################################################
 ####################################################### SENSOR SELECT ##############################################################
@@ -127,7 +129,7 @@ trajectory: "circleXY"
 #trajectory: "eightShape"
 velMed: 0.2
 
-amplitude: 2.5
+amplitude: 0.5
 
 # In case we select "straightLine", poseDesired is defined as: [Xd[m], Yd[m], Zd[m], Yawd[rad], Time[s]]
 poseDesired: [0.75, 0.75, 0.75, 0.0, 6.0]
