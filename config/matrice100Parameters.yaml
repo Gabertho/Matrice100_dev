@@ -132,7 +132,7 @@ trajectory: "circleXY"
 #trajectory: "eightShape"
 velMed: 0.2
 
-amplitude: 0.5
+amplitude: 2.5
 
 # In case we select "straightLine", poseDesired is defined as: [Xd[m], Yd[m], Zd[m], Yawd[rad], Time[s]]
 poseDesired: [0.75, 0.75, 0.75, 0.0, 6.0]

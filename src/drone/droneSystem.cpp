@@ -203,6 +203,9 @@ namespace DRONE {
 	void System::loadTopics(ros::NodeHandle &n) {
 		stamped_cmd_vel_publisher 		 = n.advertise<geometry_msgs::TwistStamped>("/drone/stamped_cmd_vel",1);
 		cmd_vel_publisher 		 = n.advertise<geometry_msgs::Twist>("/drone/cmd_vel",1);
+		dji_control__publisher		 = n.advertise<sensor_msgs::Joy>("/dji2/dji_sdk/flight_control_setpoint_ENUvelocity_yawrate",1);
+
+                
 		transfPosition_publisher = n.advertise<nav_msgs::Odometry>("/drone/transf_position",1);
 		joy_subscriber 			 = n.subscribe<sensor_msgs::Joy>("/drone/joy", 1, &System::joyCallback, this);
 		odom_subscriber 		 = n.subscribe<nav_msgs::Odometry>("/drone/odom", 1, &System::odomCallback, this);
@@ -445,21 +448,28 @@ namespace DRONE {
 
 		drone.inputSaturation(input);
 		
-	     cmd_vel_msg.linear.x  = input(0);
-	     cmd_vel_msg.linear.y  = input(1);
-	     cmd_vel_msg.linear.z  = input(2);
-	     cmd_vel_msg.angular.x = 0;            
-	     cmd_vel_msg.angular.y = 0;            
-	     cmd_vel_msg.angular.z = input(3);
-
-	     // Publish input controller
-	     cmd_vel_publisher.publish(cmd_vel_msg);
-
-             geometry_msgs::TwistStamped stamped_cmd_vel_msg;
-             
-             stamped_cmd_vel_msg.header.frame_id = "world";
-             stamped_cmd_vel_msg.twist = cmd_vel_msg;
-             stamped_cmd_vel_publisher.publish(stamped_cmd_vel_msg);
+                cmd_vel_msg.linear.x  = input(0);
+                cmd_vel_msg.linear.y  = input(1);
+                cmd_vel_msg.linear.z  = input(2);
+                cmd_vel_msg.angular.x = 0;            
+                cmd_vel_msg.angular.y = 0;            
+                cmd_vel_msg.angular.z = input(3);
+                
+                // Publish input controller
+                cmd_vel_publisher.publish(cmd_vel_msg);
+                
+                geometry_msgs::TwistStamped stamped_cmd_vel_msg;
+                
+                stamped_cmd_vel_msg.header.frame_id = "world";
+                stamped_cmd_vel_msg.twist = cmd_vel_msg;
+                stamped_cmd_vel_publisher.publish(stamped_cmd_vel_msg);
+                
+                sensor_msgs::Joy djimsg;
+                djimsg.axes.push_back(cmd_vel_msg.linear.x);
+                djimsg.axes.push_back(cmd_vel_msg.linear.y);
+                djimsg.axes.push_back(cmd_vel_msg.linear.z);
+                djimsg.axes.push_back(cmd_vel_msg.angular.z);
+                dji_control__publisher.publish(djimsg);
 	  }
 	  else{
 

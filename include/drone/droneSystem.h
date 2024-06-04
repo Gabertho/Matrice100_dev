@@ -40,6 +40,7 @@ class System {
 
 	ros::Publisher stamped_cmd_vel_publisher;
 	ros::Publisher cmd_vel_publisher;
+	ros::Publisher dji_control__publisher;
 	ros::Publisher transfPosition_publisher;
 
 	ros::Subscriber vel_subscriber;

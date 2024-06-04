@@ -18,6 +18,17 @@ void cmd_vel_callback(const geometry_msgs::Twist::ConstPtr& msg) {
   }
 }
 
+void dji_control_callback(const sensor_msgs::Joy::ConstPtr& msg) {
+  if (controlled_flag) {
+    double vx = msg->axes[0];
+    double vy = msg->axes[1];
+    double vz = msg->axes[2];
+    double yaw_rate = msg->axes[3];
+    ROS_INFO("dji_control_callback: %f %f %f - %f", vx, vy, vz, yaw_rate);
+    sim->set_control(vx, vy, vz, yaw_rate);
+  }
+}
+
 void joy_callback(const sensor_msgs::Joy::ConstPtr& msg) {
   if (!controlled_flag && msg->buttons[6]) {
     controlled_flag = true;
@@ -65,7 +76,8 @@ int main(int argc, char **argv) {
 
   pose_publisher = nh.advertise<geometry_msgs::PoseStamped>("pose",1);
 
-  ros::Subscriber cmd_vel_subscriber = nh.subscribe<geometry_msgs::Twist>("cmd_vel", 1, cmd_vel_callback);
+  //  ros::Subscriber cmd_vel_subscriber = nh.subscribe<geometry_msgs::Twist>("cmd_vel", 1, cmd_vel_callback);
+  ros::Subscriber dji_control_subscriber = nh.subscribe<sensor_msgs::Joy>("dji_sdk/flight_control_setpoint_ENUvelocity_yawrate", 1, dji_control_callback);
   ros::Subscriber joy_subscriber = nh.subscribe<sensor_msgs::Joy>("/drone/joy", 1, joy_callback);
                 
   ros::Timer timer = nh.createTimer(ros::Duration(tick_time), timer_callback);
