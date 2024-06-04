@@ -20,9 +20,10 @@ int main(int argc, char **argv)
 		DRONE::System node; 
 
 		ros::Rate loop_rate(100); // Defines update rate
+
 		while (ros::ok())
-		{
-			node.control();  //Main control function
+                  {
+                    node.control();  //Main control function
 		    ros::spinOnce(); 
 		    loop_rate.sleep(); 
 		}
