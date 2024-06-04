@@ -43,7 +43,7 @@ namespace DRONE {
           // position 		= RotGlobal.transpose()*(positionValue - position0);
           position = positionValue;
           positionError = position - positionDesired;
-          cout << "setPosition: " << position(0) << " " << positionDesired(0) << endl;
+          /// cout << "setPosition: " << position(0) << " " << positionDesired(0) << endl;
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

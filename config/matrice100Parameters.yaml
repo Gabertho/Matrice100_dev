@@ -25,9 +25,9 @@ inputRange: [1.0, 1.0, 1.0, 0.5]
 #"RecursiveLQR" = Recursive LQR
 #"Hinfinite"    = H-Infinite Controller
 
-#controlSelect: "RLQR"
+controlSelect: "RLQR"
 #controlSelect: "SLQR"
-controlSelect: "PID"
+#controlSelect: "PID"
 
 ####################################################################################################################################
 ####################################################### SENSOR SELECT ##############################################################
