@@ -948,24 +948,24 @@ namespace DRONE {
 		u = Kp*xError + Kd*dxError + Ki*xIntError;
 
 
-		// for(int i=0; i < 4;i++){
-
-		// 	if(abs(xError(i)) < threshold(i)){
-		// 		input(i) = 0.0;
-		// 	}
-		// 	else {
-		// 		input(i) = u(i);
-		// 	}
-
-		// 	if(abs(input(i)) > inputRange(i)){
-		// 		if(input(i) > 0){
-		// 			input(i) = inputRange(i);
-		// 		} else {
-		// 			input(i) = -inputRange(i);
-		// 		}
-		// 	}
-		// }
-
+                for(int i=0; i < 4;i++){
+                  
+                  if(abs(xError(i)) < threshold(i)){
+                    input(i) = 0.0;
+                  }
+                  else {
+                    input(i) = u(i);
+                  }
+                  
+                  if(abs(input(i)) > inputRange(i)){
+                    if(input(i) > 0){
+                      input(i) = inputRange(i);
+                    } else {
+                      input(i) = -inputRange(i);
+                    }
+                  }
+                }
+                
 		return input;
 	}
 

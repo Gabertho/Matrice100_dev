@@ -174,7 +174,7 @@ namespace DRONE {
 		count 	   		= 0;
 		countEKF		= 1;
 		PI 		 		= 3.141592653589793;
-		flagEnable 		= true;
+		flagEnable 		= false;
 		vxAmpl 			= 0;
 		vyAmpl 			= 0;
 		vzAmpl 			= 0;
@@ -400,10 +400,11 @@ namespace DRONE {
 
 		if(controlSelect.compare("PID") == 0){
 
-			cout << "### PID ###" << endl;
-			
+                  /// cout << "### PID ###: " << flagControllerStarted << endl;
+                        
 			// Enters only during first loop after holding joystick button responsible for "flagEnable".
-			if(flagControllerStarted == true){ 
+			if(flagControllerStarted == true){
+                          cout << "### PID ### sets integral PID error as zero." << endl;
 		  		drone.setXIntError(xTemp.Zero()); // sets integral PID error as zero.
 		  		flagControllerStarted = false;
 	  		}
@@ -694,7 +695,7 @@ namespace DRONE {
 
 		yawDesired  = eulerAngles(2);
 
-                cout << "waypoint: yawDesired: " << yawDesired*180.0/M_PI << endl;
+                // cout << "waypoint: yawDesired: " << yawDesired*180.0/M_PI << endl;
 
 
 		if(trajectory.compare("eightShape") == 0){	//Lemniscate of Gerono					 
