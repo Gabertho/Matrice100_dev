@@ -3,6 +3,7 @@
 
 #include "ros/ros.h"
 #include "geometry_msgs/PoseStamped.h"
+#include "geometry_msgs/Vector3Stamped.h"
 
 class Sim {
 private:
@@ -37,6 +38,7 @@ public:
   void tick(double time);
 
   geometry_msgs::PoseStamped get_pose();
+  geometry_msgs::Vector3Stamped get_velocity();
 
   void compute_wind();
   void set_max_wind_speed(double val);

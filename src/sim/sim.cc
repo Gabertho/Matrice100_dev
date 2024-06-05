@@ -49,6 +49,16 @@ geometry_msgs::PoseStamped Sim::get_pose() {
   return msg;
 }
 
+geometry_msgs::Vector3Stamped Sim::get_velocity() {
+  geometry_msgs::Vector3Stamped vel;
+  vel.header.stamp = ros::Time::now();
+  vel.header.frame_id = "world";
+  vel.vector.x = dx + wind_speed_x;
+  vel.vector.y = dy + wind_speed_y;
+  vel.vector.z = dz;
+  return vel;
+}
+
 void Sim::tick(double time) {
   // ROS_INFO("TICK: %f %f %f - %f %f", dx, dy, dz, wind_speed_x, wind_speed_y);
   x += time*dx;
