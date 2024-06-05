@@ -41,14 +41,16 @@ void joy_callback(const sensor_msgs::Joy::ConstPtr& msg) {
 }
 
 void timer_callback(const ros::TimerEvent&) {
-  sim->tick(tick_time);
-  if (timer_counter % 10 == 0) {
-    // ROS_INFO("timer_callback: pose publish");
-    geometry_msgs::PoseStamped msg = sim->get_pose();
-    pose_publisher.publish(msg);
-    
+  if (controlled_flag) {
+    sim->tick(tick_time);
+    if (timer_counter % 10 == 0) {
+      // ROS_INFO("timer_callback: pose publish");
+      geometry_msgs::PoseStamped msg = sim->get_pose();
+      pose_publisher.publish(msg);
+      
+    }
+    timer_counter+=1;
   }
-  timer_counter+=1;
 }
 
 int main(int argc, char **argv) {
@@ -63,16 +65,32 @@ int main(int argc, char **argv) {
   double yaw = 0.0;
   double yaw_deg = 0.0;
 
-  ros::param::get("~x", x0);
-  ros::param::get("~y", x0);
-  ros::param::get("~z", x0);
-  ros::param::get("~yaw", yaw_deg);
+  ros::param::get("x", x0);
+  ros::param::get("y", y0);
+  ros::param::get("z", z0);
+  ros::param::get("yaw", yaw_deg);
 
   yaw = yaw_deg/180.0*M_PI;
 
   ROS_INFO("Initial position: %f %f %f - %f", x0, y0, z0, yaw_deg);
 
+  double max_wind_speed = 0.0;
+  std::string wind_direction = "";
+  std::string wind_amplitude = "";
+
+  ros::param::get("max_wind_speed", max_wind_speed);
+  ros::param::get("wind_direction", wind_direction);
+  ros::param::get("wind_amplitude", wind_amplitude);
+
+  ROS_INFO("max_wind_speed: %f", max_wind_speed);
+  ROS_INFO("wind_direction: %s", wind_direction.c_str());
+  ROS_INFO("wind_amplitude: %s", wind_amplitude.c_str());
+
   sim = new Sim(x0, y0, z0, yaw);
+
+  sim->set_max_wind_speed(max_wind_speed);
+  sim->set_wind_direction(wind_direction);
+  sim->set_wind_amplitude(wind_amplitude);
 
   pose_publisher = nh.advertise<geometry_msgs::PoseStamped>("pose",1);
 

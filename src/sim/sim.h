@@ -19,6 +19,11 @@ private:
   double init_yaw;
   double yaw_rate;
   double tot_time;
+  double max_wind_speed;
+  double wind_speed_x;
+  double wind_speed_y;
+  std::string wind_direction;
+  std::string wind_amplitude;
 
 public:
   Sim();
@@ -32,6 +37,11 @@ public:
   void tick(double time);
 
   geometry_msgs::PoseStamped get_pose();
+
+  void compute_wind();
+  void set_max_wind_speed(double val);
+  void set_wind_direction(std::string val);
+  void set_wind_amplitude(std::string val);
 
 };
 
