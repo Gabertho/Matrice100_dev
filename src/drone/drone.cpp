@@ -1024,6 +1024,14 @@ namespace DRONE {
 		dxError.head(3) = dPositionError;
 		dxError(3) = dYawError;
 
+
+		deltaTAtual	  = getDeltaTimeNow();
+		xIntError = getXIntError();
+		xIntError = xIntError + xError*deltaTAtual;
+
+		
+		setXIntError(xIntError);
+
 		dxDesired.head(3) = dPositionDesired;
 		dxDesired(3) 	  = dYawDesired;
 
@@ -1039,10 +1047,6 @@ namespace DRONE {
 					 MatrixXd::Zero(4,4);
 
 		Conversion::c2d(Adisc,Bdisc,Acont,Bcont,0.02);
-
-		cout << "## Velocity ## " << endl;
-		cout << dPosition << endl;
-		
 
 		// Initial phi(x) 15x1
 		basis << 1,
@@ -1077,8 +1081,7 @@ namespace DRONE {
 		cout << vad << endl;
 
 		// Control Law
-		u = getPIDControlLaw();
-		u = u - vad; 
+		u =  Kp*xError + Kd*dxError + Ki*xIntError; - vad; 
 		cout << "## Control output ## " << endl;
 		cout << u << endl;
 		input = F1.inverse()*(u + d2xDesired + F2*Rotation.transpose()*dxDesired);

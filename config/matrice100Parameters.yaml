@@ -26,7 +26,7 @@ inputRange: [2.0, 2.0, 2.0, 0.5]
 #"Hinfinite"    = H-Infinite Controller
 #"DMRAC"        = Deep Model Reference Adaptive Controller
 
-controlSelect: "PID"
+controlSelect: "DMRAC"
 #controlSelect: "SLQR"
 #controlSelect: "RLQR"
 
