@@ -212,6 +212,7 @@ namespace DRONE {
 		joy_subscriber 			 = n.subscribe<sensor_msgs::Joy>("/drone/joy", 1, &System::joyCallback, this);
 		odom_subscriber 		 = n.subscribe<nav_msgs::Odometry>("/drone/odom", 1, &System::odomCallback, this);
 		pose_subscriber 		 = n.subscribe<geometry_msgs::PoseStamped>("/dji2/pose", 1, &System::poseCallback, this);
+		vel_subscriber 		 = n.subscribe<geometry_msgs::Vector3Stamped>("/dji2/dji_sdk/velocity", 1, &System::velCallback, this);
 		waypoint_subscriber 	 = n.subscribe<nav_msgs::Odometry>("/drone/waypoint", 1, &System::waypointCallback, this);
 		vicon_subscriber 	 	 = n.subscribe<geometry_msgs::TransformStamped>("/vicon/bebop/bebop", 1, &System::viconCallback, this);
 //		fix_subscriber = n.subscribe<sensor_msgs::NavSatFix>("/drone/fix", 10, &System::fixCallback, this);
@@ -533,6 +534,7 @@ namespace DRONE {
 	}
    
   void System::velCallback(const geometry_msgs::Vector3Stamped::ConstPtr& vel) {
+    ROS_INFO("velCallback: %f %f %f", vel->vector.x, vel->vector.y, vel->vector.z);
     current_vel = vel->vector;
   }
   
