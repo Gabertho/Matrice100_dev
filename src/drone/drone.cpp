@@ -178,10 +178,11 @@ namespace DRONE {
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	void Drone::setLinearVel(const Vector3axes& linearVelValue) {
-		Matrix3d 		Rot33;
-		Rot33 			<< Rotation.block<3,3>(0,0);
-	    dPosition 		= linearVelValue;
-		dPositionError 	<< Rot33*dPosition - dPositionDesired;
+          // Matrix3d 		Rot33;
+          //		Rot33 			<< Rotation.block<3,3>(0,0);
+          dPosition 		= linearVelValue;
+          //dPositionError 	<< Rot33*dPosition - dPositionDesired;
+          dPositionError 	<< dPosition - dPositionDesired;
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
