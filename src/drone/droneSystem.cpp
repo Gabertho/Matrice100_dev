@@ -440,6 +440,12 @@ namespace DRONE {
 
 			input = drone.getRecursiveLQRControlLaw();
 
+		} else if(controlSelect.compare("DMRAC") == 0){
+			
+			cout << "### DMRAC ###" << endl;
+
+			input = drone.getDMRACControlLaw();
+		
 		} else {
 
 			cout << "\n ERROR: Please select a valid controller" << endl;

@@ -971,6 +971,68 @@ namespace DRONE {
 		return input;
 	}
 
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	/* 		Function: get DMRAC Control Law
+	*	  Created by: gabrielbertho
+	*  Last Modified:
+	*
+	*  	 Description: 1. Defines local variables and prints current position error, position desired and current postion;	
+	* 	  			  2. Stores position and yaw orientation errors in state vectors;
+	*				  3. Stores derivatives of position error and orientation error in state vectors;
+	*                 4. Gets the current 'delta' time and computes the discrete integral of the position error (rectangle method) and stores it in "xIntError";
+	*                 5. Prints the current position error, derivative position error and integral position error;
+	*				  6. Computes the PID control law and prints its value;
+	*                 7. Stabilishes a condition, with 'threshold', that defines a tolerance for position error;
+	*                 8. Saturates each element of the input vector based on limits of the real actuator;
+	*                 9. Returns a saturated 4x1 input vector;
+	*/
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	Vector4d Drone::getDMRACControlLaw (void) {
+
+		Vector4d xError, xIntError, dxDesired, d2xDesired;
+		Vector4d dx;
+		Vector4d dxError;
+
+		double deltaTAtual;
+
+		xError.head(3) = positionError;
+		xError(3) = yawError;
+
+                cout << "PID Error:" << positionError(0) << " " << positionError(1) << " " << positionError(2)
+                     << " - " << yawError << endl;
+
+		dx.head(3) = dPosition;
+		dx(3) = dYaw;
+
+		dxDesired.head(3) = dPositionDesired;
+		dxDesired(3) 	  = dYawDesired;
+
+		d2xDesired.head(3) = d2PositionDesired;
+		d2xDesired(3) = d2YawDesired;
+
+		dxError.head(3) = dPositionError;
+		dxError(3) = dYawError;
+
+		deltaTAtual	  = getDeltaTimeNow();
+		cout << "DeltaT: " << deltaTAtual << endl;
+		xIntError = getXIntError();
+		cout << "Previous Integral Error: " << xIntError.transpose() << endl;
+		xIntError = xIntError + xError*deltaTAtual;
+		cout << "Integral Error: " << xIntError.transpose() << endl;
+		
+		setXIntError(xIntError);
+
+		u = Kp*xError + Kd*dxError + Ki*xIntError;
+		cout << "Control Output u: " << u.transpose() << endl;
+
+        input = F1.inverse()*(u + d2xDesired + F2*Rotation.transpose()*dxDesired);
+
+		cout << "Input: " << input.transpose() << endl;
+
+		return input;
+	}
+
 
 	 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/* 		Function: get Recursive LQR Control Law

@@ -179,6 +179,7 @@ namespace DRONE {
 			Vector4d 	getRobustControlLaw (void); 	  // RLQR Controller
 			Vector4d 	getLQRControlLaw (void);		  // LQR Controller
 			Vector4d 	getRecursiveLQRControlLaw (void); // Recursive LQR
+			Vector4d    getDMRACControlLaw (void);        // Deep Model Reference Adaptive Controller
 			Vector4d 	getThreshold(void);
 			Vector4d 	getInputRange(void);
 			Vector4d 	getCmdVel(void);		
