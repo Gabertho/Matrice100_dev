@@ -941,6 +941,7 @@ namespace DRONE {
                      << " - " << yawError << endl;
 
 		dx.head(3) = dPosition;
+	
 		dx(3) = dYaw;
 
 		dxDesired.head(3) = dPositionDesired;
@@ -954,11 +955,23 @@ namespace DRONE {
 
 		deltaTAtual	  = getDeltaTimeNow();
 		xIntError = getXIntError();
+
+		cout << "### x ERROR ###" << endl;
+		cout << xError << endl;
+		cout << "### DELTA TIME ###" << endl;
+		cout << deltaTAtual << endl;
 		xIntError = xIntError + xError*deltaTAtual;
-		cout << "Integral Error: " << xIntError.transpose() << endl;
+
 		
 		setXIntError(xIntError);
 
+		cout << "### INTEGRAL ERROR ###" << endl;
+		cout << xIntError << endl;
+		cout << "### DERIVATIVE ERROR ERROR ###" << endl;
+		cout << dxError << endl;
+		cout << "### PROPORTIONAL ERROR ###" << endl;
+		cout << xError << endl;
+	
 		u = Kp*xError + Kd*dxError + Ki*xIntError;
 
         input = F1.inverse()*(u + d2xDesired + F2*Rotation.transpose()*dxDesired);
