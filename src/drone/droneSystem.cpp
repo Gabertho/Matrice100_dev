@@ -169,7 +169,7 @@ namespace DRONE {
 		// Sets flag in order to halt Vicon acquisition and make sure it will be properly initialized once/if called.
 		drone.setIsViconStarted(false);
 		// Sets initial time
-		drone.setTimeNow(0);
+		drone.setTimeNow(ros::Time::now().toSec());
 
 
 		//Starting or Default Values
