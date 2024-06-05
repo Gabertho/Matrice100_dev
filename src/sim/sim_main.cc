@@ -41,14 +41,16 @@ void joy_callback(const sensor_msgs::Joy::ConstPtr& msg) {
 }
 
 void timer_callback(const ros::TimerEvent&) {
-  sim->tick(tick_time);
-  if (timer_counter % 10 == 0) {
-    // ROS_INFO("timer_callback: pose publish");
-    geometry_msgs::PoseStamped msg = sim->get_pose();
-    pose_publisher.publish(msg);
-    
+  if (controlled_flag) {
+    sim->tick(tick_time);
+    if (timer_counter % 10 == 0) {
+      // ROS_INFO("timer_callback: pose publish");
+      geometry_msgs::PoseStamped msg = sim->get_pose();
+      pose_publisher.publish(msg);
+      
+    }
+    timer_counter+=1;
   }
-  timer_counter+=1;
 }
 
 int main(int argc, char **argv) {
@@ -86,7 +88,9 @@ int main(int argc, char **argv) {
 
   sim = new Sim(x0, y0, z0, yaw);
 
-  
+  sim->set_max_wind_speed(max_wind_speed);
+  sim->set_wind_direction(wind_direction);
+  sim->set_wind_amplitude(wind_amplitude);
 
   pose_publisher = nh.advertise<geometry_msgs::PoseStamped>("pose",1);
 
