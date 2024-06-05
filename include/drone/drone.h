@@ -14,7 +14,7 @@
 #include "tf/transform_datatypes.h"
 #include "tf_conversions/tf_eigen.h"
 #include <boost/thread.hpp>
-
+#include <unsupported/Eigen/KroneckerProduct> 
 
 #include "drone/definitions.h"
 #include "drone/operations.h"
@@ -88,6 +88,7 @@ namespace DRONE {
 			MatrixSizeEKF  P_EKF, Q_EKF, F_EKF;
 
 			Matrix8d P;
+			Matrix15x4 weight;
 
 			Vector4d threshold;
 			Vector4d inputRange;
@@ -179,6 +180,7 @@ namespace DRONE {
 			Vector4d 	getRobustControlLaw (void); 	  // RLQR Controller
 			Vector4d 	getLQRControlLaw (void);		  // LQR Controller
 			Vector4d 	getRecursiveLQRControlLaw (void); // Recursive LQR
+			Vector4d    getDMRACControlLaw (void);        // Deep Model Reference Adaptive Controller
 			Vector4d 	getThreshold(void);
 			Vector4d 	getInputRange(void);
 			Vector4d 	getCmdVel(void);		
@@ -190,6 +192,8 @@ namespace DRONE {
 			Vector9d 	getKalmanXAngular(void);
 			Matrix9d 	getKalmanP(void);
 			Matrix9d 	getKalmanPAngular(void);
+
+			Types::Matrix8d solveLyapunov(const Types::Matrix8d& A, const Types::Matrix8d& Q);
 
 			Vector32x1	getXfromEKF(void);
 			

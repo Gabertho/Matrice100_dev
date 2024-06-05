@@ -971,6 +971,103 @@ namespace DRONE {
 		return input;
 	}
 
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	/* 		Function: get DMRAC Control Law
+	*	  Created by: gabrielbertho
+	*  Last Modified:
+	*
+	*  	 Description: 1. Defines local variables and prints current position error, position desired and current postion;	
+	* 	  			  2. Stores position and yaw orientation errors in state vectors;
+	*				  3. Stores derivatives of position error and orientation error in state vectors;
+	*                 4. Gets the current 'delta' time and computes the discrete integral of the position error (rectangle method) and stores it in "xIntError";
+	*                 5. Prints the current position error, derivative position error and integral position error;
+	*				  6. Computes the PID control law and prints its value;
+	*                 7. Stabilishes a condition, with 'threshold', that defines a tolerance for position error;
+	*                 8. Saturates each element of the input vector based on limits of the real actuator;
+	*                 9. Returns a saturated 4x1 input vector;
+	*/
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	Vector4d Drone::getDMRACControlLaw (void) {
+
+		Vector4d xError, xIntError, dxDesired, d2xDesired;
+		Vector4d dx;
+		Vector4d dxError;
+
+		Vector4d vad; // Adaptive term
+		Vector8d x;
+		Vector15d basis; // Basis feature vector
+		Matrix8d Lyap; //olution for Lyapunov Equation
+		Matrix8d Q;	 //Identity Matrix
+
+		Matrix8d Acont,Adisc;  // Matrices A and B from quadcopter dynamical model in continuous-time.
+		Matrix8x4 Bcont,Bdisc; // Matrices A and B from quadcopter dynamical model in discrete-time.
+
+		double deltaTAtual;
+
+		double learning_rate = 0.01; // Test and adjust
+
+		xError.head(3) = positionError;
+		xError(3) = yawError;
+
+		dx.head(3) = dPosition;
+		dx(3) = dYaw;
+
+		dxError.head(3) = dPositionError;
+		dxError(3) = dYawError;
+
+		dxDesired.head(3) = dPositionDesired;
+		dxDesired(3) 	  = dYawDesired;
+
+		d2xDesired.head(3) = d2PositionDesired;
+		d2xDesired(3) = d2YawDesired;
+
+		x << dxError, xError;
+
+		Acont << -F2*Rotation.transpose(), MatrixXd::Zero(4,4),
+					 MatrixXd::Identity(4,4),  MatrixXd::Zero(4,4);
+
+		Bcont << MatrixXd::Identity(4,4),
+					 MatrixXd::Zero(4,4);
+
+		Conversion::c2d(Adisc,Bdisc,Acont,Bcont,0.02);
+
+		// Initial phi(x) 15x1
+		basis << 1,
+				     position(0), position(1), position(2), // Position x, y, z
+                 	 dPosition(0), dPosition(1), dPosition(2), // Velocities dx, dy, dz
+                 	 yaw, dYaw, // Yaw and yaw rate
+                 	 position(0) * dPosition(0), position(1) * dPosition(1), position(2) * dPosition(2), // Non-linear terms position x velocity
+                 	 yaw * dPosition(0), yaw * dPosition(1), yaw * dPosition(2); // Non-linear terms yaw x velocity
+
+		cout << "Old weight:" << weight.transpose() << endl;
+
+		//Weight Update
+		Q = Q.Identity();
+		Lyap = solveLyapunov(Adisc, Q);
+		deltaTAtual	  = getDeltaTimeNow();
+		cout << "DeltaT: " << deltaTAtual << endl;
+		weight = weight + (-deltaTAtual) * (learning_rate) * (basis * (x.transpose() * (Lyap * Bdisc))); 
+
+		cout << "New weight:" << weight.transpose() << endl;
+
+
+		//Adaptive Term
+		vad = weight.transpose() * basis;
+		cout << "Adaptive term:" << vad << endl;
+
+
+
+		// Control Law
+		u = getPIDControlLaw() - vad; 
+		cout << "Control output:" << u << endl;
+
+		input = F1.inverse()*(u + d2xDesired + F2*Rotation.transpose()*dxDesired);
+		cout << "Input: " << input.transpose() << endl;
+
+		return input;
+	}
+
 
 	 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/* 		Function: get Recursive LQR Control Law
@@ -1321,6 +1418,8 @@ namespace DRONE {
 
 		P 						= P.Identity();
 
+		weight =                  weight.Zero(); 
+
 		u 						= u.Zero();
 		threshold 				= threshold.Zero();
 		input 					= input.Zero();
@@ -1419,6 +1518,37 @@ namespace DRONE {
 		
 		return estLinearVel;
 	}
+
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	/* 		Function: solveLyapunov
+	*	  Created by: gabrielbertho
+	*  Last Modified: May 23th 2024 
+	*
+	*  	 Description: Solve Lyapunov Equation, finding Matrix P.
+	*				  1.
+	* 				  2. 
+	*				  3. 
+	* 				  4.	  
+	* 				  5. 	  
+	*/
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Review if its right
+	Matrix8d Drone::solveLyapunov(const Matrix8d& A, const Matrix8d& Q) {
+		const int n = 8;
+		Matrix8d P = Matrix8d::Zero();
+
+		// Vetorização de A e Q para sistemas discretos
+		Eigen::MatrixXd I = Eigen::MatrixXd::Identity(n, n);
+		Eigen::MatrixXd K = Eigen::kroneckerProduct(A.transpose(), A.transpose()) - Eigen::kroneckerProduct(I, I);
+
+		Eigen::VectorXd vecQ = Eigen::Map<const Eigen::VectorXd>(Q.data(), Q.size());
+		Eigen::VectorXd vecP = K.colPivHouseholderQr().solve(-vecQ);
+
+		P = Eigen::Map<Matrix8d>(vecP.data(), n, n);
+
+		return P;
+}
+
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/* 		Function: DwKalman
