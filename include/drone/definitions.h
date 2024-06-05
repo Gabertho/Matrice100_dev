@@ -58,6 +58,7 @@ typedef Matrix<double, size3axes, size6d>    Matrix3x6;
 typedef Matrix<double, size3axes, sizeSigma> Matrix3x9;
 typedef Matrix<double, size8d, 1>      	 Vector8d;
 typedef Matrix<double, sizeSigma, 1>      	 Vector9d;
+typedef Matrix<double, 15, 1>      	 Vector15d;
 typedef Matrix<double, 1, size8d> 	 Vector1d8;
 typedef Matrix<double, sizeDelta, 1> 	 	 Vector16x1;
 typedef Matrix<double, sizeEKF, 1> 	 	 Vector32x1;
@@ -84,6 +85,7 @@ typedef Matrix<double, sizeQuat, sizeEKF>   Matrix4x32;
 
 typedef Matrix<double, size12d, 1>         Vector12d;
 typedef Matrix<double, size12d, sizeQuat>  Matrix12x4;
+typedef Matrix<double, 15, 4>  Matrix15x4;
 typedef Matrix<double, sizeQuat, size12d>   Matrix4x12;
 typedef Matrix<double, size12d, size8d>    Matrix12x8;
 typedef Matrix<double, size12d, size12d>   Matrix12x12;

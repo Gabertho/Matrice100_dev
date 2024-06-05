@@ -994,16 +994,27 @@ namespace DRONE {
 		Vector4d dx;
 		Vector4d dxError;
 
+		Vector4d vad; // Adaptive term
+		Vector8d x;
+		Vector15d basis; // Basis feature vector
+		Matrix8d Lyap; //olution for Lyapunov Equation
+		Matrix8d Q;	 //Identity Matrix
+
+		Matrix8d Acont,Adisc;  // Matrices A and B from quadcopter dynamical model in continuous-time.
+		Matrix8x4 Bcont,Bdisc; // Matrices A and B from quadcopter dynamical model in discrete-time.
+
 		double deltaTAtual;
+
+		double learning_rate = 0.01; // Test and adjust
 
 		xError.head(3) = positionError;
 		xError(3) = yawError;
 
-                cout << "PID Error:" << positionError(0) << " " << positionError(1) << " " << positionError(2)
-                     << " - " << yawError << endl;
-
 		dx.head(3) = dPosition;
 		dx(3) = dYaw;
+
+		dxError.head(3) = dPositionError;
+		dxError(3) = dYawError;
 
 		dxDesired.head(3) = dPositionDesired;
 		dxDesired(3) 	  = dYawDesired;
@@ -1011,23 +1022,47 @@ namespace DRONE {
 		d2xDesired.head(3) = d2PositionDesired;
 		d2xDesired(3) = d2YawDesired;
 
-		dxError.head(3) = dPositionError;
-		dxError(3) = dYawError;
+		x << dxError, xError;
 
+		Acont << -F2*Rotation.transpose(), MatrixXd::Zero(4,4),
+					 MatrixXd::Identity(4,4),  MatrixXd::Zero(4,4);
+
+		Bcont << MatrixXd::Identity(4,4),
+					 MatrixXd::Zero(4,4);
+
+		Conversion::c2d(Adisc,Bdisc,Acont,Bcont,0.02);
+
+		// Initial phi(x) 15x1
+		basis << 1,
+				     position(0), position(1), position(2), // Position x, y, z
+                 	 dPosition(0), dPosition(1), dPosition(2), // Velocities dx, dy, dz
+                 	 yaw, dYaw, // Yaw and yaw rate
+                 	 position(0) * dPosition(0), position(1) * dPosition(1), position(2) * dPosition(2), // Non-linear terms position x velocity
+                 	 yaw * dPosition(0), yaw * dPosition(1), yaw * dPosition(2); // Non-linear terms yaw x velocity
+
+		cout << "Old weight:" << weight.transpose() << endl;
+
+		//Weight Update
+		Q = Q.Identity();
+		Lyap = solveLyapunov(Adisc, Q);
 		deltaTAtual	  = getDeltaTimeNow();
 		cout << "DeltaT: " << deltaTAtual << endl;
-		xIntError = getXIntError();
-		cout << "Previous Integral Error: " << xIntError.transpose() << endl;
-		xIntError = xIntError + xError*deltaTAtual;
-		cout << "Integral Error: " << xIntError.transpose() << endl;
-		
-		setXIntError(xIntError);
+		weight = weight + (-deltaTAtual) * (learning_rate) * (basis * (x.transpose() * (Lyap * Bdisc))); 
 
-		u = Kp*xError + Kd*dxError + Ki*xIntError;
-		cout << "Control Output u: " << u.transpose() << endl;
+		cout << "New weight:" << weight.transpose() << endl;
 
-        input = F1.inverse()*(u + d2xDesired + F2*Rotation.transpose()*dxDesired);
 
+		//Adaptive Term
+		vad = weight.transpose() * basis;
+		cout << "Adaptive term:" << vad << endl;
+
+
+
+		// Control Law
+		u = getPIDControlLaw() - vad; 
+		cout << "Control output:" << u << endl;
+
+		input = F1.inverse()*(u + d2xDesired + F2*Rotation.transpose()*dxDesired);
 		cout << "Input: " << input.transpose() << endl;
 
 		return input;
@@ -1383,6 +1418,8 @@ namespace DRONE {
 
 		P 						= P.Identity();
 
+		weight =                  weight.Zero(); 
+
 		u 						= u.Zero();
 		threshold 				= threshold.Zero();
 		input 					= input.Zero();
@@ -1481,6 +1518,37 @@ namespace DRONE {
 		
 		return estLinearVel;
 	}
+
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	/* 		Function: solveLyapunov
+	*	  Created by: gabrielbertho
+	*  Last Modified: May 23th 2024 
+	*
+	*  	 Description: Solve Lyapunov Equation, finding Matrix P.
+	*				  1.
+	* 				  2. 
+	*				  3. 
+	* 				  4.	  
+	* 				  5. 	  
+	*/
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Review if its right
+	Matrix8d Drone::solveLyapunov(const Matrix8d& A, const Matrix8d& Q) {
+		const int n = 8;
+		Matrix8d P = Matrix8d::Zero();
+
+		// Vetorização de A e Q para sistemas discretos
+		Eigen::MatrixXd I = Eigen::MatrixXd::Identity(n, n);
+		Eigen::MatrixXd K = Eigen::kroneckerProduct(A.transpose(), A.transpose()) - Eigen::kroneckerProduct(I, I);
+
+		Eigen::VectorXd vecQ = Eigen::Map<const Eigen::VectorXd>(Q.data(), Q.size());
+		Eigen::VectorXd vecP = K.colPivHouseholderQr().solve(-vecQ);
+
+		P = Eigen::Map<Matrix8d>(vecP.data(), n, n);
+
+		return P;
+}
+
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/* 		Function: DwKalman
