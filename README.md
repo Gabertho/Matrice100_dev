@@ -23,7 +23,7 @@ roslaunch drone_dev matrice100_dev_node.launch
 
 Simulator:
 ```bash
-rosrun drone_dev sim_node __ns:=/dji2
+roslaunch drone_dev sim.launch ns:=/dji2
 ```
 
 Rviz:
