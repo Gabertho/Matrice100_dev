@@ -941,6 +941,7 @@ namespace DRONE {
                      << " - " << yawError << endl;
 
 		dx.head(3) = dPosition;
+	
 		dx(3) = dYaw;
 
 		dxDesired.head(3) = dPositionDesired;
@@ -953,20 +954,27 @@ namespace DRONE {
 		dxError(3) = dYawError;
 
 		deltaTAtual	  = getDeltaTimeNow();
-		cout << "DeltaT: " << deltaTAtual << endl;
 		xIntError = getXIntError();
-		cout << "Previous Integral Error: " << xIntError.transpose() << endl;
+
+		cout << "### x ERROR ###" << endl;
+		cout << xError << endl;
+		cout << "### DELTA TIME ###" << endl;
+		cout << deltaTAtual << endl;
 		xIntError = xIntError + xError*deltaTAtual;
-		cout << "Integral Error: " << xIntError.transpose() << endl;
+
 		
 		setXIntError(xIntError);
 
+		cout << "### INTEGRAL ERROR ###" << endl;
+		cout << xIntError << endl;
+		cout << "### DERIVATIVE ERROR ERROR ###" << endl;
+		cout << dxError << endl;
+		cout << "### PROPORTIONAL ERROR ###" << endl;
+		cout << xError << endl;
+	
 		u = Kp*xError + Kd*dxError + Ki*xIntError;
-		cout << "Control Output u: " << u.transpose() << endl;
 
         input = F1.inverse()*(u + d2xDesired + F2*Rotation.transpose()*dxDesired);
-
-		cout << "Input: " << input.transpose() << endl;
 
 		return input;
 	}
@@ -1016,6 +1024,14 @@ namespace DRONE {
 		dxError.head(3) = dPositionError;
 		dxError(3) = dYawError;
 
+
+		deltaTAtual	  = getDeltaTimeNow();
+		xIntError = getXIntError();
+		xIntError = xIntError + xError*deltaTAtual;
+
+		
+		setXIntError(xIntError);
+
 		dxDesired.head(3) = dPositionDesired;
 		dxDesired(3) 	  = dYawDesired;
 
@@ -1040,30 +1056,38 @@ namespace DRONE {
                  	 position(0) * dPosition(0), position(1) * dPosition(1), position(2) * dPosition(2), // Non-linear terms position x velocity
                  	 yaw * dPosition(0), yaw * dPosition(1), yaw * dPosition(2); // Non-linear terms yaw x velocity
 
-		cout << "Old weight:" << weight.transpose() << endl;
-
 		//Weight Update
 		Q = Q.Identity();
 		Lyap = solveLyapunov(Adisc, Q);
 		deltaTAtual	  = getDeltaTimeNow();
 		cout << "DeltaT: " << deltaTAtual << endl;
-		weight = weight + (-deltaTAtual) * (learning_rate) * (basis * (x.transpose() * (Lyap * Bdisc))); 
-
-		cout << "New weight:" << weight.transpose() << endl;
+		Matrix15x4 weightUpdateTerm = (-deltaTAtual) * (learning_rate) * (basis * (x.transpose() * (Lyap * Bdisc)));
+		weight = weight + weightUpdateTerm;
+		cout << "## Lyap ## " << endl;
+		cout << Lyap << endl;
+		cout << "## Bdisc ## " << endl;
+		cout << Bdisc << endl;
+		cout << "## Basis ## " << endl;
+		cout << basis << endl;
+		cout << "## Weight Update Term ## " << endl;
+		cout << weightUpdateTerm << endl;
+		cout << "## Weight ## " << endl;
+		cout << weight << endl;
 
 
 		//Adaptive Term
 		vad = weight.transpose() * basis;
-		cout << "Adaptive term:" << vad << endl;
-
-
+		cout << "## Adaptive term vad ## " << endl;
+		cout << vad << endl;
 
 		// Control Law
-		u = getPIDControlLaw() - vad; 
-		cout << "Control output:" << u << endl;
-
+		u =  Kp*xError + Kd*dxError + Ki*xIntError; - vad; 
+		cout << "## Control output ## " << endl;
+		cout << u << endl;
 		input = F1.inverse()*(u + d2xDesired + F2*Rotation.transpose()*dxDesired);
-		cout << "Input: " << input.transpose() << endl;
+		
+		cout << "## input ## " << endl;
+		cout << input << endl;
 
 		return input;
 	}

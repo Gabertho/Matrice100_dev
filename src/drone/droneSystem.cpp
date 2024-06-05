@@ -88,7 +88,9 @@ namespace DRONE {
 		} else if(controlSelectInput.compare("SLQR") == 0){
 			controlSelect = "SLQR";			
 		} else if(controlSelectInput.compare("RecursiveLQR") == 0){
-			controlSelect = "RecursiveLQR";			
+			controlSelect = "RecursiveLQR";
+		} else if (controlSelectInput.compare("DMRAC") == 0){		
+			controlSelect = "DMRAC";
 		} else {
 			controlSelect = DEFAULT_CONTROLLER;
 		}
@@ -441,6 +443,13 @@ namespace DRONE {
 			input = drone.getRecursiveLQRControlLaw();
 
 		} else if(controlSelect.compare("DMRAC") == 0){
+
+			// Enters only during first loop after holding joystick button responsible for "flagEnable".
+			if(flagControllerStarted == true){
+                          cout << "### PID ### sets integral PID error as zero." << endl;
+		  		drone.setXIntError(xTemp.Zero()); // sets integral PID error as zero.
+		  		flagControllerStarted = false;
+	  		}
 			
 			cout << "### DMRAC ###" << endl;
 
