@@ -88,7 +88,9 @@ namespace DRONE {
 		} else if(controlSelectInput.compare("SLQR") == 0){
 			controlSelect = "SLQR";			
 		} else if(controlSelectInput.compare("RecursiveLQR") == 0){
-			controlSelect = "RecursiveLQR";			
+			controlSelect = "RecursiveLQR";
+		} else if (controlSelectInput.compare("DMRAC") == 0){		
+			controlSelect = "DMRAC";
 		} else {
 			controlSelect = DEFAULT_CONTROLLER;
 		}

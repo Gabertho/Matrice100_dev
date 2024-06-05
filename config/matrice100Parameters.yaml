@@ -24,8 +24,9 @@ inputRange: [1.0, 1.0, 1.0, 0.5]
 #"SLQR"         = Standard LQR
 #"RecursiveLQR" = Recursive LQR
 #"Hinfinite"    = H-Infinite Controller
+#"DMRAC"        = Deep Model Reference Adaptive Controller
 
-controlSelect: "PID"
+controlSelect: "DMRAC"
 #controlSelect: "SLQR"
 #controlSelect: "PID"
 
