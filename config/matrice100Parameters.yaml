@@ -26,7 +26,7 @@ inputRange: [2.0, 2.0, 2.0, 0.5]
 #"Hinfinite"    = H-Infinite Controller
 #"DMRAC"        = Deep Model Reference Adaptive Controller
 
-controlSelect: "DMRAC"
+controlSelect: "PID"
 #controlSelect: "SLQR"
 #controlSelect: "RLQR"
 
@@ -62,19 +62,19 @@ K: [1.7420, 0.9402, 1.5441, 0.8963, 3.3489, 3.2947, 6.5121, 3.9219]
 
 # The following PID parameters worked fine on a 100Hz control loop
 
-# Kp: [-0.70, -0.70, -2.75, -1.2]
-# Kd: [-0.75, -0.75, -0.75, -3.35]
+Kp: [-1.60, -1.70, -2.75, -1.2]
+#Kd: [0.0, 0.0, 0.0, 0.0]
 
 
 # Kp: [-0.5, -0.5, -0.5, -1.2] # before 12/04/2018
 
 
 # Kd: [-1.175, -1.175, -1.175, -3.35] # before 12/04/2018
-# Kd: [-1.175, -1.175, -1.175, -0.0]
+Kd: [-1.3, -1.175, -1.175, -0.0]
 
 # Ki: [-0.0, -0.0, -0.0, -0.0] # before 12/04/2018
-Ki: [-0.05, -0.5, 0.0, 0.0]
-# Ki: [0.0, 0.0, 0.0, 0.0]
+#Ki: [-0.05, -0.5, 0.0, 0.0]
+Ki: [-0.05, -0.5, -0.1, 0.0]
 
 
 # ------------------ FL control parameters ------------------  
@@ -101,10 +101,10 @@ KdFL: [1.50, 1.50, 2.00, 2.00]
 
 # Parâmetros para Tuning do Feedbback Linearization.
 
-Kp: [-5.2, -15.2, -0.5, -1.2]
+#Kp: [-5.2, -15.2, -0.5, -1.2]
 #Kp: [0.0, -3.3, -3.50, 0]
 
-Kd: [-1.2, -4.5, -0.5, -0.8]
+#Kd: [-1.2, -4.5, -0.5, -0.8]
 #Kd: [0.0, 0.0, 0.0, 0.0]
 
 # Kp: [0.05, 0.05, 0.05, 1.2]
@@ -128,7 +128,7 @@ Kd: [-1.2, -4.5, -0.5, -0.8]
 # "wayPoint"        = set point without acc and vel desired
 # "ident"           = Identification Flight = circleXY (30s) + sinus Z(30s) + sinus Yaw (remaining time)
 
-trajectory: "circleXY"
+trajectory: "eightShape"
 #trajectory: "straightLine"
 #trajectory: "eightShape"
 velMed: 0.2

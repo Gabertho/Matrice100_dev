@@ -938,12 +938,15 @@ namespace DRONE {
 		xError.head(3) = positionError;
 		xError(3) = yawError;
 
-                cout << "PID Error:" << positionError(0) << " " << positionError(1) << " " << positionError(2)
+                cout << "Position Error:" << positionError(0) << " " << positionError(1) << " " << positionError(2)
                      << " - " << yawError << endl;
 
 		dx.head(3) = dPosition;
 	
 		dx(3) = dYaw;
+
+		cout << "Velocity Error:" << dPosition(0) << " " << dPosition(1) << " " << dPosition(2)
+                     << " - " << dYaw << endl;
 
 		dxDesired.head(3) = dPositionDesired;
 		dxDesired(3) 	  = dYawDesired;
@@ -954,26 +957,29 @@ namespace DRONE {
 		dxError.head(3) = dPositionError;
 		dxError(3) = dYawError;
 
-		deltaTAtual	  = getDeltaTimeNow();
+		deltaTAtual = 0.01;
 		xIntError = getXIntError();
 
-		cout << "### x ERROR ###" << endl;
-		cout << xError << endl;
-		cout << "### DELTA TIME ###" << endl;
-		cout << deltaTAtual << endl;
+	
 		xIntError = xIntError + xError*deltaTAtual;
 
 		
 		setXIntError(xIntError);
 
-		cout << "### INTEGRAL ERROR ###" << endl;
-		cout << xIntError << endl;
-		cout << "### DERIVATIVE ERROR ERROR ###" << endl;
-		cout << dxError << endl;
 		cout << "### PROPORTIONAL ERROR ###" << endl;
 		cout << xError << endl;
+		cout << "### INTEGRAL ERROR ###" << endl;
+		cout << xIntError << endl;
+		cout << "### DERIVATIVE ERROR ###" << endl;
+		cout << dxError << endl;
+		cout << "### DELTA TIME ###" << endl;
+		cout << deltaTAtual << endl;
+		
 	
 		u = Kp*xError + Kd*dxError + Ki*xIntError;
+
+		cout << "### CONTROL OUTPUT (U) ###" << endl;
+		cout << u << endl;
 
         input = F1.inverse()*(u + d2xDesired + F2*Rotation.transpose()*dxDesired);
 
@@ -1012,7 +1018,7 @@ namespace DRONE {
 		Matrix8d Acont,Adisc;  // Matrices A and B from quadcopter dynamical model in continuous-time.
 		Matrix8x4 Bcont,Bdisc; // Matrices A and B from quadcopter dynamical model in discrete-time.
 
-		double deltaTAtual;
+		double deltaTAtual = 0.01;
 
 		double learning_rate = 0.01; // Test and adjust
 
@@ -1026,7 +1032,7 @@ namespace DRONE {
 		dxError(3) = dYawError;
 
 
-		deltaTAtual	  = getDeltaTimeNow();
+		//deltaTAtual	  = getDeltaTimeNow();
 		xIntError = getXIntError();
 		xIntError = xIntError + xError*deltaTAtual;
 
@@ -1060,8 +1066,6 @@ namespace DRONE {
 		//Weight Update
 		Q = Q.Identity();
 		Lyap = solveLyapunov(Adisc, Q);
-		deltaTAtual	  = getDeltaTimeNow();
-		cout << "DeltaT: " << deltaTAtual << endl;
 		Matrix15x4 weightUpdateTerm = (-deltaTAtual) * (learning_rate) * (basis * (x.transpose() * (Lyap * Bdisc)));
 		weight = weight + weightUpdateTerm;
 		cout << "## Lyap ## " << endl;
