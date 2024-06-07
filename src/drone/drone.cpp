@@ -13,6 +13,12 @@
  */
 
 #include "drone/drone.h"
+#include <fstream>
+
+#define LOG_LIMIT 10000 
+
+static int pid_log_counter = 0;  
+static int dmrac_log_counter = 0;  
 
 namespace DRONE {
 
@@ -22,7 +28,7 @@ namespace DRONE {
 	}
 
 	/* ###########################################################################################################################*/
-	/* ###########################################################################################################################*/
+	/* #####################################// Contador de logs para o controlador PID######################################################################################*/
 	/* ########################################                 SETTERS                 ##########################################*/
 	/* ###########################################################################################################################*/
 	/* ###########################################################################################################################*/
@@ -981,6 +987,16 @@ namespace DRONE {
 		cout << "### CONTROL OUTPUT (U) ###" << endl;
 		cout << u << endl;
 
+
+    	// Escrever o erro de posição em um arquivo
+		if (pid_log_counter < LOG_LIMIT) {
+			std::ofstream pid_error_file;
+        	pid_error_file.open("/home/gab/lrs_ws/src/Matrice100_dev/pid_position_error.txt", std::ios::out | std::ios::app);
+        	pid_error_file << xError(0) << "," << xError(1) << "," << xError(2) << "," << xError(3) << "\n";
+        	pid_error_file.close();
+        	pid_log_counter++;
+    	}
+
         input = F1.inverse()*(u + d2xDesired + F2*Rotation.transpose()*dxDesired);
 
 		return input;
@@ -1093,6 +1109,15 @@ namespace DRONE {
 		
 		cout << "## input ## " << endl;
 		cout << input << endl;
+
+		// Escrever o erro de posição em um arquivo
+   		if (dmrac_log_counter < LOG_LIMIT) {
+			std::ofstream dmrac_error_file;
+        	dmrac_error_file.open("/home/gab/lrs_ws/src/Matrice100_dev/dmrac_position_error.txt", std::ios::out | std::ios::app);
+        	dmrac_error_file << xError(0) << "," << xError(1) << "," << xError(2) << "," << xError(3) << "\n";
+        	dmrac_error_file.close();
+        	dmrac_log_counter++;
+    	}
 
 		return input;
 	}
