@@ -1086,7 +1086,7 @@ namespace DRONE {
 		cout << vad << endl;
 
 		// Control Law
-		u =  Kp*xError + Kd*dxError + Ki*xIntError; - vad; 
+		u =  (Kp*xError + Kd*dxError + Ki*xIntError) - vad; 
 		cout << "## Control output ## " << endl;
 		cout << u << endl;
 		input = F1.inverse()*(u + d2xDesired + F2*Rotation.transpose()*dxDesired);
