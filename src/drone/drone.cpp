@@ -999,6 +999,8 @@ namespace DRONE {
 
         input = F1.inverse()*(u + d2xDesired + F2*Rotation.transpose()*dxDesired);
 
+		cout << "### CONTROL INPUT (V) ###" << endl;
+
 		return input;
 	}
 
