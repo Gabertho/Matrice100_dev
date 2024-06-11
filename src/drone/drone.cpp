@@ -1027,7 +1027,7 @@ namespace DRONE {
 		Vector4d dx;
 		Vector4d dxError;
 
-		Vector4d vad; // Adaptive term
+		Vector4d vad, u_pid; // Adaptive term
 		Vector8d x;
 		Vector15d basis; // Basis feature vector
 		Matrix8d Lyap; //olution for Lyapunov Equation
@@ -1038,7 +1038,7 @@ namespace DRONE {
 
 		double deltaTAtual = 0.01;
 
-		double learning_rate = 0.01; // Test and adjust
+		double learning_rate = 0.3; // Test and adjust
 
 		xError.head(3) = positionError;
 		xError(3) = yawError;
@@ -1081,6 +1081,33 @@ namespace DRONE {
                  	 position(0) * dPosition(0), position(1) * dPosition(1), position(2) * dPosition(2), // Non-linear terms position x velocity
                  	 yaw * dPosition(0), yaw * dPosition(1), yaw * dPosition(2); // Non-linear terms yaw x velocity
 
+
+		//Adaptive Term
+		vad = weight.transpose() * basis;
+
+		// Control Law
+		u_pid = (Kp*xError + Kd*dxError + Ki*xIntError);
+		u = u_pid + vad; 
+		cout << "## PID output ## " << endl;
+		cout << u_pid << endl;
+		cout << "## vad output ## " << endl;
+		cout << vad << endl;
+		cout << "## Control output ## " << endl;
+		cout << u << endl;
+		input = F1.inverse()*(u + d2xDesired + F2*Rotation.transpose()*dxDesired);
+		
+		cout << "## input ## " << endl;
+		cout << input << endl;
+
+		// Escrever o erro de posição em um arquivo
+   		if (dmrac_log_counter < LOG_LIMIT) {
+			std::ofstream dmrac_error_file;
+        	dmrac_error_file.open("/home/gab/lrs_ws/src/Matrice100_dev/dmrac_position_error.txt", std::ios::out | std::ios::app);
+        	dmrac_error_file << xError(0) << "," << xError(1) << "," << xError(2) << "," << xError(3) << "\n";
+        	dmrac_error_file.close();
+        	dmrac_log_counter++;
+    	}
+
 		//Weight Update
 		Q = Q.Identity();
 		Lyap = solveLyapunov(Adisc, Q);
@@ -1097,29 +1124,6 @@ namespace DRONE {
 		cout << "## Weight ## " << endl;
 		cout << weight << endl;
 
-
-		//Adaptive Term
-		vad = weight.transpose() * basis;
-		cout << "## Adaptive term vad ## " << endl;
-		cout << vad << endl;
-
-		// Control Law
-		u =  (Kp*xError + Kd*dxError + Ki*xIntError) - vad; 
-		cout << "## Control output ## " << endl;
-		cout << u << endl;
-		input = F1.inverse()*(u + d2xDesired + F2*Rotation.transpose()*dxDesired);
-		
-		cout << "## input ## " << endl;
-		cout << input << endl;
-
-		// Escrever o erro de posição em um arquivo
-   		if (dmrac_log_counter < LOG_LIMIT) {
-			std::ofstream dmrac_error_file;
-        	dmrac_error_file.open("/home/gab/lrs_ws/src/Matrice100_dev/dmrac_position_error.txt", std::ios::out | std::ios::app);
-        	dmrac_error_file << xError(0) << "," << xError(1) << "," << xError(2) << "," << xError(3) << "\n";
-        	dmrac_error_file.close();
-        	dmrac_log_counter++;
-    	}
 
 		return input;
 	}
