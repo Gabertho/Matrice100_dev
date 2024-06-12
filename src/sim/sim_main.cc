@@ -93,6 +93,10 @@ int main(int argc, char **argv) {
   ROS_INFO("wind_direction: %s", wind_direction.c_str());
   ROS_INFO("wind_amplitude: %s", wind_amplitude.c_str());
 
+  if (!use_joy) {
+    max_wind_speed = 0.0;
+  }
+
   sim = new Sim(x0, y0, z0, yaw);
 
   sim->set_max_wind_speed(max_wind_speed);
