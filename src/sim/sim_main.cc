@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
   double yaw = 0.0;
   double yaw_deg = 0.0;
 
-  ros::param::get("use_joy", use_joy);
+  ros::param::get("~use_joy", use_joy);
   ros::param::get("x", x0);
   ros::param::get("y", y0);
   ros::param::get("z", z0);
