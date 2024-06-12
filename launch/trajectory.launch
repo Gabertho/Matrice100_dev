@@ -1,4 +1,5 @@
-<!-- This will start simulator. -->
+<!-- This will start trajectory generator. -->
+
 <launch>
   <arg name="x" default="30.0" />
   <arg name="y" default="0.0" />
