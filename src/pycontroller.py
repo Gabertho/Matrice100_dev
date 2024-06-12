@@ -40,7 +40,7 @@ parser.add_option("", "--name", action="store", dest="name", type="str", default
 
 
 def pose_callback(data):
-    # print(data)
+    print("pose_callback:", data)
     if not options.vicon:
         ## rospy.loginfo(f"Before update: {controller.current_state[:3]}")
         controller.notify_position(data.pose.position.x, data.pose.position.y, data.pose.position.z)
