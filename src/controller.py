@@ -5,6 +5,9 @@ class Controller:
         self.x = 0.0
         self.y = 0.0
         self.z = 0.0
+        self.vx = 0.0
+        self.vy = 0.0
+        self.vz = 0.0
         self.qx = 0.0
         self.qy = 0.0
         self.qz = 0.0
@@ -15,6 +18,11 @@ class Controller:
         self.x = x
         self.y = y
         self.z = z
+
+    def notify_velocity(self, x, y, z):
+        self.vx = x
+        self.vy = y
+        self.vz = z
 
     def notify_attitude(self, qx, qy, qz, qw):
         self.qx = qx
