@@ -12,6 +12,7 @@ Sim * sim = 0;
 int timer_counter = 0;
 double tick_time = 0.001;
 bool controlled_flag = false;
+bool use_joy = true;
 
 void cmd_vel_callback(const geometry_msgs::Twist::ConstPtr& msg) {
   if (controlled_flag) {
@@ -70,6 +71,7 @@ int main(int argc, char **argv) {
   double yaw = 0.0;
   double yaw_deg = 0.0;
 
+  ros::param::get("use_joy", use_joy);
   ros::param::get("x", x0);
   ros::param::get("y", y0);
   ros::param::get("z", z0);
@@ -77,7 +79,7 @@ int main(int argc, char **argv) {
 
   yaw = yaw_deg/180.0*M_PI;
 
-  ROS_INFO("Initial position: %f %f %f - %f", x0, y0, z0, yaw_deg);
+  ROS_INFO("Initial position: %f %f %f - %f - %d", x0, y0, z0, yaw_deg, use_joy);
 
   double max_wind_speed = 0.0;
   std::string wind_direction = "";
