@@ -1,6 +1,8 @@
 <!-- This will start bebop_dev_node. -->
 <launch>
+  <arg name="use_joy" default="true" />
+  
     <rosparam command="load" file="$(find drone_dev)/config/sim.yaml" ns="/dji2" />
-    <node name="m100sim" pkg="drone_dev" type="sim_node" args="__ns:=/dji2" output="screen"/>
+    <node name="m100sim" pkg="drone_dev" type="sim_node" args="__ns:=/dji2 __use_joy:=$(arg use_joy)" output="screen"/>
 </launch>
 
