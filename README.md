@@ -25,7 +25,7 @@ roslaunch drone_dev trajectory.launch x:=30.0
 
 Controller:
 ```bash
-rosrun drone_dev pycontroller.py __ns:=/dji2
+roslaunch drone_dev controller.launch
 ```
 
 ## Old Drone Dev
