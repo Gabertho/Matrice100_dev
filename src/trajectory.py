@@ -22,10 +22,6 @@ enable_flag = False
 current_pose = None
 
 parser = OptionParser()
-parser.add_option("-x", "", action="store", dest="x", type="float", default=0.0, help='pick a point for x')
-parser.add_option("-y", "", action="store", dest="y", type="float", default=0.0, help='pick a point for y')
-parser.add_option("-z", "", action="store", dest="z", type="float", default=1.0, help='pick a point for z')
-parser.add_option("", "--speed", action="store", dest="speed", type="float", default=3.0, help='set the speed of the drone')
 parser.add_option("", "--dt", action="store", dest="dt", type="float", default=0.1, help='Perions, default 0.1')
 parser.add_option("", "--trajectory_type", action="store", dest="trajectory_type", type="string", help="Trajectory type (e.g., sinusoidal, step_z, step_xyz, spline, long_spline, rectangle, hexagon)", default="go_to_point")
 (options, args) = parser.parse_args()
@@ -64,7 +60,15 @@ if __name__ == "__main__":
     rospy.init_node ("pycontroller")
     ns = rospy.get_namespace ().rstrip("/")
 
-    trajectory = GotoTrajectory(options.x, options.y, options.z, options.speed)
+    x = rospy.get_param("~x", 30.0)
+    y = rospy.get_param("~y", 0.0)
+    z = rospy.get_param("~z", 0.0)
+    speed = rospy.get_param("~speed", 1.0)
+    control_mode = rospy.get_param("control_mode", "velocity")
+
+    print("MODE X Y Z SPEED:", control_mode, x, y, z, speed)
+
+    trajectory = GotoTrajectory(x, y, z, speed)
 
     trajectory_pub = rospy.Publisher("trajectory", PointStamped, latch=False, queue_size=10)
 

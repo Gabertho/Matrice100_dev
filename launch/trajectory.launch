@@ -1,0 +1,11 @@
+<!-- This will start simulator. -->
+<launch>
+  <arg name="x" default="30.0" />
+  <arg name="y" default="0.0" />
+  <arg name="z" default="2.0" />
+  <arg name="speed" default="1.0" />
+  
+  <rosparam command="load" file="$(find drone_dev)/config/common.yaml" ns="/dji2" />
+  <node name="trajectory" pkg="drone_dev" type="trajectory.py" args="_x:=$(arg x) _y:=$(arg y) _z:=$(arg z) _speed:=$(arg speed) __ns:=/dji2" output="screen"/>
+</launch>
+

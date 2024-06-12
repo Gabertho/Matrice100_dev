@@ -20,7 +20,7 @@ roslaunch drone_dev sim.launch ns:=/dji2 use_joy:=true
 
 Trajectory:
 ```bash
-rosrun drone_dev trajectory.py __ns:=/dji2 -x 30.0
+roslaunch drone_dev trajectory.launch x:=30.0
 ```
 
 Controller:
