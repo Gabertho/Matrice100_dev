@@ -2,7 +2,7 @@
 # Simulator config
 #
 
-max_wind_speed: 1.0
+max_wind_speed: 0.0
 
 # Possible values: "random", "north", "east", "south", "west" and empty string
 wind_direction: "north"
