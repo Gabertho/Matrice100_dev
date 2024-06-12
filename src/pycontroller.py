@@ -17,13 +17,8 @@ from controller import Controller
 from optparse import OptionParser
 from threading import Lock, Event
 
-saved_thrust = 38.0
-current_battery_level = None
-current_roll = 0.0
-current_pitch = 0.0
+inside_timer_callback = False
 
-state_lock = Lock()
-battery_initialized_event = Event()  
 
 parser = OptionParser()
 parser.add_option ("", "--vicon", action="store_true", dest="vicon", help="Vicon")
@@ -43,7 +38,6 @@ parser.add_option("", "--name", action="store", dest="name", type="str", default
                         help='current or full')
 (options, args) = parser.parse_args()
 
-saved_speed = options.speed
 
 def pose_callback(data):
     # print(data)
