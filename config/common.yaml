@@ -1,0 +1,6 @@
+#
+# common configuraion
+#
+
+# Possible values: "velocity", "angles", "rates"
+control_mode: "velocity"
