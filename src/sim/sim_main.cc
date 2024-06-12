@@ -44,7 +44,7 @@ void joy_callback(const sensor_msgs::Joy::ConstPtr& msg) {
 }
 
 void timer_callback(const ros::TimerEvent&) {
-  if (controlled_flag) {
+  if (controlled_flag || !use_joy) {
     sim->tick(tick_time);
     if (timer_counter % 20 == 0) { // 50 Hz
       // ROS_INFO("timer_callback: pose publish");
