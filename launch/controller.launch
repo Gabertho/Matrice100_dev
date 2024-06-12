@@ -1,0 +1,6 @@
+<!-- This will start simulator. -->
+<launch>
+  <rosparam command="load" file="$(find drone_dev)/config/common.yaml" ns="/dji2" />
+  <node name="controller" pkg="drone_dev" type="pycontroller.py" args="__ns:=/dji2" output="screen"/>
+</launch>
+
