@@ -18,7 +18,7 @@ from optparse import OptionParser
 from threading import Lock, Event
 
 inside_timer_callback = False
-
+controlled_flag = False
 
 parser = OptionParser()
 parser.add_option ("", "--vicon", action="store_true", dest="vicon", help="Vicon")
@@ -38,6 +38,12 @@ parser.add_option("", "--name", action="store", dest="name", type="str", default
                         help='current or full')
 (options, args) = parser.parse_args()
 
+def joy_callback(data):
+    global controlled_flag
+    if data.buttons[6]:
+        controlled_flag = True
+    else:
+        controlled_flag = False
 
 def pose_callback(data):
     print("pose_callback:", data)
@@ -46,17 +52,6 @@ def pose_callback(data):
         controller.notify_position(data.pose.position.x, data.pose.position.y, data.pose.position.z)
         controller.notify_attitude(data.pose.orientation.x, data.pose.orientation.y, data.pose.orientation.z, data.pose.orientation.w)        
         ## rospy.loginfo(f"After update: {controller.current_state[:3]}")
-
-def define_speed(speed):
-    global speed_defined
-    speed_defined = True
-    return speed
-
-def move_to_point(x, y, z):
-    if hasattr(controller, 'notify_fly_to_point'):
-        controller.notify_fly_to_point(x, y, z)
-    else:
-        rospy.logerr("Controller does not have the method 'notify_fly_to_point'")
 
 def battery_callback(data):
     global current_battery_level, battery_initialized_event, controller, thrust_adjustment, speed_adjustment
@@ -278,8 +273,16 @@ def timer_callback(event):
 
     inside_timer_callback = True
 
-    controller.control(dt)
+    (roll, pitch, thrust, yaw_rate) = controller.control(dt)
 
+    msg = Joy()
+    msg.axes.append(roll) # roll limit 0.611 rad (35 degree)
+    msg.axes.append(pitch) # pitch limit 0.611 rad (35 degree)
+    msg.axes.append(thrust) # thrust  0-100
+    msg.axes.append(yaw_rate) # yaw_rate limit 5/6*PI rad/s
+    msg.axes.append(0x02 | 0x01 | 0x08 | 0x20) # Is 0x01 relevant here (Actively break to hold position after stop sending setpoint)
+
+    ctrl_pub.publish(msg)
 
     inside_timer_callback = False
 
@@ -309,6 +312,7 @@ if __name__ == "__main__":
     velocity_pub = rospy.Publisher("velocity", Vector3, latch=False, queue_size=10)
     #hokuyo_lidar_pub = rospy.Publisher("hokuyo_scan", LaserScan, latch=False, queue_size=10)
 
+    joy_sub = rospy.Subscriber("/drone/joy", Joy, joy_callback)       #/dji_sdk/local_position
     pose_sub = rospy.Subscriber("pose", PoseStamped, pose_callback)       #/dji_sdk/local_position
     attitude_sub = rospy.Subscriber("dji_sdk/attitude", QuaternionStamped, attitude_callback)
     velocity_sub = rospy.Subscriber("dji_sdk/velocity", Vector3Stamped, velocity_callback)

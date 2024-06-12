@@ -12,6 +12,10 @@ class Controller:
         self.qy = 0.0
         self.qz = 0.0
         self.qw = 1.0
+        self.roll = 0.0
+        self.pitch = 0.0
+        self.thrust = 0.0
+        self.yaw_rate = 0.0
 
 
     def notify_position(self, x, y, z):
@@ -32,3 +36,7 @@ class Controller:
         
     def control(self, dt):
         print("DO CONTROL:", dt)
+
+        return (self.roll, self.pitch, self.thrust, self.yaw_rate)
+
+        
