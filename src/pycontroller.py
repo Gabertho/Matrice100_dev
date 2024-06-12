@@ -321,7 +321,6 @@ if __name__ == "__main__":
     target_sub = rospy.Subscriber("target", Vector3, target_callback)
     speed_sub = rospy.Subscriber("speed", Float64, speed_callback)
     target_speed_sub = rospy.Subscriber("target_speed", Quaternion, target_speed_callback)
-    hover_sub = rospy.Subscriber("hover", Empty, hover_callback)
 
     rc_sub = rospy.Subscriber("dji_sdk/rc", Joy, rc_callback)
 
