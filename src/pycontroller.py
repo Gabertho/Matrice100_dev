@@ -159,7 +159,7 @@ def attitude_callback(data):
         print(f"Exception occurred: {e}")
     
 def velocity_callback(data):
-    # print(data)
+    print("velocity_callback:", data)
     if not options.vicon:
         controller.notify_velocity(data.vector.x, data.vector.y, data.vector.z)
 
