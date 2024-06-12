@@ -88,7 +88,9 @@ namespace DRONE {
 		} else if(controlSelectInput.compare("SLQR") == 0){
 			controlSelect = "SLQR";			
 		} else if(controlSelectInput.compare("RecursiveLQR") == 0){
-			controlSelect = "RecursiveLQR";			
+			controlSelect = "RecursiveLQR";
+		} else if (controlSelectInput.compare("DMRAC") == 0){		
+			controlSelect = "DMRAC";
 		} else {
 			controlSelect = DEFAULT_CONTROLLER;
 		}
@@ -112,6 +114,8 @@ namespace DRONE {
 			sensorSelect = "IMU";
 		} else if(sensorSelectInput.compare("VICON") == 0){
 			sensorSelect = "VICON";
+		} else if(sensorSelectInput.compare("GPS") == 0){
+			sensorSelect = "GPS";
 		} else {
 			sensorSelect = DEFAULT_SENSOR;
 		}
@@ -167,14 +171,14 @@ namespace DRONE {
 		// Sets flag in order to halt Vicon acquisition and make sure it will be properly initialized once/if called.
 		drone.setIsViconStarted(false);
 		// Sets initial time
-		drone.setTimeNow(0);
+		drone.setTimeNow(ros::Time::now().toSec());
 
 
 		//Starting or Default Values
 		count 	   		= 0;
 		countEKF		= 1;
 		PI 		 		= 3.141592653589793;
-		flagEnable 		= true;
+		flagEnable 		= false;
 		vxAmpl 			= 0;
 		vyAmpl 			= 0;
 		vzAmpl 			= 0;
@@ -199,11 +203,16 @@ namespace DRONE {
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	void System::loadTopics(ros::NodeHandle &n) {
+		stamped_cmd_vel_publisher 		 = n.advertise<geometry_msgs::TwistStamped>("/drone/stamped_cmd_vel",1);
 		cmd_vel_publisher 		 = n.advertise<geometry_msgs::Twist>("/drone/cmd_vel",1);
+		dji_control__publisher		 = n.advertise<sensor_msgs::Joy>("/dji2/dji_sdk/flight_control_setpoint_ENUvelocity_yawrate",1);
+
+                
 		transfPosition_publisher = n.advertise<nav_msgs::Odometry>("/drone/transf_position",1);
 		joy_subscriber 			 = n.subscribe<sensor_msgs::Joy>("/drone/joy", 1, &System::joyCallback, this);
 		odom_subscriber 		 = n.subscribe<nav_msgs::Odometry>("/drone/odom", 1, &System::odomCallback, this);
 		pose_subscriber 		 = n.subscribe<geometry_msgs::PoseStamped>("/dji2/pose", 1, &System::poseCallback, this);
+		vel_subscriber 		 = n.subscribe<geometry_msgs::Vector3Stamped>("/dji2/dji_sdk/velocity", 1, &System::velCallback, this);
 		waypoint_subscriber 	 = n.subscribe<nav_msgs::Odometry>("/drone/waypoint", 1, &System::waypointCallback, this);
 		vicon_subscriber 	 	 = n.subscribe<geometry_msgs::TransformStamped>("/vicon/bebop/bebop", 1, &System::viconCallback, this);
 //		fix_subscriber = n.subscribe<sensor_msgs::NavSatFix>("/drone/fix", 10, &System::fixCallback, this);
@@ -399,10 +408,11 @@ namespace DRONE {
 
 		if(controlSelect.compare("PID") == 0){
 
-			cout << "### PID ###" << endl;
-			
+                  /// cout << "### PID ###: " << flagControllerStarted << endl;
+                        
 			// Enters only during first loop after holding joystick button responsible for "flagEnable".
-			if(flagControllerStarted == true){ 
+			if(flagControllerStarted == true){
+                          cout << "### PID ### sets integral PID error as zero." << endl;
 		  		drone.setXIntError(xTemp.Zero()); // sets integral PID error as zero.
 		  		flagControllerStarted = false;
 	  		}
@@ -433,6 +443,19 @@ namespace DRONE {
 
 			input = drone.getRecursiveLQRControlLaw();
 
+		} else if(controlSelect.compare("DMRAC") == 0){
+
+			// Enters only during first loop after holding joystick button responsible for "flagEnable".
+			if(flagControllerStarted == true){
+                          cout << "### PID ### sets integral PID error as zero." << endl;
+		  		drone.setXIntError(xTemp.Zero()); // sets integral PID error as zero.
+		  		flagControllerStarted = false;
+	  		}
+			
+			cout << "### DMRAC ###" << endl;
+
+			input = drone.getDMRACControlLaw();
+		
 		} else {
 
 			cout << "\n ERROR: Please select a valid controller" << endl;
@@ -441,15 +464,28 @@ namespace DRONE {
 
 		drone.inputSaturation(input);
 		
-	     cmd_vel_msg.linear.x  = input(0);
-	     cmd_vel_msg.linear.y  = input(1);
-	     cmd_vel_msg.linear.z  = input(2);
-	     cmd_vel_msg.angular.x = 0;            
-	     cmd_vel_msg.angular.y = 0;            
-	     cmd_vel_msg.angular.z = input(3);
-
-	     // Publish input controller
-	     cmd_vel_publisher.publish(cmd_vel_msg);
+                cmd_vel_msg.linear.x  = input(0);
+                cmd_vel_msg.linear.y  = input(1);
+                cmd_vel_msg.linear.z  = input(2);
+                cmd_vel_msg.angular.x = 0;            
+                cmd_vel_msg.angular.y = 0;            
+                cmd_vel_msg.angular.z = input(3);
+                
+                // Publish input controller
+                cmd_vel_publisher.publish(cmd_vel_msg);
+                
+                geometry_msgs::TwistStamped stamped_cmd_vel_msg;
+                
+                stamped_cmd_vel_msg.header.frame_id = "world";
+                stamped_cmd_vel_msg.twist = cmd_vel_msg;
+                stamped_cmd_vel_publisher.publish(stamped_cmd_vel_msg);
+                
+                sensor_msgs::Joy djimsg;
+                djimsg.axes.push_back(cmd_vel_msg.linear.x);
+                djimsg.axes.push_back(cmd_vel_msg.linear.y);
+                djimsg.axes.push_back(cmd_vel_msg.linear.z);
+                djimsg.axes.push_back(cmd_vel_msg.angular.z);
+                dji_control__publisher.publish(djimsg);
 	  }
 	  else{
 
@@ -498,6 +534,7 @@ namespace DRONE {
 	}
    
   void System::velCallback(const geometry_msgs::Vector3Stamped::ConstPtr& vel) {
+    ROS_INFO("velCallback: %f %f %f", vel->vector.x, vel->vector.y, vel->vector.z);
     current_vel = vel->vector;
   }
   
@@ -505,6 +542,7 @@ namespace DRONE {
   	void System::poseCallback(const geometry_msgs::PoseStamped::ConstPtr& pose)	{
           /// ROS_INFO("poseCallback:");
           if(sensorSelect.compare("GPS") == 0) {
+            /// ROS_INFO("poseCallback GPS:");
             Vector3axes position, positionLocal, angularVel, linearVel, rpy;
 			
             VectorQuat  orientation, orientationLocal;
@@ -535,7 +573,7 @@ namespace DRONE {
             drone.setLinearVel(linearVel);
             drone.setTimeNow(timeNow);
 			
-            cout << "Pose updated (GPS)" << endl;
+            ////cout << "Pose updated (GPS)" << endl;
             /// cout << "angular Velocity: twist: " << angularVel.transpose() << endl;
 
             /*Envia mensagens de position corrigidas toda vez que uma nova mensagem de odom chega*/
@@ -685,7 +723,9 @@ namespace DRONE {
 
 		Conversion::quat2angleZYX(eulerAngles,quatAngles);
 
-		yawDesired  = eulerAngles(2);						 
+		yawDesired  = eulerAngles(2);
+
+                // cout << "waypoint: yawDesired: " << yawDesired*180.0/M_PI << endl;
 
 
 		if(trajectory.compare("eightShape") == 0){	//Lemniscate of Gerono					 

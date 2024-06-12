@@ -149,6 +149,7 @@ set(${DRONE_DEV}_SOURCES
     )
 add_executable(drone_dev_node ${${DRONE_DEV}_SOURCES})
 add_executable(traj_generator_node src/planner/genTrajectory.cpp)
+add_executable(sim_node src/sim/sim.cc src/sim/sim_main.cc)
 
 
 ## Rename C++ executable without prefix
@@ -169,6 +170,7 @@ add_dependencies(traj_generator_node traj_generator_cpp)
 # )
 target_link_libraries(drone_dev_node  ${catkin_LIBRARIES} ${Eigen_LIBRARIES})
 target_link_libraries(traj_generator_node ${catkin_LIBRARIES})
+target_link_libraries(sim_node ${catkin_LIBRARIES})
 
 #############
 ## Install ##

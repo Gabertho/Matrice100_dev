@@ -12,8 +12,13 @@
  *
  */
 
-
 #include "drone/drone.h"
+#include <fstream>
+
+#define LOG_LIMIT 10000 
+
+static int pid_log_counter = 0;  
+static int dmrac_log_counter = 0;  
 
 namespace DRONE {
 
@@ -43,6 +48,7 @@ namespace DRONE {
           // position 		= RotGlobal.transpose()*(positionValue - position0);
           position = positionValue;
           positionError = position - positionDesired;
+          /// cout << "setPosition: " << position(0) << " " << positionDesired(0) << endl;
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -178,10 +184,11 @@ namespace DRONE {
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	void Drone::setLinearVel(const Vector3axes& linearVelValue) {
-		Matrix3d 		Rot33;
-		Rot33 			<< Rotation.block<3,3>(0,0);
-	    dPosition 		= linearVelValue;
-		dPositionError 	<< Rot33*dPosition - dPositionDesired;
+          // Matrix3d 		Rot33;
+          //		Rot33 			<< Rotation.block<3,3>(0,0);
+          dPosition 		= linearVelValue;
+          //dPositionError 	<< Rot33*dPosition - dPositionDesired;
+          dPositionError 	<< dPosition - dPositionDesired;
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -360,11 +367,10 @@ namespace DRONE {
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	void Drone::setTimeNow(const double& timeValue){
-		
-		timeNow 	= timeValue;
-		deltaTime 	= timeNow - timePast;
-		timePast  	= timeNow;
-		
+          boost::mutex::scoped_lock lock(mutex);    		
+          timeNow 	= timeValue;
+          deltaTime 	= timeNow - timePast;
+          timePast  	= timeNow;
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -671,7 +677,12 @@ namespace DRONE {
 	}
 
 	double Drone::getDeltaTimeNow(void){
-		return deltaTime;
+          double res;
+          {
+            boost::mutex::scoped_lock lock(mutex);    
+            res = deltaTime;
+          }
+          return res;
 	}
 
 	double Drone::getTimeOrigin(void){
@@ -924,11 +935,110 @@ namespace DRONE {
 
 	Vector4d Drone::getPIDControlLaw (void) {
 
-		Vector4d xError, xIntError;
+		Vector4d xError, xIntError, dxDesired, d2xDesired;
 		Vector4d dx;
 		Vector4d dxError;
 
 		double deltaTAtual;
+
+		xError.head(3) = positionError;
+		xError(3) = yawError;
+
+                cout << "Position Error:" << positionError(0) << " " << positionError(1) << " " << positionError(2)
+                     << " - " << yawError << endl;
+
+		dx.head(3) = dPosition;
+	
+		dx(3) = dYaw;
+
+		cout << "Velocity Error:" << dPosition(0) << " " << dPosition(1) << " " << dPosition(2)
+                     << " - " << dYaw << endl;
+
+		dxDesired.head(3) = dPositionDesired;
+		dxDesired(3) 	  = dYawDesired;
+
+		d2xDesired.head(3) = d2PositionDesired;
+		d2xDesired(3) = d2YawDesired;
+
+		dxError.head(3) = dPositionError;
+		dxError(3) = dYawError;
+
+		deltaTAtual = 0.01;
+		xIntError = getXIntError();
+
+	
+		xIntError = xIntError + xError*deltaTAtual;
+
+		
+		setXIntError(xIntError);
+
+		cout << "### PROPORTIONAL ERROR ###" << endl;
+		cout << xError << endl;
+		cout << "### INTEGRAL ERROR ###" << endl;
+		cout << xIntError << endl;
+		cout << "### DERIVATIVE ERROR ###" << endl;
+		cout << dxError << endl;
+		cout << "### DELTA TIME ###" << endl;
+		cout << deltaTAtual << endl;
+		
+	
+		u = Kp*xError + Kd*dxError + Ki*xIntError;
+
+		cout << "### CONTROL OUTPUT (U) ###" << endl;
+		cout << u << endl;
+
+
+    	// Escrever o erro de posição em um arquivo
+		if (pid_log_counter < LOG_LIMIT) {
+			std::ofstream pid_error_file;
+        	pid_error_file.open("/home/gab/lrs_ws/src/Matrice100_dev/pid_position_error.txt", std::ios::out | std::ios::app);
+        	pid_error_file << xError(0) << "," << xError(1) << "," << xError(2) << "," << xError(3) << "\n";
+        	pid_error_file.close();
+        	pid_log_counter++;
+    	}
+
+        input = F1.inverse()*(u + d2xDesired + F2*Rotation.transpose()*dxDesired);
+
+		cout << "### CONTROL INPUT (V) ###" << endl;
+
+		return input;
+	}
+
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	/* 		Function: get DMRAC Control Law
+	*	  Created by: gabrielbertho
+	*  Last Modified:
+	*
+	*  	 Description: 1. Defines local variables and prints current position error, position desired and current postion;	
+	* 	  			  2. Stores position and yaw orientation errors in state vectors;
+	*				  3. Stores derivatives of position error and orientation error in state vectors;
+	*                 4. Gets the current 'delta' time and computes the discrete integral of the position error (rectangle method) and stores it in "xIntError";
+	*                 5. Prints the current position error, derivative position error and integral position error;
+	*				  6. Computes the PID control law and prints its value;
+	*                 7. Stabilishes a condition, with 'threshold', that defines a tolerance for position error;
+	*                 8. Saturates each element of the input vector based on limits of the real actuator;
+	*                 9. Returns a saturated 4x1 input vector;
+	*/
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	Vector4d Drone::getDMRACControlLaw (void) {
+
+		Vector4d xError, xIntError, dxDesired, d2xDesired;
+		Vector4d dx;
+		Vector4d dxError;
+
+		Vector4d vad, u_pid; // Adaptive term
+		Vector8d x;
+		Vector15d basis; // Basis feature vector
+		Matrix8d Lyap; //olution for Lyapunov Equation
+		Matrix8d Q;	 //Identity Matrix
+
+		Matrix8d Acont,Adisc;  // Matrices A and B from quadcopter dynamical model in continuous-time.
+		Matrix8x4 Bcont,Bdisc; // Matrices A and B from quadcopter dynamical model in discrete-time.
+
+		double deltaTAtual = 0.01;
+
+		double learning_rate = 0.3; // Test and adjust
 
 		xError.head(3) = positionError;
 		xError(3) = yawError;
@@ -939,32 +1049,81 @@ namespace DRONE {
 		dxError.head(3) = dPositionError;
 		dxError(3) = dYawError;
 
-		deltaTAtual	  = getDeltaTimeNow();
+
+		//deltaTAtual	  = getDeltaTimeNow();
 		xIntError = getXIntError();
 		xIntError = xIntError + xError*deltaTAtual;
+
 		
 		setXIntError(xIntError);
 
-		u = Kp*xError + Kd*dxError + Ki*xIntError;
+		dxDesired.head(3) = dPositionDesired;
+		dxDesired(3) 	  = dYawDesired;
+
+		d2xDesired.head(3) = d2PositionDesired;
+		d2xDesired(3) = d2YawDesired;
+
+		x << dxError, xError;
+
+		Acont << -F2*Rotation.transpose(), MatrixXd::Zero(4,4),
+					 MatrixXd::Identity(4,4),  MatrixXd::Zero(4,4);
+
+		Bcont << MatrixXd::Identity(4,4),
+					 MatrixXd::Zero(4,4);
+
+		Conversion::c2d(Adisc,Bdisc,Acont,Bcont,0.02);
+
+		// Initial phi(x) 15x1
+		basis << 1,
+				     position(0), position(1), position(2), // Position x, y, z
+                 	 dPosition(0), dPosition(1), dPosition(2), // Velocities dx, dy, dz
+                 	 yaw, dYaw, // Yaw and yaw rate
+                 	 position(0) * dPosition(0), position(1) * dPosition(1), position(2) * dPosition(2), // Non-linear terms position x velocity
+                 	 yaw * dPosition(0), yaw * dPosition(1), yaw * dPosition(2); // Non-linear terms yaw x velocity
 
 
-		// for(int i=0; i < 4;i++){
+		//Adaptive Term
+		vad = weight.transpose() * basis;
 
-		// 	if(abs(xError(i)) < threshold(i)){
-		// 		input(i) = 0.0;
-		// 	}
-		// 	else {
-		// 		input(i) = u(i);
-		// 	}
+		// Control Law
+		u_pid = (Kp*xError + Kd*dxError + Ki*xIntError);
+		u = u_pid + vad; 
+		cout << "## PID output ## " << endl;
+		cout << u_pid << endl;
+		cout << "## vad output ## " << endl;
+		cout << vad << endl;
+		cout << "## Control output ## " << endl;
+		cout << u << endl;
+		input = F1.inverse()*(u + d2xDesired + F2*Rotation.transpose()*dxDesired);
+		
+		cout << "## input ## " << endl;
+		cout << input << endl;
 
-		// 	if(abs(input(i)) > inputRange(i)){
-		// 		if(input(i) > 0){
-		// 			input(i) = inputRange(i);
-		// 		} else {
-		// 			input(i) = -inputRange(i);
-		// 		}
-		// 	}
-		// }
+		// Escrever o erro de posição em um arquivo
+   		if (dmrac_log_counter < LOG_LIMIT) {
+			std::ofstream dmrac_error_file;
+        	dmrac_error_file.open("/home/gab/lrs_ws/src/Matrice100_dev/dmrac_position_error.txt", std::ios::out | std::ios::app);
+        	dmrac_error_file << xError(0) << "," << xError(1) << "," << xError(2) << "," << xError(3) << "\n";
+        	dmrac_error_file.close();
+        	dmrac_log_counter++;
+    	}
+
+		//Weight Update
+		Q = Q.Identity();
+		Lyap = solveLyapunov(Adisc, Q);
+		Matrix15x4 weightUpdateTerm = (-deltaTAtual) * (learning_rate) * (basis * (x.transpose() * (Lyap * Bdisc)));
+		weight = weight + weightUpdateTerm;
+		cout << "## Lyap ## " << endl;
+		cout << Lyap << endl;
+		cout << "## Bdisc ## " << endl;
+		cout << Bdisc << endl;
+		cout << "## Basis ## " << endl;
+		cout << basis << endl;
+		cout << "## Weight Update Term ## " << endl;
+		cout << weightUpdateTerm << endl;
+		cout << "## Weight ## " << endl;
+		cout << weight << endl;
+
 
 		return input;
 	}
@@ -1319,6 +1478,8 @@ namespace DRONE {
 
 		P 						= P.Identity();
 
+		weight =                  weight.Zero(); 
+
 		u 						= u.Zero();
 		threshold 				= threshold.Zero();
 		input 					= input.Zero();
@@ -1417,6 +1578,37 @@ namespace DRONE {
 		
 		return estLinearVel;
 	}
+
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	/* 		Function: solveLyapunov
+	*	  Created by: gabrielbertho
+	*  Last Modified: May 23th 2024 
+	*
+	*  	 Description: Solve Lyapunov Equation, finding Matrix P.
+	*				  1.
+	* 				  2. 
+	*				  3. 
+	* 				  4.	  
+	* 				  5. 	  
+	*/
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Review if its right
+	Matrix8d Drone::solveLyapunov(const Matrix8d& A, const Matrix8d& Q) {
+		const int n = 8;
+		Matrix8d P = Matrix8d::Zero();
+
+		// Vetorização de A e Q para sistemas discretos
+		Eigen::MatrixXd I = Eigen::MatrixXd::Identity(n, n);
+		Eigen::MatrixXd K = Eigen::kroneckerProduct(A.transpose(), A.transpose()) - Eigen::kroneckerProduct(I, I);
+
+		Eigen::VectorXd vecQ = Eigen::Map<const Eigen::VectorXd>(Q.data(), Q.size());
+		Eigen::VectorXd vecP = K.colPivHouseholderQr().solve(-vecQ);
+
+		P = Eigen::Map<Matrix8d>(vecP.data(), n, n);
+
+		return P;
+}
+
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	/* 		Function: DwKalman
