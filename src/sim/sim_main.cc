@@ -18,7 +18,7 @@ std::string control_mode = "velocity";
 void cmd_vel_callback(const geometry_msgs::Twist::ConstPtr& msg) {
   if (controlled_flag) {
     ROS_INFO("cmd_vel_callback: %f %f %f - %f", msg->linear.x, msg->linear.y, msg->linear.z, msg->angular.z);
-    sim->set_control(msg->linear.x, msg->linear.y, msg->linear.z, msg->angular.z);
+    sim->set_velocity_control(msg->linear.x, msg->linear.y, msg->linear.z, msg->angular.z);
   }
 }
 
@@ -29,7 +29,7 @@ void dji_control_callback(const sensor_msgs::Joy::ConstPtr& msg) {
     double vz = msg->axes[2];
     double yaw_rate = msg->axes[3];
     ROS_INFO("dji_control_callback: %f %f %f - %f", vx, vy, vz, yaw_rate);
-    sim->set_control(vx, vy, vz, yaw_rate);
+    sim->set_velocity_control(vx, vy, vz, yaw_rate);
   }
 }
 
@@ -41,7 +41,7 @@ void dji_generic_control_callback(const sensor_msgs::Joy::ConstPtr& msg) {
       double thrust = msg->axes[2];
       double yaw_rate = msg->axes[3];
       ROS_INFO("dji_generic_control_callback: %f %f - %f - %f", vx, vy, thrust, yaw_rate);
-      sim->set_control(vx, vy, thrust, yaw_rate);
+      sim->set_velocity_control(vx, vy, thrust, yaw_rate);
     }
     if (control_mode == "angles") {
       double roll = msg->axes[0];
@@ -49,7 +49,7 @@ void dji_generic_control_callback(const sensor_msgs::Joy::ConstPtr& msg) {
       double thrust = msg->axes[2];
       double yaw_rate = msg->axes[3];
       ROS_INFO("dji_generic_control_callback RPTY: %f %f - %f - %f", roll, pitch, thrust, yaw_rate);
-      // sim->set_control(vx, vy, thrust, yaw_rate);
+      sim->set_angle_control(roll, pitch, thrust, yaw_rate);
     }
   }
 }
@@ -61,7 +61,12 @@ void joy_callback(const sensor_msgs::Joy::ConstPtr& msg) {
   if (controlled_flag && !msg->buttons[6]) {
     controlled_flag = false;
     sim->init();
-    sim->set_control(0.0, 0.0, 0.0, 0.0);
+    if (control_mode == "velocity") {
+      sim->set_velocity_control(0.0, 0.0, 0.0, 0.0);
+    }
+    if (control_mode == "angles") {
+      sim->set_angle_control(0.0, 0.0, 38.0, 0.0);
+    }
   }
 }
 

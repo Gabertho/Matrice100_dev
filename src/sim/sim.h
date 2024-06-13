@@ -25,6 +25,10 @@ private:
   double wind_speed_y;
   std::string wind_direction;
   std::string wind_amplitude;
+  double roll;
+  double pitch;
+  double thrust;
+  std::string control_mode;
 
 public:
   Sim();
@@ -33,7 +37,8 @@ public:
 
   void init();
   
-  void set_control(double dx_, double dy_, double dz_, double yaw_rate_);
+  void set_velocity_control(double dx_, double dy_, double dz_, double yaw_rate_);
+  void set_angle_control(double roll_, double pitch_, double thrust_, double yaw_rate_);
   
   void tick(double time);
 
