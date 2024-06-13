@@ -28,7 +28,7 @@ parser.add_option("", "--trajectory_type", action="store", dest="trajectory_type
 
 def joy_callback(data):
     global enable_flag
-    if data.buttons[6]:
+    if data.buttons[6] or data.buttons[0]:
         enable_flag = True
     else:
         enable_flag = False

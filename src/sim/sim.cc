@@ -70,55 +70,65 @@ geometry_msgs::Vector3Stamped Sim::get_velocity() {
   return vel;
 }
 
-void Sim::tick(double time) {
-  ROS_INFO("TICK: %s - %f %f %f - %f %f", control_mode.c_str(), dx, dy, dz, wind_speed_x, wind_speed_y);
-  if (control_mode == "velocity") {
-    x += time*dx;
-    y += time*dy;
-    z += time*dz;
-    x += time*wind_speed_x;
-    y += time*wind_speed_y;
-    yaw += time*yaw_rate;
-  }
+void Sim::tick(double time, bool controlled_flag) {
+  ROS_INFO("TICK: %s - %f %f %f - %f %f - %d", control_mode.c_str(), dx, dy, dz, wind_speed_x, wind_speed_y,
+           controlled_flag);
 
-  if (control_mode == "angles") {
+  // TODO: rotate properly
 
-    // TODO: rotate properly
+  double forward_speed = dx;
+  double left_speed = dy;
 
-    double forward_speed = dx;
-    double left_speed = dy;
+  // END TODO
+  
+  double mass = 2.0;
+  double F_drag_forward = 2.0*forward_speed;
+  double F_drag_left = 2.0*left_speed;
+  
+  if (controlled_flag) {
+    if (control_mode == "velocity") {
+      z += time*dz;
+    }
 
-    // END TODO
+    if (control_mode == "angles") {
+
+      
+      double F_forward = pitch * 10.0;
+      double F_left = roll * 10.0;    
+      
+      double acc_forward = (F_forward - F_drag_forward)/mass;
+      double acc_left = (F_left - F_drag_left)/mass;
+      
+      // TODO: rotate acceleration
+      
+      double acc_x = acc_forward;
+      double acc_y = acc_left;
+      
+      dx += acc_x*time;
+      dy += acc_y*time;
     
-    double mass = 2.0;
-    double F_drag_forward = 2.0*forward_speed;
-    double F_drag_left = 2.0*left_speed;
+      ROS_INFO("ANGLES: ROLL - PITCH - F_forward - acc_forward - dx: %f %f %f - %f %f", roll, pitch, F_forward, acc_forward, dx);
 
-    double F_forward = pitch * 10.0;
-    double F_left = roll * 10.0;    
-
-    double acc_forward = (F_forward - F_drag_forward)/mass;
-    double acc_left = (F_left - F_drag_left)/mass;
-
+    }
+  } else {
+    double acc_forward = - F_drag_forward/mass;
+    double acc_left = - F_drag_left/mass;
+      
     // TODO: rotate acceleration
-
+      
     double acc_x = acc_forward;
     double acc_y = acc_left;
-
+      
     dx += acc_x*time;
-    x += time*dx;
-
     dy += acc_y*time;
-    y += time*dy;
-    
-    ROS_INFO("ROLL - PITCH - F_forward - acc_forward - dx: %f %f %f - %f %f", roll, pitch, F_forward, acc_forward, dx);
-    
-    
-    //    dy += acc_left;
-    //    y += time*dy;
-    yaw += time*yaw_rate;    
-  }
 
+  }
+  
+  x += time*dx;
+  y += time*dy;
+  x += time*wind_speed_x;
+  y += time*wind_speed_y;
+  yaw += time*yaw_rate;    
   
   tot_time += time;
 }

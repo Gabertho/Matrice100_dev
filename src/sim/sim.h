@@ -40,7 +40,7 @@ public:
   void set_velocity_control(double dx_, double dy_, double dz_, double yaw_rate_);
   void set_angle_control(double roll_, double pitch_, double thrust_, double yaw_rate_);
   
-  void tick(double time);
+  void tick(double time, bool controlled_flag);
 
   geometry_msgs::PoseStamped get_pose();
   geometry_msgs::Vector3Stamped get_velocity();

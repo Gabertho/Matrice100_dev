@@ -41,7 +41,7 @@ parser.add_option("", "--name", action="store", dest="name", type="str", default
 
 def joy_callback(data):
     global controlled_flag
-    if data.buttons[6]:
+    if data.buttons[6] or data.buttons[0]:
         controlled_flag = True
     else:
         controlled_flag = False

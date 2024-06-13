@@ -14,6 +14,7 @@ double tick_time = 0.001;
 bool controlled_flag = false;
 bool use_joy = true;
 std::string control_mode = "velocity";
+int button_index = -1;
 
 void cmd_vel_callback(const geometry_msgs::Twist::ConstPtr& msg) {
   if (controlled_flag) {
@@ -57,9 +58,34 @@ void dji_generic_control_callback(const sensor_msgs::Joy::ConstPtr& msg) {
 void joy_callback(const sensor_msgs::Joy::ConstPtr& msg) {
   if (!controlled_flag && msg->buttons[6]) {
     controlled_flag = true;
+    button_index = 6;
   }
-  if (controlled_flag && !msg->buttons[6]) {
+  if (!controlled_flag && msg->buttons[0]) {
+    controlled_flag = true;
+    button_index = 0;
+  }
+  if (controlled_flag && (button_index == 0) && !msg->buttons[0]) {
+    button_index = -1;
     controlled_flag = false;
+    if (control_mode == "velocity") {
+      sim->set_velocity_control(0.0, 0.0, 0.0, 0.0);
+    }
+    if (control_mode == "angles") {
+      sim->set_angle_control(0.0, 0.0, 38.0, 0.0);
+    }
+  }
+  if (controlled_flag && (button_index == 6) && !msg->buttons[6]) {
+    button_index = -1;
+    controlled_flag = false;
+    sim->init();
+    if (control_mode == "velocity") {
+      sim->set_velocity_control(0.0, 0.0, 0.0, 0.0);
+    }
+    if (control_mode == "angles") {
+      sim->set_angle_control(0.0, 0.0, 38.0, 0.0);
+    }
+  }
+  if (msg->buttons[1]) {
     sim->init();
     if (control_mode == "velocity") {
       sim->set_velocity_control(0.0, 0.0, 0.0, 0.0);
@@ -71,9 +97,8 @@ void joy_callback(const sensor_msgs::Joy::ConstPtr& msg) {
 }
 
 void timer_callback(const ros::TimerEvent&) {
-  if (controlled_flag || !use_joy) {
-    sim->tick(tick_time);
-  }
+  sim->tick(tick_time, controlled_flag);
+
   if (timer_counter % 20 == 0) { // 50 Hz
     geometry_msgs::PoseStamped msg = sim->get_pose();
     pose_publisher.publish(msg);
