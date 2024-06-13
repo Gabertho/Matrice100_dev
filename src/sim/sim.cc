@@ -82,48 +82,36 @@ void Sim::tick(double time) {
   }
 
   if (control_mode == "angles") {
+
+    // TODO: rotate properly
+
+    double forward_speed = dx;
+    double left_speed = dy;
+
+    // END TODO
+    
     double mass = 2.0;
-    double F_drag = 2.0;
-    double F_pitch = pitch * 10.0;
+    double F_drag_forward = 2.0*forward_speed;
+    double F_drag_left = 2.0*left_speed;
+
+    double F_forward = pitch * 10.0;
     double F_left = roll * 10.0;    
-    double acc_forward;
-    double acc_left;
 
-    if (F_pitch >= 0.0) {
-      acc_forward = (F_pitch - F_drag)/mass;
-      //      if (acc_forward < 0.0) {
-      //        acc_forward = 0.0;
-        //      }
-    }
+    double acc_forward = (F_forward - F_drag_forward)/mass;
+    double acc_left = (F_left - F_drag_left)/mass;
 
-    if (F_pitch < 0.0) {
-      acc_forward = (F_pitch + F_drag)/mass;
-      //      if (acc_forward > 0.0) {
-      //        acc_forward = 0.0;
-        //      }
-    }
+    // TODO: rotate acceleration
 
-    dx += acc_forward*time;
+    double acc_x = acc_forward;
+    double acc_y = acc_left;
+
+    dx += acc_x*time;
     x += time*dx;
 
-    if (F_left >= 0.0) {
-      acc_left = (F_left - F_drag)/mass;
-      if (acc_left < 0.0) {
-        acc_left = 0.0;
-      }
-    }
-
-    if (F_left < 0.0) {
-      acc_left = (F_left + F_drag)/mass;
-      if (acc_left > 0.0) {
-        acc_left = 0.0;
-      }
-    }
-
-    dy += acc_left*time;
+    dy += acc_y*time;
     y += time*dy;
     
-    ROS_INFO("ROLL - PITCH - F-pitch - acc_forward - dx: %f %f %f - %f %f", roll, pitch, F_pitch, acc_forward, dx);
+    ROS_INFO("ROLL - PITCH - F_forward - acc_forward - dx: %f %f %f - %f %f", roll, pitch, F_forward, acc_forward, dx);
     
     
     //    dy += acc_left;
