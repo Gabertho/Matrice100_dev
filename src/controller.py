@@ -2,6 +2,8 @@
 
 from tf.transformations import euler_from_quaternion
 import numpy as np
+import scipy
+import scipy.ndimage
 import math
 
 class Controller:
@@ -22,6 +24,7 @@ class Controller:
         self.target_speed = None
         self.have_target = False
         self.have_target0 = False
+        self.have_current_yaw = False
 
 
     def notify_position(self, x, y, z):
@@ -50,11 +53,20 @@ class Controller:
         (roll, pitch, yaw) = euler_from_quaternion([qx, qy, qz, qw])
         # print("YAW:", math.degrees(yaw))
         self.current_yaw = yaw
+        self.have_current_yaw = True
         
     def control(self, dt):
-        # print("DO CONTROL:", dt)
+        # print("DO CONTROL:", dt, self.control_mode)
 
         u = [0.0, 0.0, 38.0, 0.0]
+
+        if not self.have_target0:
+            print("Do not have target0")
+            return u
+
+        if not self.have_current_yaw:
+            print("Do not have current_yaw")
+            return u
 
         if self.control_mode == "velocity":
             error = self.target - self.current_position
@@ -62,6 +74,36 @@ class Controller:
             P = 3.0
             u[0] = P*error[0]            # east
             u[1] = P*error[1]            # north
+
+        if self.control_mode == "angles":
+            error = self.target - self.current_position
+            # print("ERROR:", error, self.target)
+
+            herror = np.array([error[0], error[1]])
+            # print("HERROR:", herror)
+
+            theta = self.current_yaw
+            c, s = np.cos(theta), np.sin(theta)
+            R = np.array(((c, -s), (s, c)))
+            # print("R:", R)
+
+            rherror = np.dot(R, herror)
+
+            print("ROTATET HERROR:", rherror)
+            
+            P = 3.0
+            u[0] = P*error[1]            # roll
+            u[1] = P*error[0]            # pitch
+
+            max = math.radians(20.0)
+            if u[0] > max:
+                u[0] = max
+            if u[0] < -max:
+                u[0] = -max
+            if u[1] > max:
+                u[1] = max
+            if u[1] < -max:
+                u[1] = -max
 
         return u
 

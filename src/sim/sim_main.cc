@@ -43,6 +43,14 @@ void dji_generic_control_callback(const sensor_msgs::Joy::ConstPtr& msg) {
       ROS_INFO("dji_generic_control_callback: %f %f - %f - %f", vx, vy, thrust, yaw_rate);
       sim->set_control(vx, vy, thrust, yaw_rate);
     }
+    if (control_mode == "angles") {
+      double roll = msg->axes[0];
+      double pitch = msg->axes[1];
+      double thrust = msg->axes[2];
+      double yaw_rate = msg->axes[3];
+      ROS_INFO("dji_generic_control_callback RPTY: %f %f - %f - %f", roll, pitch, thrust, yaw_rate);
+      // sim->set_control(vx, vy, thrust, yaw_rate);
+    }
   }
 }
 
