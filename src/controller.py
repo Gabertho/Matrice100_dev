@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
+from tf.transformations import euler_from_quaternion
 import numpy as np
+import math
 
 class Controller:
     def __init__(self, control_mode):
         self.control_mode = control_mode
-        self.x = 0.0
-        self.y = 0.0
-        self.z = 0.0
+        self.current_position = np.array([0.0, 0.0, 0.0])
         self.vx = 0.0
         self.vy = 0.0
         self.vz = 0.0
@@ -27,9 +27,7 @@ class Controller:
 
 
     def notify_position(self, x, y, z):
-        self.x = x
-        self.y = y
-        self.z = z
+        self.current_position = np.array([x, y, z])
 
     def notify_trajectory(self, x, y, z):
         if self.have_target:
@@ -40,7 +38,7 @@ class Controller:
         if self.have_target0:
             dist = np.linalg.norm(self.target-self.target0)
             self.target_speed = dist/0.1
-            print("TARGET SPEED:", self.target_speed)
+            # print("TARGET SPEED:", self.target_speed)
         
 
     def notify_velocity(self, x, y, z):
@@ -53,10 +51,22 @@ class Controller:
         self.qy = qy
         self.qz = qz
         self.qw = qw
+        (roll, pitch, yaw) = euler_from_quaternion([qx, qy, qz, qw])
+        # print("YAW:", math.degrees(yaw))
+        self.current_yaw = yaw
         
     def control(self, dt):
         # print("DO CONTROL:", dt)
 
-        return (self.roll, self.pitch, self.thrust, self.yaw_rate)
+        u = [0.0, 0.0, 38.0, 0.0]
+
+        if self.control_mode == "velocity":
+            error = self.target - self.current_position
+            # print("ERROR:", error, self.target)
+            P = 3.0
+            u[0] = P*error[0]            # east
+            u[1] = P*error[1]            # north
+
+        return u
 
         

@@ -13,6 +13,7 @@ int timer_counter = 0;
 double tick_time = 0.001;
 bool controlled_flag = false;
 bool use_joy = true;
+std::string control_mode = "velocity";
 
 void cmd_vel_callback(const geometry_msgs::Twist::ConstPtr& msg) {
   if (controlled_flag) {
@@ -32,6 +33,19 @@ void dji_control_callback(const sensor_msgs::Joy::ConstPtr& msg) {
   }
 }
 
+void dji_generic_control_callback(const sensor_msgs::Joy::ConstPtr& msg) {
+  if (controlled_flag) {
+    if (control_mode == "velocity") {
+      double vx = msg->axes[0];
+      double vy = msg->axes[1];
+      double thrust = msg->axes[2];
+      double yaw_rate = msg->axes[3];
+      ROS_INFO("dji_generic_control_callback: %f %f - %f - %f", vx, vy, thrust, yaw_rate);
+      sim->set_control(vx, vy, thrust, yaw_rate);
+    }
+  }
+}
+
 void joy_callback(const sensor_msgs::Joy::ConstPtr& msg) {
   if (!controlled_flag && msg->buttons[6]) {
     controlled_flag = true;
@@ -46,17 +60,15 @@ void joy_callback(const sensor_msgs::Joy::ConstPtr& msg) {
 void timer_callback(const ros::TimerEvent&) {
   if (controlled_flag || !use_joy) {
     sim->tick(tick_time);
-    if (timer_counter % 20 == 0) { // 50 Hz
-      // ROS_INFO("timer_callback: pose publish");
-      geometry_msgs::PoseStamped msg = sim->get_pose();
-      pose_publisher.publish(msg);
-
-      geometry_msgs::Vector3Stamped velmsg = sim->get_velocity();
-      vel_publisher.publish(velmsg);
-      
-    }
-    timer_counter+=1;
   }
+  if (timer_counter % 20 == 0) { // 50 Hz
+    geometry_msgs::PoseStamped msg = sim->get_pose();
+    pose_publisher.publish(msg);
+    
+    geometry_msgs::Vector3Stamped velmsg = sim->get_velocity();
+    vel_publisher.publish(velmsg);
+  }
+  timer_counter+=1;
 }
 
 int main(int argc, char **argv) {
@@ -76,6 +88,7 @@ int main(int argc, char **argv) {
   ros::param::get("y", y0);
   ros::param::get("z", z0);
   ros::param::get("yaw", yaw_deg);
+  ros::param::get("control_mode", control_mode);
 
   yaw = yaw_deg/180.0*M_PI;
 
@@ -89,6 +102,7 @@ int main(int argc, char **argv) {
   ros::param::get("wind_direction", wind_direction);
   ros::param::get("wind_amplitude", wind_amplitude);
 
+  ROS_INFO("control_mode: %s", control_mode.c_str());
   ROS_INFO("max_wind_speed: %f", max_wind_speed);
   ROS_INFO("wind_direction: %s", wind_direction.c_str());
   ROS_INFO("wind_amplitude: %s", wind_amplitude.c_str());
@@ -108,6 +122,9 @@ int main(int argc, char **argv) {
 
   //  ros::Subscriber cmd_vel_subscriber = nh.subscribe<geometry_msgs::Twist>("cmd_vel", 1, cmd_vel_callback);
   ros::Subscriber dji_control_subscriber = nh.subscribe<sensor_msgs::Joy>("dji_sdk/flight_control_setpoint_ENUvelocity_yawrate", 1, dji_control_callback);
+
+  ros::Subscriber dji_generic_control_subscriber = nh.subscribe<sensor_msgs::Joy>("dji_sdk/flight_control_setpoint_generic", 1, dji_generic_control_callback);
+  
   ros::Subscriber joy_subscriber = nh.subscribe<sensor_msgs::Joy>("/drone/joy", 1, joy_callback);
                 
   ros::Timer timer = nh.createTimer(ros::Duration(tick_time), timer_callback);

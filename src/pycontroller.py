@@ -19,6 +19,7 @@ from threading import Lock, Event
 
 inside_timer_callback = False
 controlled_flag = False
+control_mode = "velocity"
 
 parser = OptionParser()
 parser.add_option ("", "--vicon", action="store_true", dest="vicon", help="Vicon")
@@ -54,7 +55,7 @@ def pose_callback(data):
         ## rospy.loginfo(f"After update: {controller.current_state[:3]}")
 
 def trajectory_callback(data):
-    # print("trajectory_callback:", data)
+    # print("trajectory_callback:", data.point.x, data.point.y, data.point.z)
     controller.notify_trajectory(data.point.x, data.point.y, data.point.z)
         
 def battery_callback(data):
@@ -238,7 +239,16 @@ def tf_callback(data):
                 old_y = y
                 old_z = z
 
+def publish_value(pub, value):
+    msg = Float64()
+    msg.data = value
+    pub.publish(msg)
 
+def publish_controls(u):
+    publish_value(ctrl0_pub, u[0])
+    publish_value(ctrl1_pub, u[1])
+    publish_value(ctrl2_pub, u[2])
+    publish_value(ctrl3_pub, u[3])
 
 def timer_callback(event): 
     # print("timer_callback")
@@ -250,14 +260,22 @@ def timer_callback(event):
 
     inside_timer_callback = True
 
-    (roll, pitch, thrust, yaw_rate) = controller.control(dt)
+    u = controller.control(dt)
+
+    publish_controls(u)
+
+    # print("U:", u)
 
     msg = Joy()
-    msg.axes.append(roll) # roll limit 0.611 rad (35 degree)
-    msg.axes.append(pitch) # pitch limit 0.611 rad (35 degree)
-    msg.axes.append(thrust) # thrust  0-100
-    msg.axes.append(yaw_rate) # yaw_rate limit 5/6*PI rad/s
-    msg.axes.append(0x02 | 0x01 | 0x08 | 0x20) # Is 0x01 relevant here (Actively break to hold position after stop sending setpoint)
+    msg.axes = u
+    #msg.axes.append(u[0]) # roll limit 0.611 rad (35 degree)
+    #msg.axes.append(u[1]) # pitch limit 0.611 rad (35 degree)
+    #msg.axes.append(u[2]) # thrust  0-100
+    #msg.axes.append(u[3]) # yaw_rate limit 5/6*PI rad/s
+    if control_mode == "velocity":
+        msg.axes.append(0x40 | 0x01 | 0x08 | 0x20) # Is 0x01 relevant here (Actively break to hold position after stop sending setpoint)
+    if control_mode == "angles":
+        msg.axes.append(0x02 | 0x01 | 0x08 | 0x20) # Is 0x01 relevant here (Actively break to hold position after stop sending setpoint)
 
     ctrl_pub.publish(msg)
 
@@ -286,10 +304,10 @@ if __name__ == "__main__":
     err_x_pub = rospy.Publisher("tune/err_x", Float64, latch=False, queue_size=10)
     err_y_pub = rospy.Publisher("tune/err_y", Float64, latch=False, queue_size=10)
     err_z_pub = rospy.Publisher("tune/err_z", Float64, latch=False, queue_size=10)
-    ctrl_roll_pub = rospy.Publisher("ctrl/roll", Float64, latch=False, queue_size=10)
-    ctrl_pitch_pub = rospy.Publisher("ctrl/pitch", Float64, latch=False, queue_size=10)
-    ctrl_thrust_pub = rospy.Publisher("ctrl/thrust", Float64, latch=False, queue_size=10)
-    ctrl_yaw_rate_pub = rospy.Publisher("ctrl/yaw_rate", Float64, latch=False, queue_size=10)
+    ctrl0_pub = rospy.Publisher("ctrl/u0", Float64, latch=False, queue_size=10)
+    ctrl1_pub = rospy.Publisher("ctrl/u1", Float64, latch=False, queue_size=10)
+    ctrl2_pub = rospy.Publisher("ctrl/u2", Float64, latch=False, queue_size=10)
+    ctrl3_pub = rospy.Publisher("ctrl/u3", Float64, latch=False, queue_size=10)
     velocity_pub = rospy.Publisher("velocity", Vector3, latch=False, queue_size=10)
     #hokuyo_lidar_pub = rospy.Publisher("hokuyo_scan", LaserScan, latch=False, queue_size=10)
 

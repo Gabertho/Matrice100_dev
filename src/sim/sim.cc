@@ -31,6 +31,7 @@ void Sim::set_control(double dx_, double dy_, double dz_, double yaw_rate_) {
   dx =dx_;
   dy =dy_;
   dz =dz_;
+  dz = 0.0; // handle thrust later
   yaw_rate =yaw_rate_;
 }
 
