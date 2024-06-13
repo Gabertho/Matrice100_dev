@@ -91,16 +91,16 @@ void Sim::tick(double time) {
 
     if (F_pitch >= 0.0) {
       acc_forward = (F_pitch - F_drag)/mass;
-      if (acc_forward < 0.0) {
-        acc_forward = 0.0;
-      }
+      //      if (acc_forward < 0.0) {
+      //        acc_forward = 0.0;
+        //      }
     }
 
     if (F_pitch < 0.0) {
       acc_forward = (F_pitch + F_drag)/mass;
-      if (acc_forward > 0.0) {
-        acc_forward = 0.0;
-      }
+      //      if (acc_forward > 0.0) {
+      //        acc_forward = 0.0;
+        //      }
     }
 
     dx += acc_forward*time;
