@@ -28,6 +28,11 @@ Controller:
 roslaunch drone_dev controller.launch
 ```
 
+Rviz:
+```bash
+rviz -d lrs_ws/src/Matrice100_dev/test.rviz
+```
+
 ## Old Drone Dev
 
 Roscore:
