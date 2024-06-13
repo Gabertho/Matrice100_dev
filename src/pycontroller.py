@@ -46,13 +46,17 @@ def joy_callback(data):
         controlled_flag = False
 
 def pose_callback(data):
-    print("pose_callback:", data)
+    # print("pose_callback:", data)
     if not options.vicon:
         ## rospy.loginfo(f"Before update: {controller.current_state[:3]}")
         controller.notify_position(data.pose.position.x, data.pose.position.y, data.pose.position.z)
         controller.notify_attitude(data.pose.orientation.x, data.pose.orientation.y, data.pose.orientation.z, data.pose.orientation.w)        
         ## rospy.loginfo(f"After update: {controller.current_state[:3]}")
 
+def trajectory_callback(data):
+    # print("trajectory_callback:", data)
+    controller.notify_trajectory(data.point.x, data.point.y, data.point.z)
+        
 def battery_callback(data):
     global current_battery_level, battery_initialized_event, controller, thrust_adjustment, speed_adjustment
     # Intialize the controller once
@@ -154,36 +158,9 @@ def attitude_callback(data):
         print(f"Exception occurred: {e}")
     
 def velocity_callback(data):
-    print("velocity_callback:", data)
+    # print("velocity_callback:", data)
     if not options.vicon:
         controller.notify_velocity(data.vector.x, data.vector.y, data.vector.z)
-
-def speed_callback(data):
-    global saved_speed
-    saved_speed = data.data
-
-def target_callback(data):
-    global new_controller, new_controller_initialised, saved_thrust, saved_speed, target_position, target_reached
-    print("NEW TARGET:", dt, options.trajectory_type, data, saved_thrust, saved_speed)
-    new_controller = MPCController(saved_speed, saved_thrust, dt=dt, trajectory_type="go_to_point")
-    # new_controller = MPCController(speed_adjustment, thrust_adjustment, dt=dt, trajectory_type=options.trajectory_type)
-    new_controller.create_nmpc_problem()  # Make sure this is called here
-    new_controller.notify_fly_to_point(data.x, data.y, data.z)
-    target_position = [data.x, data.y, data.z]
-    target_reached = False    
-    new_controller_initialised = True
-
-def target_speed_callback(data):
-    global new_controller, new_controller_initialised, saved_thrust, target_position, target_reached
-    print("NEW TARGET:", dt, options.trajectory_type, data, saved_thrust, data.w)
-    new_controller = MPCController(data.w, saved_thrust, dt=dt, trajectory_type=options.trajectory_type)
-    # new_controller = MPCController(speed_adjustment, thrust_adjustment, dt=dt, trajectory_type=options.trajectory_type)
-    new_controller.create_nmpc_problem()  # Make sure this is called here
-    new_controller.notify_fly_to_point(data.x, data.y, data.z)
-    target_position = [data.x, data.y, data.z]
-    target_reached = False
-    new_controller_initialised = True
-
 
 def rc_callback(data):
     # print(data)
@@ -264,7 +241,7 @@ def tf_callback(data):
 
 
 def timer_callback(event): 
-    print("timer_callback")
+    # print("timer_callback")
 
     global inside_timer_callback
 
@@ -316,9 +293,7 @@ if __name__ == "__main__":
     pose_sub = rospy.Subscriber("pose", PoseStamped, pose_callback)       #/dji_sdk/local_position
     attitude_sub = rospy.Subscriber("dji_sdk/attitude", QuaternionStamped, attitude_callback)
     velocity_sub = rospy.Subscriber("dji_sdk/velocity", Vector3Stamped, velocity_callback)
-    target_sub = rospy.Subscriber("target", Vector3, target_callback)
-    speed_sub = rospy.Subscriber("speed", Float64, speed_callback)
-    target_speed_sub = rospy.Subscriber("target_speed", Quaternion, target_speed_callback)
+    trajectory_sub = rospy.Subscriber("trajectory", PointStamped, trajectory_callback)
 
     rc_sub = rospy.Subscriber("dji_sdk/rc", Joy, rc_callback)
 
