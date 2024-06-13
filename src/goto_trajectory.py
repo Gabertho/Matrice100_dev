@@ -14,7 +14,6 @@ class GotoTrajectory:
         self.reset()
         self.acc = 1.0
         self.phase = "acc"
-        self.acc_len = 0.0
 
     def reset(self):
         self.x = 0.0
@@ -28,6 +27,7 @@ class GotoTrajectory:
         self.frac_x = dx/len
         self.frac_y = dy/len
         self.phase = "acc"
+        self.acc_len = 0.0
 
     def get_point_stamped(self):
         msg = PointStamped()
