@@ -268,7 +268,11 @@ if __name__ == "__main__":
     rospy.init_node ("pycontroller")
     ns = rospy.get_namespace ().rstrip("/")
 
-    controller = Controller()
+    control_mode = rospy.get_param("control_mode", "velocity")
+
+    print("CONTROL_MODE:", control_mode)
+
+    controller = Controller(control_mode)
 
     battery_sub = rospy.Subscriber(ns + "/dji_sdk/battery_state", BatteryState, battery_callback)
     dt = 0.1

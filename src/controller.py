@@ -3,7 +3,8 @@
 import numpy as np
 
 class Controller:
-    def __init__(self):
+    def __init__(self, control_mode):
+        self.control_mode = control_mode
         self.x = 0.0
         self.y = 0.0
         self.z = 0.0
