@@ -28,6 +28,8 @@ private:
   double roll;
   double pitch;
   double thrust;
+  double pitch_rate;
+  double roll_rate;
   std::string control_mode;
 
 public:
@@ -39,6 +41,7 @@ public:
   
   void set_velocity_control(double dx_, double dy_, double dz_, double yaw_rate_);
   void set_angle_control(double roll_, double pitch_, double thrust_, double yaw_rate_);
+  void set_rate_control(double roll_rate_, double pitch_rate_, double thrust_, double yaw_rate_);
   
   void tick(double time, bool controlled_flag);
 

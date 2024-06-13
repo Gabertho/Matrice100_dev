@@ -45,6 +45,14 @@ void Sim::set_angle_control(double roll_, double pitch_, double thrust_, double 
   control_mode = "angles";
 }
 
+void Sim::set_rate_control(double roll_rate_, double pitch_rate_, double thrust_, double yaw_rate_) {
+  roll_rate = roll_rate_;
+  pitch_rate = pitch_rate_;
+  thrust = thrust_;
+  yaw_rate = yaw_rate_;
+  control_mode = "rates";
+}
+
 geometry_msgs::PoseStamped Sim::get_pose() {
   geometry_msgs::PoseStamped msg;
   msg = geometry_msgs::PoseStamped();
@@ -90,7 +98,12 @@ void Sim::tick(double time, bool controlled_flag) {
       z += time*dz;
     }
 
-    if (control_mode == "angles") {
+    if (control_mode == "rates") {
+      roll += roll_rate*time;
+      pitch += pitch_rate*time;
+    }
+
+    if ((control_mode == "angles") || (control_mode == "rates")) {
 
       
       double F_forward = pitch * 10.0;

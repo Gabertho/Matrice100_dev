@@ -105,6 +105,36 @@ class Controller:
             if u[1] < -max:
                 u[1] = -max
 
+        if self.control_mode == "rates":
+            error = self.target - self.current_position
+            # print("ERROR:", error, self.target)
+
+            herror = np.array([error[0], error[1]])
+            # print("HERROR:", herror)
+
+            theta = self.current_yaw
+            c, s = np.cos(theta), np.sin(theta)
+            R = np.array(((c, -s), (s, c)))
+            # print("R:", R)
+
+            rherror = np.dot(R, herror)
+
+            print("ROTATET HERROR:", rherror)
+            
+            P = 0.5
+            u[0] = P*error[1]            # roll rate
+            u[1] = P*error[0]            # pitch rate
+
+            max = 5.0/6.0*math.pi
+            if u[0] > max:
+                u[0] = max
+            if u[0] < -max:
+                u[0] = -max
+            if u[1] > max:
+                u[1] = max
+            if u[1] < -max:
+                u[1] = -max
+
         return u
 
         

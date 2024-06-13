@@ -276,6 +276,8 @@ def timer_callback(event):
         msg.axes.append(0x40 | 0x01 | 0x08 | 0x20) # Is 0x01 relevant here (Actively break to hold position after stop sending setpoint)
     if control_mode == "angles":
         msg.axes.append(0x02 | 0x01 | 0x08 | 0x20) # Is 0x01 relevant here (Actively break to hold position after stop sending setpoint)
+    if control_mode == "rates":
+        msg.axes.append(0xC0 | 0x02 | 0x01 | 0x08 | 0x20) # Is 0x01 relevant here (Actively break to hold position after stop sending setpoint)
 
     ctrl_pub.publish(msg)
 

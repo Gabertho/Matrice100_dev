@@ -52,6 +52,14 @@ void dji_generic_control_callback(const sensor_msgs::Joy::ConstPtr& msg) {
       ROS_INFO("dji_generic_control_callback RPTY: %f %f - %f - %f", roll, pitch, thrust, yaw_rate);
       sim->set_angle_control(roll, pitch, thrust, yaw_rate);
     }
+    if (control_mode == "rates") {
+      double roll_rate = msg->axes[0];
+      double pitch_rate = msg->axes[1];
+      double thrust = msg->axes[2];
+      double yaw_rate = msg->axes[3];
+      ROS_INFO("dji_generic_control_callback RATES: %f %f - %f - %f", roll_rate, pitch_rate, thrust, yaw_rate);
+      sim->set_rate_control(roll_rate, pitch_rate, thrust, yaw_rate);
+    }
   }
 }
 
@@ -73,6 +81,9 @@ void joy_callback(const sensor_msgs::Joy::ConstPtr& msg) {
     if (control_mode == "angles") {
       sim->set_angle_control(0.0, 0.0, 38.0, 0.0);
     }
+    if (control_mode == "rates") {
+      sim->set_angle_control(0.0, 0.0, 38.0, 0.0);
+    }
   }
   if (controlled_flag && (button_index == 6) && !msg->buttons[6]) {
     button_index = -1;
@@ -84,6 +95,9 @@ void joy_callback(const sensor_msgs::Joy::ConstPtr& msg) {
     if (control_mode == "angles") {
       sim->set_angle_control(0.0, 0.0, 38.0, 0.0);
     }
+    if (control_mode == "rates") {
+      sim->set_angle_control(0.0, 0.0, 38.0, 0.0);
+    }
   }
   if (msg->buttons[1]) {
     sim->init();
@@ -91,6 +105,9 @@ void joy_callback(const sensor_msgs::Joy::ConstPtr& msg) {
       sim->set_velocity_control(0.0, 0.0, 0.0, 0.0);
     }
     if (control_mode == "angles") {
+      sim->set_angle_control(0.0, 0.0, 38.0, 0.0);
+    }
+    if (control_mode == "rates") {
       sim->set_angle_control(0.0, 0.0, 38.0, 0.0);
     }
   }

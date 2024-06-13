@@ -3,4 +3,4 @@
 #
 
 # Possible values: "velocity", "angles", "rates"
-control_mode: "angles"
+control_mode: "rates"
