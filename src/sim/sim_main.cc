@@ -5,9 +5,12 @@
 #include "geometry_msgs/Twist.h"
 #include "geometry_msgs/Vector3Stamped.h"
 #include "sensor_msgs/Joy.h"
+#include "sensor_msgs/BatteryState.h"
 
 ros::Publisher pose_publisher;
 ros::Publisher vel_publisher;
+ros::Publisher battery_state_publisher;
+
 Sim * sim = 0;
 int timer_counter = 0;
 double tick_time = 0.001;
@@ -113,6 +116,12 @@ void joy_callback(const sensor_msgs::Joy::ConstPtr& msg) {
   }
 }
 
+void publish_battery_state() {
+  sensor_msgs::BatteryState msg;
+  msg.percentage = 1.0;
+  battery_state_publisher.publish(msg);
+}
+
 void timer_callback(const ros::TimerEvent&) {
   sim->tick(tick_time, controlled_flag);
 
@@ -122,6 +131,10 @@ void timer_callback(const ros::TimerEvent&) {
     
     geometry_msgs::Vector3Stamped velmsg = sim->get_velocity();
     vel_publisher.publish(velmsg);
+  }
+
+  if (timer_counter % 100 == 0) { // 10 Hz
+    publish_battery_state();
   }
   timer_counter+=1;
 }
@@ -174,6 +187,7 @@ int main(int argc, char **argv) {
 
   pose_publisher = nh.advertise<geometry_msgs::PoseStamped>("pose",1);
   vel_publisher = nh.advertise<geometry_msgs::Vector3Stamped>("dji_sdk/velocity",1);
+  battery_state_publisher = nh.advertise<sensor_msgs::BatteryState>("dji_sdk/battery_state",1);
 
   //  ros::Subscriber cmd_vel_subscriber = nh.subscribe<geometry_msgs::Twist>("cmd_vel", 1, cmd_vel_callback);
   ros::Subscriber dji_control_subscriber = nh.subscribe<sensor_msgs::Joy>("dji_sdk/flight_control_setpoint_ENUvelocity_yawrate", 1, dji_control_callback);
