@@ -118,7 +118,7 @@ void joy_callback(const sensor_msgs::Joy::ConstPtr& msg) {
 
 void publish_battery_state() {
   sensor_msgs::BatteryState msg;
-  msg.percentage = 1.0;
+  msg.percentage = 0.8;
   battery_state_publisher.publish(msg);
 }
 

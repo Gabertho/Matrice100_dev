@@ -2,9 +2,11 @@
 import rospy
 import math
 import sys
+import os
 
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 import numpy as np
+import pandas as pd
 
 from geometry_msgs.msg import PoseStamped, PointStamped, QuaternionStamped, Vector3Stamped, Vector3, Point, Quaternion
 from tf2_msgs.msg import TFMessage
@@ -20,6 +22,7 @@ from threading import Lock, Event
 inside_timer_callback = False
 controlled_flag = False
 control_mode = "velocity"
+battery_file = f'{os.environ["HOME"]}/lrs_ws/src/Matrice100_dev/config/matrice_battery_thrust.ods'
 
 parser = OptionParser()
 parser.add_option ("", "--vicon", action="store_true", dest="vicon", help="Vicon")
@@ -59,31 +62,16 @@ def trajectory_callback(data):
     controller.notify_trajectory(data.point.x, data.point.y, data.point.z)
         
 def battery_callback(data):
-    global current_battery_level, battery_initialized_event, controller, thrust_adjustment, speed_adjustment
-    # Intialize the controller once
-    if controller:
+    if controlled_flag:
         return
-    
     current_battery_level = data.percentage
-    rospy.loginfo(f"Received battery level: {current_battery_level}%")
-    thrust_adjustment = get_thrust_based_on_battery(current_battery_level)
-    speed_adjustment = define_speed(options.speed)  # Set the speed before initializing the controller
-
-    rospy.loginfo(f"Battery level: {current_battery_level}% -> Adjusting initial thrust to: {thrust_adjustment}")
-
-    try:
-        if speed_defined:
-            controller = MPCController(speed_adjustment, thrust_adjustment, dt=dt, trajectory_type=options.trajectory_type)
-            controller.create_nmpc_problem()
-            move_to_point(options.x, options.y, options.z)
-            battery_initialized_event.set()
-        else:
-            rospy.logwarn("Speed not defined yet, waiting for speed to be set before initializing controller.")
-    except Exception as e:
-        rospy.logerr(f"Failed to initialize controller: {e}")
+    thrust = get_thrust_based_on_battery(int(current_battery_level*100), battery_data)
+    # rospy.loginfo(f"Received battery level: {current_battery_level} - {thrust}")
+    controller.set_hover_thrust(thrust)
+    return
 
 
-def get_thrust_based_on_battery(battery_level):
+def get_thrust_based_on_battery(battery_level, data):
     val = 0.0
     if battery_level in data['Battery'].values:
         valid_entries = data[data['Battery'] == battery_level]
@@ -288,13 +276,21 @@ if __name__ == "__main__":
     rospy.init_node ("pycontroller")
     ns = rospy.get_namespace ().rstrip("/")
 
+    try:
+        battery_data = pd.read_excel(battery_file, engine='odf')
+        print("BATTERY_DATA:", battery_data)
+    except Exception as e:
+        rospy.logerr(f"Failed to load battery thrust data: {e}")
+        sys.exit(1)
+
+
     control_mode = rospy.get_param("control_mode", "velocity")
 
     print("CONTROL_MODE:", control_mode)
 
     controller = Controller(control_mode)
 
-    battery_sub = rospy.Subscriber(ns + "/dji_sdk/battery_state", BatteryState, battery_callback)
+    battery_sub = rospy.Subscriber("dji_sdk/battery_state", BatteryState, battery_callback)
     dt = 0.1
 
     # ----------------------------------------------------------------

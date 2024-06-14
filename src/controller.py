@@ -25,7 +25,10 @@ class Controller:
         self.have_target = False
         self.have_target0 = False
         self.have_current_yaw = False
+        self.hover_thrust = 38.0
 
+    def set_hover_thrust(self, thrust):
+        self.hover_thrust = thrust
 
     def notify_position(self, x, y, z):
         self.current_position = np.array([x, y, z])
@@ -60,6 +63,15 @@ class Controller:
 
         u = [0.0, 0.0, 38.0, 0.0]
 
+        error = self.target - self.current_position
+
+        #
+        # Thrust
+        #
+        thrust_C = 1.0
+        
+        u[2] = self.hover_thrust + error[2]*thrust_C
+
         if not self.have_target0:
             print("Do not have target0")
             return u
@@ -69,14 +81,12 @@ class Controller:
             return u
 
         if self.control_mode == "velocity":
-            error = self.target - self.current_position
             # print("ERROR:", error, self.target)
             P = 3.0
             u[0] = P*error[0]            # east
             u[1] = P*error[1]            # north
 
         if self.control_mode == "angles":
-            error = self.target - self.current_position
             # print("ERROR:", error, self.target)
 
             herror = np.array([error[0], error[1]])
@@ -106,7 +116,6 @@ class Controller:
                 u[1] = -max
 
         if self.control_mode == "rates":
-            error = self.target - self.current_position
             # print("ERROR:", error, self.target)
 
             herror = np.array([error[0], error[1]])
