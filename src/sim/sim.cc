@@ -11,7 +11,8 @@ Sim::Sim(double x0, double y0, double z0, double yaw0) : x(x0), y(y0), z(z0), in
                                                          yaw_rate(0.0), tot_time(0.0),
                                                          max_wind_speed(0.0), wind_speed_x(0.0), wind_speed_y(0.0),
                                                          wind_direction(""), wind_amplitude(""), roll(0.0),
-                                                         pitch(0.0), thrust(38.0) {
+                                                         pitch(0.0), thrust(38.0), update_flag(true),
+                                                         acc_forward(0.0), acc_left(0.0), acc_x(0.0), acc_y(0.0) {
 
 }
 
@@ -24,10 +25,46 @@ void Sim::init() {
   y = init_y;
   z = init_z;
   yaw = init_yaw;
+  //  yaw = M_PI/2.0;
+  //  yaw = M_PI;
+  //yaw = M_PI/4.0;
+  //yaw = -M_PI/2.0;
   dx = 0.0;
   dy = 0.0;
   dz = 0.0;
   yaw_rate = 0.0;
+}
+
+void Sim::set_update_flag(bool flag) {
+  update_flag = flag;
+}
+
+void Sim::add_to_yaw_deg(double val) {
+  yaw += (val*M_PI/180.0);
+}
+
+geometry_msgs::Vector3 Sim::get_acc() {
+  geometry_msgs::Vector3 msg;
+  msg.x = acc_x;
+  msg.y = acc_y;
+  msg.z = 0.0;
+  return msg;
+}
+
+geometry_msgs::Vector3 Sim::get_body_acc() {
+  geometry_msgs::Vector3 msg;
+  msg.x = acc_forward;
+  msg.y = acc_left;
+  msg.z = 0.0;
+  return msg;
+}
+
+geometry_msgs::Vector3 Sim::get_angles() {
+  geometry_msgs::Vector3 msg;
+  msg.x = roll*180.0/M_PI;
+  msg.y = pitch*180.0/M_PI;
+  msg.z = 0.0;
+  return msg;
 }
 
 void Sim::set_velocity_control(double dx_, double dy_, double dz_, double yaw_rate_) {
@@ -77,14 +114,23 @@ geometry_msgs::Vector3Stamped Sim::get_velocity() {
   return vel;
 }
 
+
 void Sim::tick(double time, bool controlled_flag) {
   ROS_INFO("TICK: %s - %f %f %f - %f %f - %d", control_mode.c_str(), dx, dy, dz, wind_speed_x, wind_speed_y,
            controlled_flag);
 
   // TODO: rotate properly
 
-  double forward_speed = dx;
-  double left_speed = dy;
+  double forward_speed = cos(yaw)*dx + sin(yaw)*dy;
+  double left_speed = -sin(yaw)*dx + cos(yaw)*dy;
+
+  ROS_INFO("          roll: %f", roll*180.0/M_PI);
+  ROS_INFO("         pitch: %f", pitch*180.0/M_PI);
+  ROS_INFO("           yaw: %f", yaw*180.0/M_PI);
+  ROS_INFO("            dx: %f", dx);
+  ROS_INFO("            dy: %f", dy);
+  ROS_INFO("forward_speed: %f", forward_speed);
+  ROS_INFO("   left_speed: %f", left_speed);
 
   // END TODO
   
@@ -110,38 +156,49 @@ void Sim::tick(double time, bool controlled_flag) {
       double F_forward = pitch * pitch_C;
       double F_left = roll * roll_C;    
       
-      double acc_forward = (F_forward - F_drag_forward)/mass;
-      double acc_left = (F_left - F_drag_left)/mass;
+      acc_forward = (F_forward - F_drag_forward)/mass;
+      acc_left = (F_left - F_drag_left)/mass;
       
       // TODO: rotate acceleration
       
-      double acc_x = acc_forward;
-      double acc_y = acc_left;
-      
-      dx += acc_x*time;
-      dy += acc_y*time;
+      acc_x = cos(yaw)*acc_forward - sin(yaw)*acc_left;
+      acc_y = sin(yaw)*acc_forward + cos(yaw)*acc_left;
+
+      ROS_INFO("acc_forward: %f", acc_forward);
+      ROS_INFO("   acc_left: %f", acc_left);
+      ROS_INFO("      acc_x: %f", acc_x);
+      ROS_INFO("      acc_y: %f", acc_y);
+
+      if (update_flag) {
+        dx += acc_x*time;
+        dy += acc_y*time;
+      }
     
-      ROS_INFO("ANGLES: ROLL - PITCH - F_forward - acc_forward - dx: %f %f %f - %f %f", roll, pitch, F_forward, acc_forward, dx);
+      // ROS_INFO("ANGLES: ROLL - PITCH - F_forward - acc_forward - dx: %f %f %f - %f %f", roll, pitch, F_forward, acc_forward, dx);
 
     }
   } else {
-    double acc_forward = - F_drag_forward/mass;
-    double acc_left = - F_drag_left/mass;
+    acc_forward = - F_drag_forward/mass;
+    acc_left = - F_drag_left/mass;
       
     // TODO: rotate acceleration
       
-    double acc_x = acc_forward;
-    double acc_y = acc_left;
-      
-    dx += acc_x*time;
-    dy += acc_y*time;
+    acc_x = cos(yaw)*acc_forward - sin(yaw)*acc_left;
+    acc_y = sin(yaw)*acc_forward + cos(yaw)*acc_left;
+
+    if (update_flag) {    
+      dx += acc_x*time;
+      dy += acc_y*time;
+    }
 
   }
-  
-  x += time*dx;
-  y += time*dy;
-  x += time*wind_speed_x;
-  y += time*wind_speed_y;
+
+  if (update_flag) {
+    x += time*dx;
+    y += time*dy;
+    x += time*wind_speed_x;
+    y += time*wind_speed_y;
+  }
   yaw += time*yaw_rate;    
   
   tot_time += time;

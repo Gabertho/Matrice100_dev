@@ -250,6 +250,9 @@ def timer_callback(event):
 
     u = controller.control(dt)
 
+    # test
+    #### u[3] = math.radians(20.0)  # rotate 3 degreesper second
+
     publish_controls(u)
 
     # print("U:", u)

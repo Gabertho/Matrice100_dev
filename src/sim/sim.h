@@ -4,6 +4,7 @@
 #include "ros/ros.h"
 #include "geometry_msgs/PoseStamped.h"
 #include "geometry_msgs/Vector3Stamped.h"
+#include "geometry_msgs/Vector3.h"
 
 class Sim {
 private:
@@ -31,6 +32,11 @@ private:
   double pitch_rate;
   double roll_rate;
   std::string control_mode;
+  bool update_flag;
+  double acc_forward;
+  double acc_left;
+  double acc_x;
+  double acc_y;
 
 public:
   Sim();
@@ -38,6 +44,12 @@ public:
   ~Sim();
 
   void init();
+
+  void set_update_flag(bool flag);
+  void add_to_yaw_deg(double val);
+  geometry_msgs::Vector3 get_acc();
+  geometry_msgs::Vector3 get_body_acc();
+  geometry_msgs::Vector3 get_angles();
   
   void set_velocity_control(double dx_, double dy_, double dz_, double yaw_rate_);
   void set_angle_control(double roll_, double pitch_, double thrust_, double yaw_rate_);

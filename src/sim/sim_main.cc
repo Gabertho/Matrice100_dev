@@ -10,6 +10,9 @@
 ros::Publisher pose_publisher;
 ros::Publisher vel_publisher;
 ros::Publisher battery_state_publisher;
+ros::Publisher acc_publisher;
+ros::Publisher body_acc_publisher;
+ros::Publisher angles_publisher;
 
 Sim * sim = 0;
 int timer_counter = 0;
@@ -67,6 +70,18 @@ void dji_generic_control_callback(const sensor_msgs::Joy::ConstPtr& msg) {
 }
 
 void joy_callback(const sensor_msgs::Joy::ConstPtr& msg) {
+  if (msg->axes[7] > 0.5) {
+    sim->set_update_flag(true);
+  }
+  if (msg->axes[7] < -0.5) {
+    sim->set_update_flag(false);
+  }
+  if (msg->axes[6] > 0.5) {
+    sim->add_to_yaw_deg(30.0);
+  }
+  if (msg->axes[6] < -0.5) {
+    sim->add_to_yaw_deg(-30.0);
+  }
   if (!controlled_flag && msg->buttons[6]) {
     controlled_flag = true;
     button_index = 6;
@@ -122,6 +137,19 @@ void publish_battery_state() {
   battery_state_publisher.publish(msg);
 }
 
+void publish_acc() {
+  geometry_msgs::Vector3 acc;
+  geometry_msgs::Vector3 bodyacc;
+  geometry_msgs::Vector3 angles;
+  acc = sim->get_acc();
+  bodyacc = sim->get_body_acc();
+  acc_publisher.publish(acc);
+  body_acc_publisher.publish(bodyacc);
+
+  angles = sim->get_angles();
+  angles_publisher.publish(angles);
+}
+
 void timer_callback(const ros::TimerEvent&) {
   sim->tick(tick_time, controlled_flag);
 
@@ -131,6 +159,8 @@ void timer_callback(const ros::TimerEvent&) {
     
     geometry_msgs::Vector3Stamped velmsg = sim->get_velocity();
     vel_publisher.publish(velmsg);
+
+    publish_acc();
   }
 
   if (timer_counter % 100 == 0) { // 10 Hz
@@ -185,6 +215,9 @@ int main(int argc, char **argv) {
   sim->set_wind_direction(wind_direction);
   sim->set_wind_amplitude(wind_amplitude);
 
+  body_acc_publisher = nh.advertise<geometry_msgs::Vector3>("bodyacc",1);
+  acc_publisher = nh.advertise<geometry_msgs::Vector3>("acc",1);
+  angles_publisher = nh.advertise<geometry_msgs::Vector3>("angles",1);
   pose_publisher = nh.advertise<geometry_msgs::PoseStamped>("pose",1);
   vel_publisher = nh.advertise<geometry_msgs::Vector3Stamped>("dji_sdk/velocity",1);
   battery_state_publisher = nh.advertise<sensor_msgs::BatteryState>("dji_sdk/battery_state",1);
