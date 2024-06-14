@@ -63,6 +63,14 @@ class Controller:
 
         u = [0.0, 0.0, 38.0, 0.0]
 
+        if not self.have_target0:
+            print("Do not have target0")
+            return u
+
+        if not self.have_current_yaw:
+            print("Do not have current_yaw")
+            return u
+
         error = self.target - self.current_position
 
         #
@@ -71,14 +79,6 @@ class Controller:
         thrust_C = 1.0
         
         u[2] = self.hover_thrust + error[2]*thrust_C
-
-        if not self.have_target0:
-            print("Do not have target0")
-            return u
-
-        if not self.have_current_yaw:
-            print("Do not have current_yaw")
-            return u
 
         if self.control_mode == "velocity":
             # print("ERROR:", error, self.target)
