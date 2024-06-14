@@ -22,6 +22,7 @@ class Controller:
         self.target0 = None
         self.target = None
         self.target_speed = None
+        self.target_yaw = 0.0
         self.have_target = False
         self.have_target0 = False
         self.have_current_yaw = False
@@ -79,6 +80,16 @@ class Controller:
         thrust_C = 1.0
         
         u[2] = self.hover_thrust + error[2]*thrust_C
+
+        #
+        # Yaw
+        #
+
+        yaw_error = self.target_yaw - self.current_yaw
+        print("YAW_ERROR:", yaw_error)
+
+        yaw_C = 1.0
+        u[3] = yaw_error*yaw_C
 
         if self.control_mode == "velocity":
             # print("ERROR:", error, self.target)
