@@ -34,6 +34,7 @@ class Controller:
         self.old_err_yaw = 0.0
         self.old_err_z = 0.0
         self.yaw_control_flag = False
+        self.mode = "simple_pid"
 
     def set_yaw_control(self, flag):
         self.yaw_control_flag = flag
@@ -175,7 +176,7 @@ class Controller:
             u[1] = P*error[1]            # north
 
         if self.control_mode == "angles":
-            if False:
+            if self.mode == "gabriel"            
                 #FIRST: Converting x,y,z, yaw from reference trajectory to roll, pitch, yaw angles:
                 #Assuming reference trajectory is x,y,z,yaw (adjust reference trajectory later to do this.)
                 xref, yref, yaw_ref = self.target[0], self.target[1], self.target[3]
@@ -210,7 +211,7 @@ class Controller:
                 # Now that we have our r(t) = roll_ref, pitch_ref, yaw_ref, we need to feed the reference model and integrate it.
 
 
-            if True:
+            if self.mode == "simple_pid"
                 # print("ERROR:", error, self.target)
 
                 herror = np.array([error[0], error[1]])
