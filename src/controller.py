@@ -201,12 +201,12 @@ class Controller:
 
                 print("ROTATET HERROR:", rherror)
 
-                derr_pitch = (rherror[0] - self.old_error_pitch)/dt
-                derr_roll = (rherror[1] - self.old_error_roll)/dt
+                derr_pitch = (rherror[0] - self.old_err_pitch)/dt
+                derr_roll = (rherror[1] - self.old_err_roll)/dt
 
 
-                self.old_error_pitch = rherror[0]
-                self.old_error_roll = rherror[1]
+                self.old_err_pitch = rherror[0]
+                self.old_err_roll = rherror[1]
             
                 P = 2.0
                 D = 4.0
