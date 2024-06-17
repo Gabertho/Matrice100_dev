@@ -22,6 +22,7 @@ class GotoTrajectory:
         self.phase = "acc"
 
     def set_target0(self):
+        print("set_target0:", self.target0_x, self.target0_y, self.target0_z)
         self.target_x = self.target0_x
         self.target_y = self.target0_y
         self.target_z = self.target0_z
@@ -34,6 +35,7 @@ class GotoTrajectory:
         self.reset(self.target1_x, self.target1_y, self.target_z)
         
     def reset(self, x0, y0, z0):
+        print("reset:", x0, y0, z0)
         self.x = x0
         self.y = y0
         self.z = z0
