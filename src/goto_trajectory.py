@@ -42,7 +42,7 @@ class GotoTrajectory:
         self.y0 = self.target0_y
         self.z0 = self.target0_z
         
-    def reset(self, x0, y0, z0):
+    def reset(self):
         self.x = self.x0
         self.y = self.y0
         self.z = self.z0
