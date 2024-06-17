@@ -1,9 +1,9 @@
 <!-- This will start trajectory generator. -->
 
 <launch>
-  <arg name="x" default="30.0" />
+  <arg name="x" default="10.0" />
   <arg name="y" default="0.0" />
-  <arg name="z" default="2.0" />
+  <arg name="z" default="10.0" />
   <arg name="speed" default="1.0" />
   
   <rosparam command="load" file="$(find drone_dev)/config/common.yaml" ns="/dji2" />
