@@ -11,7 +11,7 @@ class GotoTrajectory:
         self.target_y = y
         self.target_z = z
         self.target_speed = speed
-        self.reset()
+        self.reset(0.0, 0.0, 10.0)
         self.acc = 1.0
         self.phase = "acc"
 
