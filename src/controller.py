@@ -139,7 +139,7 @@ class Controller:
 
         yaw_C = 1.0
         u[3] = yaw_error*yaw_C
-        u[0] = 0.0
+        u[3] = 0.0
 
         if self.control_mode == "velocity":
             # print("ERROR:", error, self.target)
