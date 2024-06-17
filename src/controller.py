@@ -147,68 +147,69 @@ class Controller:
             u[1] = P*error[1]            # north
 
         if self.control_mode == "angles":
-            #FIRST: Converting x,y,z, yaw from reference trajectory to roll, pitch, yaw angles:
-            #Assuming reference trajectory is x,y,z,yaw (adjust reference trajectory later to do this.)
-            xref, yref, yaw_ref = self.target[0], self.target[1], self.target[3]
+            if False:
+                #FIRST: Converting x,y,z, yaw from reference trajectory to roll, pitch, yaw angles:
+                #Assuming reference trajectory is x,y,z,yaw (adjust reference trajectory later to do this.)
+                xref, yref, yaw_ref = self.target[0], self.target[1], self.target[3]
 
-            error_x = xref - self.current_position[0]
-            self.integration_val_x = self.integral(self.integration_val_x , error_x) #fiz these selfs etc to be oop
+                error_x = xref - self.current_position[0]
+                self.integration_val_x = self.integral(self.integration_val_x , error_x) #fiz these selfs etc to be oop
 
-            error_y = yref - self.current_position[1]
-            self.integration_val_y = self.integral(self.integration_val_y , error_y) #fiz these selfs etc to be oop
+                error_y = yref - self.current_position[1]
+                self.integration_val_y = self.integral(self.integration_val_y , error_y) #fiz these selfs etc to be oop
 
-            #Implement the values of P, I, D and get the right velocities (dx dy)
-            PID_x = self.PID_control(self.P_x, self.I_x, self.D_x, error_x , self.integration_val_x , self.dx)
-            PID_y = self.PID_control(self.P_y, self.I_y , self.D_y, error_y , self.integration_val_y , self.dy)
-            pitch_ref = PID_x*math.cos(self.yaw)+PID_y*math.sin(self.yaw) # Approx Model Inversion
-            roll_ref = PID_x*math.sin(self.yaw)-PID_y*math.cos(self.yaw) # Approx Model Inversion
+                #Implement the values of P, I, D and get the right velocities (dx dy)
+                PID_x = self.PID_control(self.P_x, self.I_x, self.D_x, error_x , self.integration_val_x , self.dx)
+                PID_y = self.PID_control(self.P_y, self.I_y , self.D_y, error_y , self.integration_val_y , self.dy)
+                pitch_ref = PID_x*math.cos(self.yaw)+PID_y*math.sin(self.yaw) # Approx Model Inversion
+                roll_ref = PID_x*math.sin(self.yaw)-PID_y*math.cos(self.yaw) # Approx Model Inversion
 
-            #i am not sure if we should feed the reference model now and get its output or get the last output.
+                #i am not sure if we should feed the reference model now and get its output or get the last output.
 
-            vad = self.adaptive_term()
+                vad = self.adaptive_term()
 
-            total_control = self.linear_Cntrl(state,ref)
+                total_control = self.linear_Cntrl(state,ref)
 
-            u = total_control - vad
+                u = total_control - vad
 
-            #check dimensions etc
+                #check dimensions etc
+                
+                #Update reference model and adaptive term weights.
+                
+                A.reference_model([yaw_ref_OL, pitch_ref_OL, roll_ref_OL ])
+                A.mrac_weight_update(A.ref_model_states)
+                
+                # Now that we have our r(t) = roll_ref, pitch_ref, yaw_ref, we need to feed the reference model and integrate it.
 
-            #Update reference model and adaptive term weights.
 
-            A.reference_model([yaw_ref_OL, pitch_ref_OL, roll_ref_OL ])
-            A.mrac_weight_update(A.ref_model_states)
+            if True:
+                # print("ERROR:", error, self.target)
 
-            # Now that we have our r(t) = roll_ref, pitch_ref, yaw_ref, we need to feed the reference model and integrate it.
+                herror = np.array([error[0], error[1]])
+                print("HERROR:", math.degrees(self.current_yaw), herror)
 
+                theta = -self.current_yaw
+                c, s = np.cos(theta), np.sin(theta)
+                R = np.array(((c, -s), (s, c)))
+                # print("R:", R)
 
+                rherror = np.dot(R, herror)
 
-            # print("ERROR:", error, self.target)
-
-            herror = np.array([error[0], error[1]])
-            print("HERROR:", math.degrees(self.current_yaw), herror)
-
-            theta = -self.current_yaw
-            c, s = np.cos(theta), np.sin(theta)
-            R = np.array(((c, -s), (s, c)))
-            # print("R:", R)
-
-            rherror = np.dot(R, herror)
-
-            print("ROTATET HERROR:", rherror)
+                print("ROTATET HERROR:", rherror)
             
-            P = 0.2
-            u[0] = P*rherror[1]            # roll
-            u[1] = -P*rherror[0]           # pitch
+                P = 0.2
+                u[0] = P*rherror[1]            # roll
+                u[1] = -P*rherror[0]           # pitch
 
-            max = math.radians(20.0)
-            if u[0] > max:
-                u[0] = max
-            if u[0] < -max:
-                u[0] = -max
-            if u[1] > max:
-                u[1] = max
-            if u[1] < -max:
-                u[1] = -max
+                max = math.radians(20.0)
+                if u[0] > max:
+                    u[0] = max
+                if u[0] < -max:
+                    u[0] = -max
+                if u[1] > max:
+                    u[1] = max
+                if u[1] < -max:
+                    u[1] = -max
 
         if self.control_mode == "rates":
             # print("ERROR:", error, self.target)
