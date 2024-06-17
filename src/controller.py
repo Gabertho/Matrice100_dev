@@ -211,6 +211,7 @@ class Controller:
                 P = 2.0
                 D = 4.0
                 u[0] = -(P*rherror[1] + D*derr_pitch)       # roll
+                u[0] = 0.0
                 u[1] = P*rherror[0] + D*derr_roll           # pitch
 
                 max = math.radians(20.0)
