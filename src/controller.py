@@ -199,7 +199,7 @@ class Controller:
             
                 P = 0.2
                 u[0] = P*rherror[1]            # roll
-                u[1] = -P*rherror[0]           # pitch
+                u[1] = P*rherror[0]           # pitch
 
                 max = math.radians(20.0)
                 if u[0] > max:
@@ -228,7 +228,7 @@ class Controller:
             
             P = 0.5
             u[0] = -P*rherror[1]             # roll rate
-            u[1] = -P*rherror[0]            # pitch rate
+            u[1] = P*rherror[0]            # pitch rate
 
             print("U:", u)
 
