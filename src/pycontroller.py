@@ -19,6 +19,7 @@ from controller import Controller
 from optparse import OptionParser
 from threading import Lock, Event
 
+auto_flag = False
 inside_timer_callback = False
 controlled_flag = False
 control_mode = "velocity"
