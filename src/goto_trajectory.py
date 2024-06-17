@@ -15,10 +15,10 @@ class GotoTrajectory:
         self.acc = 1.0
         self.phase = "acc"
 
-    def reset(self):
-        self.x = 0.0
-        self.y = 0.0
-        self.z = 2.0
+    def reset(self, x0, y0, z0):
+        self.x = x0
+        self.y = y0
+        self.z = z0
         self.speed = 0
         dx = self.target_x - self.x
         dy = self.target_y - self.y

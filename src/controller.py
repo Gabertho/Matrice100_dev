@@ -176,9 +176,9 @@ class Controller:
             # print("ERROR:", error, self.target)
 
             herror = np.array([error[0], error[1]])
-            # print("HERROR:", herror)
+            print("HERROR:", math.degrees(self.current_yaw), herror)
 
-            theta = self.current_yaw
+            theta = -self.current_yaw
             c, s = np.cos(theta), np.sin(theta)
             R = np.array(((c, -s), (s, c)))
             # print("R:", R)
@@ -187,9 +187,9 @@ class Controller:
 
             print("ROTATET HERROR:", rherror)
             
-            P = 3.0
-            u[0] = P*error[1]            # roll
-            u[1] = -P*error[0]           # pitch
+            P = 0.2
+            u[0] = P*rherror[1]            # roll
+            u[1] = -P*rherror[0]           # pitch
 
             max = math.radians(20.0)
             if u[0] > max:
@@ -205,7 +205,7 @@ class Controller:
             # print("ERROR:", error, self.target)
 
             herror = np.array([error[0], error[1]])
-            # print("HERROR:", herror)
+            print("HERROR:", math.degrees(self.current_yaw), herror)
 
             theta = self.current_yaw
             c, s = np.cos(theta), np.sin(theta)
@@ -217,8 +217,10 @@ class Controller:
             print("ROTATET HERROR:", rherror)
             
             P = 0.5
-            u[0] = P*error[1]             # roll rate
-            u[1] = -P*error[0]            # pitch rate
+            u[0] = -P*rherror[1]             # roll rate
+            u[1] = -P*rherror[0]            # pitch rate
+
+            print("U:", u)
 
             max = 5.0/6.0*math.pi
             if u[0] > max:
