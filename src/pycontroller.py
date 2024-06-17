@@ -53,8 +53,6 @@ def joy_callback(data):
     if data.buttons[2]:
         # get authority
         print("Get authriy")
-        req = SDKControlAuthority.Request()
-        req.control_enable = 1
         proxy = rospy.ServiceProxy('dji_sdk/sdk_control_authority', SDKControlAuthority)
         resp = proxy(1)
         print("AUTH RESP:", resp)
