@@ -41,7 +41,7 @@ def joy_callback(data):
     else:
         enable_flag = False
         # trajectory.reset(current_pose.pose.position.x, current_pose.pose.position.z, current_pose.pose.position.z)
-        trajectory.reset(0.0, 0.0, 10.0)
+        # trajectory.reset(0.0, 0.0, 10.0)
 
 def pose_callback(data):
     global current_pose
