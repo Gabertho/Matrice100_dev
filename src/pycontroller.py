@@ -94,6 +94,7 @@ def get_thrust_based_on_battery(battery_level, data):
     return val
 
 def attitude_callback(data):
+    return
     try:
         # print(data)
         global n_samples
