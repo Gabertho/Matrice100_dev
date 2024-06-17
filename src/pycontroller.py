@@ -50,6 +50,14 @@ parser.add_option("", "--name", action="store", dest="name", type="str", default
 
 def joy_callback(data):
     global controlled_flag
+    if data.buttons[2]:
+        # get authority
+        print("Get authriy")
+        req = SDKControlAuthority.Request()
+        req.control_enable = 1
+        proxy = rospy.ServiceProxy('dji_sdk/sdk_control_authority', SDKControlAuthority)
+        resp = proxy(1)
+        print("AUTH RESP:", resp)
     if data.buttons[6] or data.buttons[0]:
         controlled_flag = True
     else:
@@ -322,6 +330,8 @@ if __name__ == "__main__":
     ctrl3_pub = rospy.Publisher("ctrl/u3", Float64, latch=False, queue_size=10)
     velocity_pub = rospy.Publisher("velocity", Vector3, latch=False, queue_size=10)
     #hokuyo_lidar_pub = rospy.Publisher("hokuyo_scan", LaserScan, latch=False, queue_size=10)
+
+    auth_service_client = self.create_client(SDKControlAuthority, 'dji_sdk/sdk_control_authority')
 
     joy_sub = rospy.Subscriber("/drone/joy", Joy, joy_callback)       #/dji_sdk/local_position
     pose_sub = rospy.Subscriber("pose", PoseStamped, pose_callback)       #/dji_sdk/local_position
