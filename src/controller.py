@@ -29,6 +29,7 @@ class Controller:
         self.hover_thrust = 38.0
         self.old_err_pitch = 0.0
         self.old_err_roll = 0.0
+        self.int_err_z = 0.0
         
 
     def set_hover_thrust(self, thrust):
@@ -120,22 +121,34 @@ class Controller:
         #
         # Thrust
         #
-        thrust_C = 1.0
+        pthrust = 1.5
+        ithrust = 0.0019
+        dthrust = 6.0
 
         print("TARGET:", self.target)
         print("CUPOS:", self.current_position)
         print("THRUSTERROR:", error[2])
-        
-        u[2] = self.hover_thrust + error[2]*thrust_C
+
+        int_err_z += error[2]
+        d_err_z = (error[2] - self.old_err_z)/dt
+
+        delta = error[2]*pthrust + ithrust*int_err_z + dthrust*d_err_z
+        u[2] = self.hover_thrust + delta
 
         if u[2] < 20.0:
             u[2] = 20.0
-        if u[2] > 60.0:
-            u[2] = 60.0
+        if u[2] > 80.0:
+            u[2] = 80.0
+
+        self.old_err_z = error[2]
 
         #
         # Yaw
         #
+
+        pyaw = 1.0
+        iyaw = 0.0
+        dyaw = 0.5
 
         yaw_error = self.target_yaw - self.current_yaw
         print("YAW_ERROR:", yaw_error)
@@ -213,7 +226,7 @@ class Controller:
                 u[0] = math.radians(-(P*rherror[1] + D*derr_roll))       # roll
                 u[1] = math.radians(P*rherror[0] + D*derr_pitch)         # pitch
 
-                max = math.radians(10.0)
+                max = math.radians(20.0)
                 if u[0] > max:
                     u[0] = max
                 if u[0] < -max:
