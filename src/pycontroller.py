@@ -244,6 +244,9 @@ def publish_controls(u):
 def timer_callback(event): 
     # print("timer_callback")
 
+    if not controlled_flag:
+        return
+
     global inside_timer_callback
 
     if inside_timer_callback:
