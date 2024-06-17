@@ -50,6 +50,12 @@ parser.add_option("", "--name", action="store", dest="name", type="str", default
 
 def joy_callback(data):
     global controlled_flag
+
+    if data.axes[7] < -0.5:
+        controller.set_yaw_control(False)
+    if data.axes[7] > 0.5:
+        controller.set_yaw_control(True)
+        
     if data.buttons[2]:
         # get authority
         print("Get authriy")
