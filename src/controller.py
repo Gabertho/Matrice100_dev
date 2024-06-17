@@ -32,6 +32,7 @@ class Controller:
         self.int_err_z = 0.0
         self.int_err_yaw = 0.0
         self.old_err_yaw = 0.0
+        self.old_err_z = 0.0
         
 
     def set_hover_thrust(self, thrust):
