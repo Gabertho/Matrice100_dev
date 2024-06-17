@@ -336,14 +336,18 @@ if __name__ == "__main__":
     #hokuyo_lidar_pub = rospy.Publisher("hokuyo_scan", LaserScan, latch=False, queue_size=10)
 
     joy_sub = rospy.Subscriber("/drone/joy", Joy, joy_callback)       #/dji_sdk/local_position
-    pose_sub = rospy.Subscriber("pose", PoseStamped, pose_callback)       #/dji_sdk/local_position
-    attitude_sub = rospy.Subscriber("dji_sdk/attitude", QuaternionStamped, attitude_callback)
-    velocity_sub = rospy.Subscriber("dji_sdk/velocity", Vector3Stamped, velocity_callback)
+    if not options.vicon:
+        pose_sub = rospy.Subscriber("pose", PoseStamped, pose_callback)       #/dji_sdk/local_position
+        velocity_sub = rospy.Subscriber("dji_sdk/velocity", Vector3Stamped, velocity_callback)
+
+    # Seems like attitude callback is not needed
+    ###attitude_sub = rospy.Subscriber("dji_sdk/attitude", QuaternionStamped, attitude_callback)
     trajectory_sub = rospy.Subscriber("trajectory", PointStamped, trajectory_callback)
 
     rc_sub = rospy.Subscriber("dji_sdk/rc", Joy, rc_callback)
 
-    tf_sub = rospy.Subscriber("/tf", TFMessage, tf_callback)
+    if options.vicon:
+        tf_sub = rospy.Subscriber("/tf", TFMessage, tf_callback)
 
     rospy.Timer(rospy.Duration(dt), timer_callback)
     

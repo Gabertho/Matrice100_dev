@@ -60,6 +60,9 @@ class Controller:
     def notify_velocity(self, x, y, z):
         self.velocity = np.array([x, y, z])
 
+    def notify_angles(self, roll, pitch, yaw):
+        self.current_yaw = yaw
+
     def notify_attitude(self, qx, qy, qz, qw):
         self.qx = qx
         self.qy = qy
