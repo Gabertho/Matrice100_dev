@@ -123,7 +123,12 @@ class Controller:
         print("CUPOS:", self.current_position)
         print("THRUSTERROR:", error[2])
         
-        u[2] = self.hover_thrust - error[2]*thrust_C
+        u[2] = self.hover_thrust + error[2]*thrust_C
+
+        if u[2] < 20.0:
+            u[2] = 20.0
+        if u[2] > 60.0:
+            u[2] = 60.0
 
         #
         # Yaw
