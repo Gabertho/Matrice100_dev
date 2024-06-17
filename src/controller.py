@@ -30,6 +30,8 @@ class Controller:
         self.old_err_pitch = 0.0
         self.old_err_roll = 0.0
         self.int_err_z = 0.0
+        self.int_err_yaw = 0.0
+        self.old_err_yaw = 0.0
         
 
     def set_hover_thrust(self, thrust):
@@ -150,12 +152,14 @@ class Controller:
         iyaw = 0.0
         dyaw = 0.5
 
+
         yaw_error = self.target_yaw - self.current_yaw
         print("YAW_ERROR:", yaw_error)
+        
+        self.int_err_yaw += yaw_error
+        d_err = (yaw_error - self.old_err_yaw)/dt
 
-        yaw_C = 1.0
-        u[3] = yaw_error*yaw_C
-        u[3] = 0.0
+        u[3] = yaw_error*pyaw + dyaw*derr
 
         if self.control_mode == "velocity":
             # print("ERROR:", error, self.target)
