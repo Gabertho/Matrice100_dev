@@ -331,8 +331,6 @@ if __name__ == "__main__":
     velocity_pub = rospy.Publisher("velocity", Vector3, latch=False, queue_size=10)
     #hokuyo_lidar_pub = rospy.Publisher("hokuyo_scan", LaserScan, latch=False, queue_size=10)
 
-    auth_service_client = self.create_client(SDKControlAuthority, 'dji_sdk/sdk_control_authority')
-
     joy_sub = rospy.Subscriber("/drone/joy", Joy, joy_callback)       #/dji_sdk/local_position
     pose_sub = rospy.Subscriber("pose", PoseStamped, pose_callback)       #/dji_sdk/local_position
     attitude_sub = rospy.Subscriber("dji_sdk/attitude", QuaternionStamped, attitude_callback)
