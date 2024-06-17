@@ -27,6 +27,9 @@ class Controller:
         self.have_target0 = False
         self.have_current_yaw = False
         self.hover_thrust = 38.0
+        self.old_err_pitch = 0.0
+        self.old_err_roll = 0.0
+        
 
     def set_hover_thrust(self, thrust):
         self.hover_thrust = thrust
@@ -197,10 +200,18 @@ class Controller:
                 rherror = np.dot(R, herror)
 
                 print("ROTATET HERROR:", rherror)
+
+                derr_pitch = (rherror[0] - self.old_error_pitch)/dt
+                derr_roll = (rherror[1] - self.old_error_roll)/dt
+
+
+                self.old_error_pitch = rherror[0]
+                self.old_error_roll = rherror[1]
             
-                P = 0.02
-                u[0] = -P*rherror[1]            # roll
-                u[1] = P*rherror[0]           # pitch
+                P = 2.0
+                D = 4.0
+                u[0] = -(P*rherror[1] + D*derr_åitch)       # roll
+                u[1] = P*rherror[0] + D*derr_roll           # pitch
 
                 max = math.radians(20.0)
                 if u[0] > max:
