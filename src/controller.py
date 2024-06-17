@@ -118,6 +118,10 @@ class Controller:
         # Thrust
         #
         thrust_C = 1.0
+
+        print("TARGET:", self.target)
+        print("CUPOS:", self.current_position)
+        print("THRUSTERROR:", error[2])
         
         u[2] = self.hover_thrust + error[2]*thrust_C
 
