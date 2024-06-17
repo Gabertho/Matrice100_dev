@@ -158,9 +158,9 @@ class Controller:
         print("YAW_ERROR:", yaw_error)
         
         self.int_err_yaw += yaw_error
-        d_err = (yaw_error - self.old_err_yaw)/dt
+        d_err_yaw = (yaw_error - self.old_err_yaw)/dt
 
-        u[3] = yaw_error*pyaw + dyaw*derr
+        u[3] = yaw_error*pyaw + dyaw*d_err_yaw
 
         if self.control_mode == "velocity":
             # print("ERROR:", error, self.target)
