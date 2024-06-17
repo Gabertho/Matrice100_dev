@@ -66,7 +66,7 @@ if __name__ == "__main__":
 
     x = rospy.get_param("~x", 30.0)
     y = rospy.get_param("~y", 0.0)
-    z = rospy.get_param("~z", 0.0)
+    z = rospy.get_param("~z", 10.0)
     speed = rospy.get_param("~speed", 3.0)
     control_mode = rospy.get_param("control_mode", "velocity")
 
