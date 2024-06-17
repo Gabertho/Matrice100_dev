@@ -13,6 +13,11 @@ from tf2_msgs.msg import TFMessage
 from std_msgs.msg import Float64, Header, ColorRGBA, Empty
 from visualization_msgs.msg import Marker, MarkerArray
 from sensor_msgs.msg import Joy, LaserScan, BatteryState
+from dji_sdk.srv import SDKControlAuthority
+
+# rosservice call /dji2/dji_sdk/sdk_control_authority "control_enable: 1"
+# dji_sdk/SDKControlAuthority
+
 
 from controller import Controller
 
