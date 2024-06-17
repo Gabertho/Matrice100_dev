@@ -151,7 +151,7 @@ class Controller:
 
         pyaw = 1.0
         iyaw = 0.0
-        dyaw = 0.5
+        dyaw = 0.0
 
 
         yaw_error = self.target_yaw - self.current_yaw
