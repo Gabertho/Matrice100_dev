@@ -131,10 +131,10 @@ class Controller:
         print("CUPOS:", self.current_position)
         print("THRUSTERROR:", error[2])
 
-        int_err_z += error[2]
+        self.int_err_z += error[2]
         d_err_z = (error[2] - self.old_err_z)/dt
 
-        delta = error[2]*pthrust + ithrust*int_err_z + dthrust*d_err_z
+        delta = error[2]*pthrust + ithrust*self.int_err_z + dthrust*d_err_z
         u[2] = self.hover_thrust + delta
 
         if u[2] < 20.0:
