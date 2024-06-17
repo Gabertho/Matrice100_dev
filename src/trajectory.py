@@ -31,6 +31,11 @@ parser.add_option("", "--trajectory_type", action="store", dest="trajectory_type
 
 def joy_callback(data):
     global enable_flag
+    if data.axes[6] > 0.5:
+        trajectory.set_target0()
+    if data.axes[6] < -0.5:
+        trajectory.set_target1()
+        
     if data.buttons[6] or data.buttons[0]:
         enable_flag = True
     else:
