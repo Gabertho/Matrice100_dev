@@ -22,7 +22,7 @@ enable_flag = False
 current_pose = PoseStamped()
 current_pose.pose.position.x = 0.0
 current_pose.pose.position.y = 0.0
-current_pose.pose.position.z = 2.0
+current_pose.pose.position.z = 10.0
 
 parser = OptionParser()
 parser.add_option("", "--dt", action="store", dest="dt", type="float", default=0.1, help='Perions, default 0.1')
