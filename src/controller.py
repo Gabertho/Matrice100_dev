@@ -58,6 +58,46 @@ class Controller:
         # print("YAW:", math.degrees(yaw))
         self.current_yaw = yaw
         self.have_current_yaw = True
+
+    def integral(self, prev_integral_value, error):
+        # 0.001 is antiwindup gain
+        # # if prev_integral_value >=2: # For modeling saturation
+        # # prev_integral_value =2
+        # # elif prev_integral_value <= -2:
+        # # prev_integral_value =( -2)
+        error_anti_windup = error -0.001* prev_integral_value
+        integral_new = prev_integral_value + error_anti_windup * self.delt #delt is the period like 0.01 sec if 100hz.
+        return integral_new
+    
+    def PID_control(self, Kp, Ki, Kd, error, int_error, d_error):
+        PID_control_value = Kp * error + Ki * int_error - Kd *d_error
+        return PID_control_value
+    
+    def adaptive_term(self):
+        vad = np.dot(self.output_weight.T, self.basis)
+        u_net = - vad
+        return u_net
+    
+    def linear_Cntrl(self, state, ref_signal):
+        # K =
+        # Kr =
+        upd = -K @ state #check it
+        ucrm = Kr @ ref_signal 
+        cntrl = fb+ff
+        return cntrl
+    
+    def mrac_weight_update(self, ref_model_states):
+        current_rpy_state = np.array([[self.roll], [self.D_roll], [self.pitch], [self.D_pitch], [self.yaw], [self.D_yaw]])
+        error = ref_model_states - current_rpy_state
+        #P = Solution for Lyapunov Equation
+        P = np.array([[50.13, 0.0013, 0, 0, 0, 0], [0.0013, 0.1253, 0, 0, 0, 0],
+                      [0, 0, 50.13, 0.0013, 0, 0], [0, 0, 0.0013, 0.1253, 0, 0],
+                      [0, 0, 0, 0, 50.13, 0.0013], [0, 0, 0, 0, 0.0013, 0.1253]])
+
+        B = np.array([[0, 0, 0], [1, 0, 0], [0, 0, 0],
+                      [0, 1, 0], [0, 0, 0], [0, 0, 1]])
+
+        self.output_weight = self.output_weight + (-self.delt) * (self.adaptive_gain) * np.dot(self.basis, np.dot(error.T, np.dot(P, B)))
         
     def control(self, dt):
         # print("DO CONTROL:", dt, self.control_mode)
@@ -98,6 +138,41 @@ class Controller:
             u[1] = P*error[1]            # north
 
         if self.control_mode == "angles":
+            #FIRST: Converting x,y,z, yaw from reference trajectory to roll, pitch, yaw angles:
+            #Assuming reference trajectory is x,y,z,yaw (adjust reference trajectory later to do this.)
+            xref, yref, yaw_ref = self.target[0], self.target[1], self.target[3]
+
+            error_x = xref - self.current_position[0]
+            self.integration_val_x = self.integral(self.integration_val_x , error_x) #fiz these selfs etc to be oop
+
+            error_y = yref - self.current_position[1]
+            self.integration_val_y = self.integral(self.integration_val_y , error_y) #fiz these selfs etc to be oop
+
+            #Implement the values of P, I, D and get the right velocities (dx dy)
+            PID_x = self.PID_control(self.P_x, self.I_x, self.D_x, error_x , self.integration_val_x , self.dx)
+            PID_y = self.PID_control(self.P_y, self.I_y , self.D_y, error_y , self.integration_val_y , self.dy)
+            pitch_ref = PID_x*math.cos(self.yaw)+PID_y*math.sin(self.yaw) # Approx Model Inversion
+            roll_ref = PID_x*math.sin(self.yaw)-PID_y*math.cos(self.yaw) # Approx Model Inversion
+
+            #i am not sure if we should feed the reference model now and get its output or get the last output.
+
+            vad = self.adaptive_term()
+
+            total_control = self.linear_Cntrl(state,ref)
+
+            u = total_control - vad
+
+            #check dimensions etc
+
+            #Update reference model and adaptive term weights.
+
+            A.reference_model([yaw_ref_OL, pitch_ref_OL, roll_ref_OL ])
+            A.mrac_weight_update(A.ref_model_states)
+
+            # Now that we have our r(t) = roll_ref, pitch_ref, yaw_ref, we need to feed the reference model and integrate it.
+
+
+
             # print("ERROR:", error, self.target)
 
             herror = np.array([error[0], error[1]])
