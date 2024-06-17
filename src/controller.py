@@ -36,7 +36,7 @@ class Controller:
         self.yaw_control_flag = False
 
     def set_yaw_control(self, flag):
-        self.yaw_control_flaf = flag
+        self.yaw_control_flag = flag
 
     def set_hover_thrust(self, thrust):
         self.hover_thrust = thrust
