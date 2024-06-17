@@ -198,7 +198,7 @@ class Controller:
                 print("ROTATET HERROR:", rherror)
             
                 P = 0.2
-                u[0] = P*rherror[1]            # roll
+                u[0] = -P*rherror[1]            # roll
                 u[1] = P*rherror[0]           # pitch
 
                 max = math.radians(20.0)
