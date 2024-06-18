@@ -83,8 +83,12 @@ def battery_callback(data):
     if controlled_flag:
         return
     current_battery_level = data.percentage
-    thrust = get_thrust_based_on_battery(int(current_battery_level*100), battery_data)
-    # rospy.loginfo(f"Received battery level: {current_battery_level} - {thrust}")
+    ##thrust = get_thrust_based_on_battery(int(current_battery_level*100), battery_data)
+    if current_battery_level > 0.8:
+        thrust = 39.0 + (41.5-39.0)*(current_battery_level-0.8)/0.2
+    else:
+        thrust = 45.0 - (45.0-39.0)*current_battery_level/0.8
+    rospy.loginfo(f"Received battery level: {current_battery_level} - {thrust}")
     controller.set_hover_thrust(thrust)
     return
 
@@ -302,12 +306,12 @@ if __name__ == "__main__":
     rospy.init_node ("pycontroller")
     ns = rospy.get_namespace ().rstrip("/")
 
-    try:
-        battery_data = pd.read_excel(battery_file, engine='odf')
-        print("BATTERY_DATA:", battery_data)
-    except Exception as e:
-        rospy.logerr(f"Failed to load battery thrust data: {e}")
-        sys.exit(1)
+    #try:
+    #    battery_data = pd.read_excel(battery_file, engine='odf')
+    #    print("BATTERY_DATA:", battery_data)
+    #except Exception as e:
+    #    rospy.logerr(f"Failed to load battery thrust data: {e}")
+    #    sys.exit(1)
 
 
     control_mode = rospy.get_param("control_mode", "velocity")

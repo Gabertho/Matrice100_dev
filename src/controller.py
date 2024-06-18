@@ -9,7 +9,7 @@ import math
 class Controller:
     def __init__(self, control_mode):
         self.control_mode = control_mode
-        self.current_position = np.array([0.0, 0.0, 10.0])
+        self.current_position = np.array([0.0, 0.0, 2.5])
         self.velocity = np.array([0.0, 0.0, 0.0])
         self.qx = 0.0
         self.qy = 0.0
