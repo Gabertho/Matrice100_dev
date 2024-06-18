@@ -73,7 +73,8 @@ class Controller:
 
     def notify_angles(self, roll, pitch, yaw):
         self.current_yaw = yaw
-
+        self.have_current_yaw = True
+        
     def notify_attitude(self, qx, qy, qz, qw):
         self.qx = qx
         self.qy = qy
