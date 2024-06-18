@@ -69,7 +69,7 @@ def timer_callback(event):
     trajectory_pub.publish(msg)
 
     msg2 = trajectory.get_target_point_stamped()
-    target_pub.publish(msg)
+    target_pub.publish(msg2)
 
     inside_timer_callback = False
 
