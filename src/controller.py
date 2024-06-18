@@ -21,7 +21,7 @@ class Controller:
         self.yaw_rate = 0.0
         self.target0 = None
         self.target = None
-        self.target_speed = None
+        self.target_speed = 1.0
         self.target_yaw = 0.0
         self.have_target = False
         self.have_target0 = False
@@ -59,15 +59,8 @@ class Controller:
         self.current_position = np.array([x, y, z])
 
     def notify_trajectory(self, x, y, z):
-        if self.have_target:
-            self.target0 = self.target
-            self.have_target0 = True
         self.target = np.array([x, y, z])
         self.have_target = True
-        if self.have_target0:
-            dist = np.linalg.norm(self.target-self.target0)
-            self.target_speed = dist/0.1
-            # print("TARGET SPEED:", self.target_speed)
         
 
     def notify_velocity(self, x, y, z):
