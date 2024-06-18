@@ -16,6 +16,10 @@ class GotoTrajectory:
         self.have_initial_position = False
         self.speed = 0.0
         self.travel_length = 0.0
+        self.joy_x = 0.0
+        self.joy_y = 0.0
+        self.joy_z = 0.0
+        self.enabled_flag = False
 
     def set_target(self, x, y, z):
         print("set_target:", x, y, z)
@@ -25,11 +29,14 @@ class GotoTrajectory:
         self.reset()
 
 
-    def move_target(self, joy_x, joy_y):
-        self.target_x += joy_x
-        self.target_y += joy_y
+    def move_target(self, joy_x, joy_y, joy_z):
+        self.joy_x = joy_x
+        self.joy_y = joy_y
+        self.joy_z = joy_z
+        #self.target_x += joy_x
+        #self.target_y += joy_y
         # print("move_target:", self.target_x, self.target_y)
-        self.reset()
+        # self.reset()
         
     def reset(self):
         dx = self.target_x - self.x
@@ -41,7 +48,7 @@ class GotoTrajectory:
         self.travel_length = len
         self.frac_x = dx/len
         self.frac_y = dy/len
-        self.frac_z = dy/len
+        self.frac_z = dz/len
         self.phase = "acc"
         self.acc_len = 0.0
         self.speed = 0.0
@@ -74,6 +81,15 @@ class GotoTrajectory:
 
     def tick(self, dt):
         print("goto_trajectory tick:", dt, self.phase)
+
+        self.target_x += self.joy_x
+        self.target_y += self.joy_y
+        self.target_z += self.joy_z
+
+        if not self.enabled_flag:
+            self.reset()
+            return
+        
         dx = self.target_x - self.x
         dy = self.target_y - self.y
         dz = self.target_z - self.z

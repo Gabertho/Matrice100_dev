@@ -41,14 +41,13 @@ def joy_callback(data):
     #    trajectory.set_target1()
 
     if data.buttons[6]:
-        enable_flag = True
+        trajectory.enable_flag = True
     else:
-        enable_flag = False
+        trajectory.enable_flag = False
         # trajectory.reset(current_pose.pose.position.x, current_pose.pose.position.z, current_pose.pose.position.z)
         trajectory.have_initial_position
 
-    if not enable_flag:
-        trajectory.move_target(-data.axes[0]/50.0, data.axes[1]/50.0)
+    trajectory.move_target(-data.axes[0]/50.0, data.axes[1]/50.0, data.axes[2]/50.0)
         
         
 def pose_callback(data):
@@ -67,15 +66,11 @@ def timer_callback(event):
         return
     inside_timer_callback = True
 
+    trajectory.tick(options.dt)
+
     msg2 = trajectory.get_target_point_stamped()
     target_pub.publish(msg2)
 
-
-    if enable_flag:
-        trajectory.tick(options.dt)
-    else:
-        inside_timer_callback = False
-        return
     msg = trajectory.get_point_stamped()
     trajectory_pub.publish(msg)
 
