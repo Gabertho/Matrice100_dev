@@ -28,6 +28,9 @@ old_x = 0.0
 old_y = 0.0
 old_z = 0.0
 n_samples = 0
+x_vel=[]
+y_vel=[]
+z_vel=[]
 
 auto_flag = False
 inside_timer_callback = False
