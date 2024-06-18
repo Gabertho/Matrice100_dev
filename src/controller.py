@@ -19,12 +19,10 @@ class Controller:
         self.pitch = 0.0
         self.thrust = 0.0
         self.yaw_rate = 0.0
-        self.target0 = None
         self.target = None
         self.target_speed = 1.0
         self.target_yaw = 0.0
         self.have_target = False
-        self.have_target0 = False
         self.have_current_yaw = False
         self.hover_thrust = 38.0
         self.P_z = 1.5
@@ -165,10 +163,6 @@ class Controller:
         # print("DO CONTROL:", dt, self.control_mode)
 
         u = [0.0, 0.0, 38.0, 0.0]
-
-        if not self.have_target0:
-            print("Do not have target0")
-            return u
 
         if not self.have_current_yaw:
             print("Do not have current_yaw")
