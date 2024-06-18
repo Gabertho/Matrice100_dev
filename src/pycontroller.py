@@ -108,6 +108,7 @@ def battery_callback(data):
     else:
         thrust = 45.0 - (45.0-39.0)*current_battery_level/80.0
     # rospy.loginfo(f"Received battery level: {current_battery_level} - {thrust}")
+    thrust = 38.0
     controller.set_hover_thrust(thrust)
     return
 
