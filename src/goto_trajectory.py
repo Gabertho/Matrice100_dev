@@ -77,7 +77,7 @@ class GotoTrajectory:
                 self.phase = "cruise"
                 print("ACCLEN:", self.acc_len)
             else:
-                if self.acc_length >= self.travel_length/2.0:
+                if self.acc_len >= self.travel_length/2.0:
                     self.phase = "brake"
                 
 
