@@ -39,7 +39,7 @@ def joy_callback(data):
     #    trajectory.set_target0()
     #if data.axes[6] < -0.5:
     #    trajectory.set_target1()
-        
+
     if data.buttons[6]:
         enable_flag = True
     else:
@@ -47,6 +47,10 @@ def joy_callback(data):
         # trajectory.reset(current_pose.pose.position.x, current_pose.pose.position.z, current_pose.pose.position.z)
         trajectory.have_initial_position
 
+    if not enable_flag:
+        trajectory.move_target(-data.axes[0], data.axes[1])
+        
+        
 def pose_callback(data):
     global current_pose
     # print("pose_callback:", data)

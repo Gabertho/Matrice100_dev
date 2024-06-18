@@ -23,6 +23,12 @@ class GotoTrajectory:
         self.target_y = y
         self.target_z = z
         # self.reset()
+
+
+    def move_target(self, joy_x, joy_y):
+        self.target_x += joy_x
+        self.target_y += joy_y
+        self.reset()
         
     def reset(self):
         dx = self.target_x - self.x
