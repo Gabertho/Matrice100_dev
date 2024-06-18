@@ -21,7 +21,7 @@ class GotoTrajectory:
         self.target_x = x
         self.target_y = y
         self.target_z = z
-        self.reset()
+        # self.reset()
         
     def reset(self):
         dx = self.target_x - self.x
