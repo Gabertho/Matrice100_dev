@@ -11,9 +11,9 @@ class GotoTrajectory:
         self.target_y = y
         self.target_z = z
         self.target_speed = speed
-        self.reset()
         self.acc = 1.0
         self.phase = "acc"
+        self.have_initial_position = False
 
     def set_target(self, x, y, z):
         print("set_target:", x, y, z)
@@ -54,6 +54,9 @@ class GotoTrajectory:
         self.x = x
         self.y = y
         self.z = z
+        if not self.have_initial_position:
+            self.reset()
+            self.have_initial_position = True
 
     def tick(self, dt):
         # print("goto_trajectory tick:", dt)
