@@ -31,6 +31,7 @@ n_samples = 0
 x_vel=[]
 y_vel=[]
 z_vel=[]
+avel_index = 0
 
 auto_flag = False
 inside_timer_callback = False
