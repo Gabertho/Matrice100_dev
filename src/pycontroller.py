@@ -68,12 +68,19 @@ def joy_callback(data):
         controller.set_yaw_control(True)
 
 
-    if data.buttons[3]:
+    if data.buttons[0]:
         controller.auto()
         controlled_flag = True
 
-    if data.buttons[0]:
+    if data.buttons[1]:
         controlled_flag = False
+    
+    if data.buttons[3]:
+        # releaseget authority
+        print("releaseGet authriy")
+        proxy = rospy.ServiceProxy('dji_sdk/sdk_control_authority', SDKControlAuthority)
+        resp = proxy(0)
+        print("AUTH RESP:", resp)
     
         
     if data.buttons[2]:
