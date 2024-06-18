@@ -32,6 +32,7 @@ class GotoTrajectory:
         self.frac_y = dy/len
         self.phase = "acc"
         self.acc_len = 0.0
+        self.speed = 0.0
 
     def get_point_stamped(self):
         msg = PointStamped()
@@ -60,7 +61,7 @@ class GotoTrajectory:
             self.have_initial_position = True
 
     def tick(self, dt):
-        # print("goto_trajectory tick:", dt)
+        print("goto_trajectory tick:", dt, self.phase)
         dx = self.target_x - self.x
         dy = self.target_y - self.y
         dz = self.target_z - self.z
