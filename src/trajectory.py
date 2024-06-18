@@ -40,7 +40,7 @@ def joy_callback(data):
     #if data.axes[6] < -0.5:
     #    trajectory.set_target1()
         
-    if data.buttons[6] or data.buttons[0]:
+    if data.buttons[6]:
         enable_flag = True
     else:
         enable_flag = False

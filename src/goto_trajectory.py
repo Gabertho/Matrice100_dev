@@ -7,31 +7,19 @@ from geometry_msgs.msg import PointStamped
 
 class GotoTrajectory:
     def __init__(self, x, y, z, speed):
-        self.x0 = 0.0
-        self.y0 = 0.0
-        self.z0 = z
         self.target_x = x
         self.target_y = y
         self.target_z = z
-        self.target1_x = x
-        self.target1_y = y
-        self.target1_z = z
-        self.target0_x = 0.0
-        self.target0_y = 0.0
-        self.target0_z = z
         self.target_speed = speed
         self.reset()
         self.acc = 1.0
         self.phase = "acc"
 
-    def set_target0(self):
-        print("set_target0:", self.target0_x, self.target0_y, self.target0_z)
-        self.target_x = self.target0_x
-        self.target_y = self.target0_y
-        self.target_z = self.target0_z
-        self.x0 = self.target1_x
-        self.y0 = self.target1_y
-        self.z0 = self.target1_z
+    def set_target(self, x, y, z):
+        print("set_target:", x, y, z)
+        self.target_x = x
+        self.target_y = y
+        self.target_z = z
         self.reset()
         
     def set_target1(self):
@@ -43,10 +31,6 @@ class GotoTrajectory:
         self.z0 = self.target0_z
         
     def reset(self):
-        self.x = self.x0
-        self.y = self.y0
-        self.z = self.z0
-        self.speed = 0
         dx = self.target_x - self.x
         dy = self.target_y - self.y
         dz = self.target_z - self.z
