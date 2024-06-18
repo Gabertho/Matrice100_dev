@@ -22,14 +22,6 @@ class GotoTrajectory:
         self.target_z = z
         self.reset()
         
-    def set_target1(self):
-        self.target_x = self.target1_x
-        self.target_y = self.target1_y
-        self.target_z = self.target1_z
-        self.x0 = self.target0_x
-        self.y0 = self.target0_y
-        self.z0 = self.target0_z
-        
     def reset(self):
         dx = self.target_x - self.x
         dy = self.target_y - self.y
@@ -93,7 +85,7 @@ class GotoTrajectory:
             self.x = self.target_x
             self.y = self.target_y
 
-        print("SPEED:", self.speed)
+        print("SPEED:", self.speed, self.frac_x, self.frac_y)
         len = self.speed*dt
         self.x += self.frac_x*len
         self.y += self.frac_y*len
