@@ -14,6 +14,7 @@ class GotoTrajectory:
         self.acc = 1.0
         self.phase = "acc"
         self.have_initial_position = False
+        self.speed = 0.0
 
     def set_target(self, x, y, z):
         print("set_target:", x, y, z)
