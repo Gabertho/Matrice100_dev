@@ -24,6 +24,10 @@ from controller import Controller
 from optparse import OptionParser
 from threading import Lock, Event
 
+old_x = 0.0
+0ld_y = 0.0
+omd_z = 0.0
+
 auto_flag = False
 inside_timer_callback = False
 controlled_flag = False
