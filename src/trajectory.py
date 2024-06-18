@@ -49,10 +49,10 @@ def joy_callback(data):
 
 def pose_callback(data):
     global current_pose
-    print("pose_callback:", data)
+    # print("pose_callback:", data)
     current_pose = data
     if not enable_flag:
-        trajectory.set_initial_position(current_pose.pose.position.x, current_pose.pose.position.z, current_pose.pose.position.z)
+        trajectory.set_initial_position(current_pose.pose.position.x, current_pose.pose.position.y, current_pose.pose.position.z)
 
 def timer_callback(event): 
     # print("trajectory timer_callback")
