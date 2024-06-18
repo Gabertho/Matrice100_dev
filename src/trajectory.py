@@ -93,6 +93,7 @@ if __name__ == "__main__":
 
     joy_sub = rospy.Subscriber("/drone/joy", Joy, joy_callback)       #/dji_sdk/local_position
     pose_sub = rospy.Subscriber("pose", PoseStamped, pose_callback)       #/dji_sdk/local_position
+    pose2_sub = rospy.Subscriber("/mat2/pose", PoseStamped, pose_callback)       #/dji_sdk/local_position
 
     rospy.Timer(rospy.Duration(options.dt), timer_callback)
     
