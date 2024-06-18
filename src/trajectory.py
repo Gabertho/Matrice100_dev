@@ -3,6 +3,10 @@ import rospy
 import math
 import sys
 
+#
+# Take current position as atart.  button0 is greeb manual, yellow=3 auto
+#
+
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 import numpy as np
 
