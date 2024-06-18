@@ -15,6 +15,7 @@ class GotoTrajectory:
         self.phase = "acc"
         self.have_initial_position = False
         self.speed = 0.0
+        self.travel_length = 0.0
 
     def set_target(self, x, y, z):
         print("set_target:", x, y, z)
@@ -28,6 +29,7 @@ class GotoTrajectory:
         dy = self.target_y - self.y
         dz = self.target_z - self.z
         len = math.sqrt(dx*dx+dy*dy)
+        self.travel_length = len
         self.frac_x = dx/len
         self.frac_y = dy/len
         self.phase = "acc"
@@ -74,6 +76,10 @@ class GotoTrajectory:
                 self.speed = self.target_speed
                 self.phase = "cruise"
                 print("ACCLEN:", self.acc_len)
+            else:
+                if self.acc_length >= self.travel_length/2.0:
+                    self.phase = "brake"
+                
 
         if self.phase == "brake":
             self.speed -= self.acc*dt
