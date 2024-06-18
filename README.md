@@ -32,6 +32,15 @@ Controller:
 ```bash
 roslaunch drone_dev controller.launch
 ```
+or
+```bash
+roslaunch drone_dev controller.launch djisim:=true
+```
+or
+```bash
+roslaunch drone_dev controller.launch vicon:=true
+```
+
 
 Rviz:
 ```bash
