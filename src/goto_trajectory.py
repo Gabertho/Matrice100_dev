@@ -35,12 +35,13 @@ class GotoTrajectory:
         dx = self.target_x - self.x
         dy = self.target_y - self.y
         dz = self.target_z - self.z
-        len = math.sqrt(dx*dx+dy*dy)
+        len = math.sqrt(dx*dx+dy*dy+dz*dz)
         if len < 0.001:
             return
         self.travel_length = len
         self.frac_x = dx/len
         self.frac_y = dy/len
+        self.frac_z = dy/len
         self.phase = "acc"
         self.acc_len = 0.0
         self.speed = 0.0
@@ -76,7 +77,7 @@ class GotoTrajectory:
         dx = self.target_x - self.x
         dy = self.target_y - self.y
         dz = self.target_z - self.z
-        dist_to_target = math.sqrt(dx*dx+dy*dy)
+        dist_to_target = math.sqrt(dx*dx+dy*dy+dz*dz)
         print("dist_to_target:", dist_to_target)
 
         if self.phase == "acc":
@@ -104,11 +105,13 @@ class GotoTrajectory:
         if self.phase == "hover":
             self.x = self.target_x
             self.y = self.target_y
+            self.z = self.target_z
 
-        print("SPEED:", self.speed, self.frac_x, self.frac_y)
+        print("SPEED:", self.speed, self.frac_x, self.frac_y, self.frac_z)
         len = self.speed*dt
         self.x += self.frac_x*len
         self.y += self.frac_y*len
+        self.z += self.frac_z*len
         if self.phase == "acc":
             self.acc_len += len
         
