@@ -1,8 +1,16 @@
 <!-- This will start the controller. -->
 <launch>
   <arg name="vicon" default="false" />
+  <arg name="djisim" default="false" />
   <rosparam command="load" file="$(find drone_dev)/config/common.yaml" ns="/dji2" />
-  <node name="controller" pkg="drone_dev" type="pycontroller.py" args="--vicon __ns:=/dji2" output="screen" if="$(arg vicon)" />
-  <node name="controller" pkg="drone_dev" type="pycontroller.py" args="__ns:=/dji2" output="screen" unless="$(arg vicon)" />
+
+  <group if="$(arg djisim)">
+    <node name="controller" pkg="drone_dev" type="pycontroller.py" args="--djisim __ns:=/dji2" output="screen"" />
+  </group>
+  
+  <group unless="$(arg djisim)">
+    <node name="controller" pkg="drone_dev" type="pycontroller.py" args="--vicon __ns:=/dji2" output="screen" if="$(arg vicon)" />
+    <node name="controller" pkg="drone_dev" type="pycontroller.py" args="__ns:=/dji2" output="screen" unless="$(arg vicon)" />
+  </group>
 </launch>
 

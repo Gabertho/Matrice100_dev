@@ -44,6 +44,7 @@ battery_file = f'{os.environ["HOME"]}/lrs_ws/src/Matrice100_dev/config/matrice_b
 parser = OptionParser()
 parser.add_option ("", "--vicon", action="store_true", dest="vicon", help="Vicon")
 parser.add_option ("", "--hover", action="store_true", dest="hover", help="Hover")
+parser.add_option ("", "--djisim", action="store_true", dest="djisim", help="Dji Hardware Sim")
 
 parser.add_option("-x", "", action="store", dest="x", type="float", default=0.0, help='pick a point for x')
 parser.add_option("-y", "", action="store", dest="y", type="float", default=0.0, help='pick a point for y')
@@ -132,7 +133,7 @@ def get_thrust_based_on_battery(battery_level, data):
     if val > 44.0:
         rospy.logerr(f"Error: Abnormal value: {val}")        
         val = 44.0
-    if not options.vicon:
+    if options.djisim:
         val = 38.0
     return val
 
