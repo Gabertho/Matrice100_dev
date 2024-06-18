@@ -69,26 +69,22 @@ def joy_callback(data):
 
 
     if data.buttons[0]:
-        controller.auto()
-        controlled_flag = True
-
-    if data.buttons[1]:
-        controlled_flag = False
-    
-    if data.buttons[3]:
-        # releaseget authority
-        print("releaseGet authriy")
-        proxy = rospy.ServiceProxy('dji_sdk/sdk_control_authority', SDKControlAuthority)
-        resp = proxy(0)
-        print("AUTH RESP:", resp)
-    
-        
-    if data.buttons[2]:
         # get authority
         print("Get authriy")
         proxy = rospy.ServiceProxy('dji_sdk/sdk_control_authority', SDKControlAuthority)
         resp = proxy(1)
         print("AUTH RESP:", resp)
+        controller.auto()
+        controlled_flag = True
+
+    if data.buttons[1]:
+        controlled_flag = False
+        # releaseget authority
+        print("releaseGet authriy")
+        proxy = rospy.ServiceProxy('dji_sdk/sdk_control_authority', SDKControlAuthority)
+        resp = proxy(0)
+        print("AUTH RESP:", resp)
+
 
 def pose_callback(data):
     # print("pose_callback:", data)
