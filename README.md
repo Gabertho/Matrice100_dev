@@ -3,14 +3,19 @@ Control repository for the DJI Matrice 100 UAV.
 
 ## pycontroller.py
 
-Roscore:
+Roscore (backpack):
 ```bash
 roscore
 ```
 
-Joystick:
+Joystick (backpack):
 ```bash
 rosrun joy joy_node __ns:=/drone
+```
+
+Vicon (backpack):
+```bash
+roslaunch lrs_vicon mat2.launch
 ```
 
 Simulator:

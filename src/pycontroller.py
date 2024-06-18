@@ -132,7 +132,8 @@ def get_thrust_based_on_battery(battery_level, data):
     if val > 44.0:
         rospy.logerr(f"Error: Abnormal value: {val}")        
         val = 44.0
-    val = 38.0
+    if not options.vicon:
+        val = 38.0
     return val
 
 def attitude_callback(data):
