@@ -27,6 +27,15 @@ class Controller:
         self.have_target0 = False
         self.have_current_yaw = False
         self.hover_thrust = 38.0
+        self.P_z = 1.5
+        self.I_z = 0.0019 
+        self.D_z = 6.0
+        self.P_yaw = 1.0 
+        self.D_yaw = 0.5
+        self.P_x = 2.0
+        self.D_x = 4.0
+        self.P_y = 2.0
+        self.D_y = 4.0
         self.old_err_pitch = 0.0
         self.old_err_roll = 0.0
         self.int_err_z = 0.0
@@ -35,6 +44,8 @@ class Controller:
         self.old_err_z = 0.0
         self.yaw_control_flag = False
         self.mode = "simple_pid"
+
+        
 
     def set_yaw_control(self, flag):
         self.yaw_control_flag = flag
@@ -83,35 +94,76 @@ class Controller:
         integral_new = prev_integral_value + error_anti_windup * self.delt #delt is the period like 0.01 sec if 100hz.
         return integral_new
     
-    def PID_control(self, Kp, Ki, Kd, error, int_error, d_error):
-        PID_control_value = Kp * error + Ki * int_error - Kd *d_error
-        return PID_control_value
+    # Setters
     
-    def adaptive_term(self):
-        vad = np.dot(self.output_weight.T, self.basis)
-        u_net = - vad
-        return u_net
-    
-    def linear_Cntrl(self, state, ref_signal):
-        # K =
-        # Kr =
-        upd = -K @ state #check it
-        ucrm = Kr @ ref_signal 
-        cntrl = fb+ff
-        return cntrl
-    
-    def mrac_weight_update(self, ref_model_states):
-        current_rpy_state = np.array([[self.roll], [self.D_roll], [self.pitch], [self.D_pitch], [self.yaw], [self.D_yaw]])
-        error = ref_model_states - current_rpy_state
-        #P = Solution for Lyapunov Equation
-        P = np.array([[50.13, 0.0013, 0, 0, 0, 0], [0.0013, 0.1253, 0, 0, 0, 0],
-                      [0, 0, 50.13, 0.0013, 0, 0], [0, 0, 0.0013, 0.1253, 0, 0],
-                      [0, 0, 0, 0, 50.13, 0.0013], [0, 0, 0, 0, 0.0013, 0.1253]])
+    def set_pitch(self, pitch):
+        self.pitch = pitch
 
-        B = np.array([[0, 0, 0], [1, 0, 0], [0, 0, 0],
-                      [0, 1, 0], [0, 0, 0], [0, 0, 1]])
+    def set_roll(self, roll):
+        self.roll = roll
+    
+    def set_thrust(self, thrust):
+        self.thrust = thrust
 
-        self.output_weight = self.output_weight + (-self.delt) * (self.adaptive_gain) * np.dot(self.basis, np.dot(error.T, np.dot(P, B)))
+    def set_yawrate(self, yaw_rate):
+        self.yaw_rate = yaw_rate
+
+    # Getters
+
+    def get_yaw_control(self):
+        return self.yaw_control_flag
+
+    def control_thrust(self, period):
+        self.err_z = self.target[2] - self.current_position[2] 
+        self.int_err_z += self.err_z
+        self.d_err_z = (self.err_z - self.old_err_z) / period
+        delta = self.P_z * self.err_z + self.I_z * self.int_err_z + self.D_z * self.d_err_z
+        thrust = self.hover_thrust + delta
+        limit1 = 80.0
+        limit2 = 20.0
+        if thrust > limit1:
+            thrust = limit1
+        if thrust < limit2:
+            thrust = limit2
+        self.old_err_z = self.err_z
+        return thrust
+     
+    def control_yaw(self, period):
+        yaw_rate = 0.0
+        self.err_yaw = self.target_yaw - self.current_yaw
+        self.int_err_yaw += self.err_yaw
+        d_err = (self.err_z - self.old_err_z) / period
+        if self.get_yaw_control():
+            yaw_rate = self.P_yaw * self.err_yaw + self.D_yaw * d_err
+        self.old_err_yaw = self.err_yaw
+        return yaw_rate
+
+    def control_horizontal(self, period):
+        err_x = self.target[0] - self.current_position[0]
+        err_y = self.target[1] - self.current_position[1]
+        self.err_pitch = math.cos(-self.current_yaw) * err_x - math.sin(-self.current_yaw) * err_y
+        self.err_roll = math.sin(-self.current_yaw) * err_x + math.cos(-self.current_yaw) * err_y
+
+        derr_pitch = (self.err_pitch - self.old_err_pitch) / period
+        derr_roll = (self.err_roll - self.old_err_roll) / period
+
+        pitch = self.P_y * self.err_pitch + self.D_y * derr_pitch
+        roll = -(self.P_x * self.err_roll + self.D_x * derr_roll)
+
+        limit = 10.0
+        if pitch > limit:
+            pitch = limit
+        if pitch < -limit:
+            pitch = -limit
+        if roll > limit:
+            roll = limit
+        if roll < -limit:
+            roll = -limit
+
+        self.old_err_pitch = self.err_pitch
+        self.old_err_roll = self.err_roll
+
+        return(pitch * math.pi / 180.0, roll * math.pi / 180.0)
         
     def control(self, dt):
         # print("DO CONTROL:", dt, self.control_mode)
@@ -179,42 +231,36 @@ class Controller:
             u[1] = P*error[1]            # north
 
         if self.control_mode == "angles":
-            if self.mode == "gabriel"            
-                #FIRST: Converting x,y,z, yaw from reference trajectory to roll, pitch, yaw angles:
-                #Assuming reference trajectory is x,y,z,yaw (adjust reference trajectory later to do this.)
-                xref, yref, yaw_ref = self.target[0], self.target[1], self.target[3]
+            if self.mode == "gabriel":
+                thrust = self.control_thrust(dt)
+                yaw = self.control_yaw(dt)
+                pitch, roll = self.control_horizontal(dt)
+                u[0] = roll 
+                u[1] = pitch
+                u[2] = thrust 
+                u[3] = yaw
 
-                error_x = xref - self.current_position[0]
-                self.integration_val_x = self.integral(self.integration_val_x , error_x) #fiz these selfs etc to be oop
+                #Saturation
+                ##Thrust
+                if u[2] < 20.0:
+                    u[2] = 20.0
+                if u[2] > 80.0:
+                    u[2] = 80.0
 
-                error_y = yref - self.current_position[1]
-                self.integration_val_y = self.integral(self.integration_val_y , error_y) #fiz these selfs etc to be oop
+                ##Roll, pitch
+                max = math.radians(20.0)
+                if u[0] > max:
+                    u[0] = max
+                if u[0] < -max:
+                    u[0] = -max
+                if u[1] > max:
+                    u[1] = max
+                if u[1] < -max:
+                    u[1] = -max
 
-                #Implement the values of P, I, D and get the right velocities (dx dy)
-                PID_x = self.PID_control(self.P_x, self.I_x, self.D_x, error_x , self.integration_val_x , self.dx)
-                PID_y = self.PID_control(self.P_y, self.I_y , self.D_y, error_y , self.integration_val_y , self.dy)
-                pitch_ref = PID_x*math.cos(self.yaw)+PID_y*math.sin(self.yaw) # Approx Model Inversion
-                roll_ref = PID_x*math.sin(self.yaw)-PID_y*math.cos(self.yaw) # Approx Model Inversion
+                #Yaw
 
-                #i am not sure if we should feed the reference model now and get its output or get the last output.
-
-                vad = self.adaptive_term()
-
-                total_control = self.linear_Cntrl(state,ref)
-
-                u = total_control - vad
-
-                #check dimensions etc
-                
-                #Update reference model and adaptive term weights.
-                
-                A.reference_model([yaw_ref_OL, pitch_ref_OL, roll_ref_OL ])
-                A.mrac_weight_update(A.ref_model_states)
-                
-                # Now that we have our r(t) = roll_ref, pitch_ref, yaw_ref, we need to feed the reference model and integrate it.
-
-
-            if self.mode == "simple_pid"
+            if self.mode == "simple_pid":
                 # print("ERROR:", error, self.target)
 
                 herror = np.array([error[0], error[1]])
