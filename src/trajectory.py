@@ -67,6 +67,10 @@ def timer_callback(event):
         return
     inside_timer_callback = True
 
+    msg2 = trajectory.get_target_point_stamped()
+    target_pub.publish(msg2)
+
+
     if enable_flag:
         trajectory.tick(options.dt)
     else:
@@ -74,9 +78,6 @@ def timer_callback(event):
         return
     msg = trajectory.get_point_stamped()
     trajectory_pub.publish(msg)
-
-    msg2 = trajectory.get_target_point_stamped()
-    target_pub.publish(msg2)
 
     inside_timer_callback = False
 
