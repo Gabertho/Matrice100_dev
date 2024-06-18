@@ -48,7 +48,7 @@ def joy_callback(data):
         trajectory.have_initial_position
 
     if not enable_flag:
-        trajectory.move_target(-data.axes[0]/10.0, data.axes[1]/10.0)
+        trajectory.move_target(-data.axes[0]/50.0, data.axes[1]/50.0)
         
         
 def pose_callback(data):
