@@ -65,6 +65,20 @@ class GotoTrajectory:
         msg.point.z = self.z
         return msg
 
+    def get_target_point_stamped(self):
+        msg = PointStamped()
+        msg.header.frame_id = "world"
+        msg.header.stamp = rospy.Time.now()
+        msg.point.x = self.target_x
+        msg.point.y = self.target_y
+        msg.point.z = self.target_z
+        return msg
+
+    def set_initial_position(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
+
     def tick(self, dt):
         # print("goto_trajectory tick:", dt)
         dx = self.target_x - self.x

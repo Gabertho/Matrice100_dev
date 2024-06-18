@@ -35,10 +35,10 @@ parser.add_option("", "--trajectory_type", action="store", dest="trajectory_type
 
 def joy_callback(data):
     global enable_flag
-    if data.axes[6] > 0.5:
-        trajectory.set_target0()
-    if data.axes[6] < -0.5:
-        trajectory.set_target1()
+    #if data.axes[6] > 0.5:
+    #    trajectory.set_target0()
+    #if data.axes[6] < -0.5:
+    #    trajectory.set_target1()
         
     if data.buttons[6] or data.buttons[0]:
         enable_flag = True
@@ -51,6 +51,8 @@ def pose_callback(data):
     global current_pose
     # print("pose_callback:", data)
     current_pose = data
+    if not enable_flag:
+        trajectory.set_initial_position(current_pose.pose.position.x, current_pose.pose.position.z, current_pose.pose.position.z)
 
 def timer_callback(event): 
     # print("trajectory timer_callback")
@@ -65,6 +67,9 @@ def timer_callback(event):
         trajectory.tick(options.dt)
     msg = trajectory.get_point_stamped()
     trajectory_pub.publish(msg)
+
+    msg2 = trajectory.get_target_point_stamped()
+    target_pub.publish(msg)
 
     inside_timer_callback = False
 
@@ -84,6 +89,7 @@ if __name__ == "__main__":
     trajectory = GotoTrajectory(x, y, z, speed)
 
     trajectory_pub = rospy.Publisher("trajectory", PointStamped, latch=False, queue_size=10)
+    target_pub = rospy.Publisher("target", PointStamped, latch=False, queue_size=10)
 
     joy_sub = rospy.Subscriber("/drone/joy", Joy, joy_callback)       #/dji_sdk/local_position
     pose_sub = rospy.Subscriber("pose", PoseStamped, pose_callback)       #/dji_sdk/local_position
