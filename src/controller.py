@@ -45,7 +45,9 @@ class Controller:
         self.yaw_control_flag = False
         self.mode = "simple_pid"
 
-        
+
+    def auto(self):
+        self.target = np.array([self.current_position[0], self.current_position[1], self.current_position[2] ])
 
     def set_yaw_control(self, flag):
         self.yaw_control_flag = flag

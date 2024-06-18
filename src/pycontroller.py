@@ -66,6 +66,15 @@ def joy_callback(data):
         controller.set_yaw_control(False)
     if data.axes[7] > 0.5:
         controller.set_yaw_control(True)
+
+
+    if data.buttons[3]:
+        controller.auto()
+        controlled_flag = True
+
+    if data.buttons[0]:
+        controlled_flag = False
+    
         
     if data.buttons[2]:
         # get authority
@@ -73,10 +82,6 @@ def joy_callback(data):
         proxy = rospy.ServiceProxy('dji_sdk/sdk_control_authority', SDKControlAuthority)
         resp = proxy(1)
         print("AUTH RESP:", resp)
-    if data.buttons[6] or data.buttons[0]:
-        controlled_flag = True
-    else:
-        controlled_flag = False
 
 def pose_callback(data):
     # print("pose_callback:", data)
