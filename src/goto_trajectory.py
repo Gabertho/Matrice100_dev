@@ -22,19 +22,21 @@ class GotoTrajectory:
         self.target_x = x
         self.target_y = y
         self.target_z = z
-        # self.reset()
+        self.reset()
 
 
     def move_target(self, joy_x, joy_y):
         self.target_x += joy_x
         self.target_y += joy_y
-        # self.reset()
+        self.reset()
         
     def reset(self):
         dx = self.target_x - self.x
         dy = self.target_y - self.y
         dz = self.target_z - self.z
         len = math.sqrt(dx*dx+dy*dy)
+        if len < 0.001:
+            return
         self.travel_length = len
         self.frac_x = dx/len
         self.frac_y = dy/len
