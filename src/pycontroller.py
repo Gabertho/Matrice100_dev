@@ -32,6 +32,8 @@ x_vel=[]
 y_vel=[]
 z_vel=[]
 avel_index = 0
+current_roll = 0.0
+current_pitch = 0.0
 
 auto_flag = False
 inside_timer_callback = False
