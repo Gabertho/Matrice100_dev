@@ -22,7 +22,7 @@ enable_flag = False
 current_pose = PoseStamped()
 current_pose.pose.position.x = 0.0
 current_pose.pose.position.y = 0.0
-current_pose.pose.position.z = 10.0
+current_pose.pose.position.z = 2.5
 
 parser = OptionParser()
 parser.add_option("", "--dt", action="store", dest="dt", type="float", default=0.1, help='Perions, default 0.1')
@@ -69,9 +69,9 @@ if __name__ == "__main__":
     rospy.init_node ("pycontroller")
     ns = rospy.get_namespace ().rstrip("/")
 
-    x = rospy.get_param("~x", 30.0)
+    x = rospy.get_param("~x", 3.0)
     y = rospy.get_param("~y", 0.0)
-    z = rospy.get_param("~z", 10.0)
+    z = rospy.get_param("~z", 2.5)
     speed = rospy.get_param("~speed", 3.0)
     control_mode = rospy.get_param("control_mode", "velocity")
 
