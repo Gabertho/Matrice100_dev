@@ -27,7 +27,7 @@ from threading import Lock, Event
 old_x = 0.0
 old_y = 0.0
 old_z = 0.0
-n_sampled = 0
+n_samples = 0
 
 auto_flag = False
 inside_timer_callback = False
