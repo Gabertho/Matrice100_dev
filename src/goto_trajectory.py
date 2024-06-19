@@ -20,6 +20,7 @@ class GotoTrajectory:
         self.joy_y = 0.0
         self.joy_z = 0.0
         self.enabled_flag = False
+        self.target_yaw = 0.0
 
 
     def enable(self):
@@ -52,6 +53,7 @@ class GotoTrajectory:
         dx = self.target_x - self.x
         dy = self.target_y - self.y
         dz = self.target_z - self.z
+        self.target_yaw = math.atan2(dy, dx)
         len = math.sqrt(dx*dx+dy*dy+dz*dz)
         if len < 0.001:
             return
@@ -79,6 +81,11 @@ class GotoTrajectory:
         msg.point.x = self.target_x
         msg.point.y = self.target_y
         msg.point.z = self.target_z
+        return msg
+
+    def get_target_yaw(self):
+        msg = Float64()
+        msg.data = self.target_yaw
         return msg
 
     def set_initial_position(self, x, y, z):

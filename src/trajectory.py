@@ -79,6 +79,9 @@ def timer_callback(event):
     msg = trajectory.get_point_stamped()
     trajectory_pub.publish(msg)
 
+    msg3 = trajectory.get_target_yaw()
+    yaw_pub.publisg(msg3)
+
     inside_timer_callback = False
 
 
@@ -97,6 +100,7 @@ if __name__ == "__main__":
     trajectory = GotoTrajectory(x, y, z, speed)
 
     trajectory_pub = rospy.Publisher("trajectory", PointStamped, latch=False, queue_size=10)
+    yaw_pub = rospy.Publisher("yaw_trajectory", Float64, latch=False, queue_size=10)
     target_pub = rospy.Publisher("target", PointStamped, latch=False, queue_size=10)
 
     joy_sub = rospy.Subscriber("/drone/joy", Joy, joy_callback)       #/dji_sdk/local_position
