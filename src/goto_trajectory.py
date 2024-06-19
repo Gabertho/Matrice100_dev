@@ -22,6 +22,9 @@ class GotoTrajectory:
         self.joy_z = 0.0
         self.enabled_flag = False
         self.target_yaw = 0.0
+        self.x = 0.0
+        self.y = 0.0
+        self.z = 0.0
 
 
     def enabled(self):
