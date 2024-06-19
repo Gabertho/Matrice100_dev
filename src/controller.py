@@ -42,7 +42,18 @@ class Controller:
         self.old_err_z = 0.0
         self.yaw_control_flag = False
         self.mode = "simple_pid"
+        self.trajectory_flag = False
 
+    def enable_trajectory(self):
+        self.trajectory_flag = True
+
+    def disable_trajectory(self):
+
+        self.trajectory_flag = False
+
+    def reset(self):
+        self.int_err_z = 0.0
+        self.int_err_yaw = 0.0        
 
     def auto(self):
         self.target = np.array([self.current_position[0], self.current_position[1], self.current_position[2] ])
@@ -57,8 +68,9 @@ class Controller:
         self.current_position = np.array([x, y, z])
 
     def notify_trajectory(self, x, y, z):
-        self.target = np.array([x, y, z])
-        self.have_target = True
+        if self.trajectory_flag:
+            self.target = np.array([x, y, z])
+            self.have_target = True
         
     def notify_yaw_trajectory(self, yaw):
         self.target_yaw = yaw
