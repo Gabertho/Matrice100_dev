@@ -212,7 +212,7 @@ class Controller:
 
         #pthrust = 1.5
         ithrust = 0.004
-        #dthrust = 6.0
+        dthrust = 0.0
 
         print("TARGET:", self.target)
         print("CUPOS:", self.current_position)
