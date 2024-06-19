@@ -45,7 +45,7 @@ class Controller:
         self.trajectory_flag = False
 
     def get_target_pose(self):
-        if self.target:
+        if self.target.any():
             msg = PoseStamped()
             msg.header.frame_id = "world"
             msg.header.stamp = rospy.time.now()
