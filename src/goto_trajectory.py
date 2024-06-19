@@ -131,11 +131,12 @@ class GotoTrajectory:
             self.y = self.target_y
             self.z = self.target_z
 
-        print("SPEED:", self.speed, self.frac_x, self.frac_y, self.frac_z)
         len = self.speed*dt
+        print("SPEED:", self.speed, self.frac_x, self.frac_y, self.frac_z, len)
         self.x += self.frac_x*len
         self.y += self.frac_y*len
         self.z += self.frac_z*len
+        print("POSITION:", self.x, self.y, self.z)
         if self.phase == "acc":
             self.acc_len += len
         
