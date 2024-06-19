@@ -80,6 +80,7 @@ class GotoTrajectory:
         return msg
 
     def set_initial_position(self, x, y, z):
+        print("set_initial_position:", x, y, z)
         self.x = x
         self.y = y
         self.z = z
