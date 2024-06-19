@@ -5,7 +5,7 @@
   <rosparam command="load" file="$(find drone_dev)/config/common.yaml" ns="/dji2" />
 
   <group if="$(arg djisim)">
-    <node name="controller" pkg="drone_dev" type="pycontroller.py" args="--djisim __ns:=/dji2" output="screen"" />
+    <node name="controller" pkg="drone_dev" type="pycontroller.py" args="--djisim __ns:=/dji2" output="screen" />
   </group>
   
   <group unless="$(arg djisim)">
