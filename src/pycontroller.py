@@ -294,6 +294,10 @@ def publish_controls(u):
     publish_value(ctrl2_pub, u[2])
     publish_value(ctrl3_pub, u[3])
 
+def publist_target(pub):
+    msg = controller.get_target_pose()
+    pub.publish(msg)
+
 def timer_callback(event): 
     # print("timer_callback")
 
@@ -313,6 +317,8 @@ def timer_callback(event):
     #### u[3] = math.radians(20.0)  # rotate 3 degreesper second
 
     publish_controls(u)
+
+    publish_target(target_pub)
 
     # print("U:", u)
 
@@ -369,6 +375,7 @@ if __name__ == "__main__":
     ctrl2_pub = rospy.Publisher("ctrl/u2", Float64, latch=False, queue_size=10)
     ctrl3_pub = rospy.Publisher("ctrl/u3", Float64, latch=False, queue_size=10)
     velocity_pub = rospy.Publisher("velocity", Vector3, latch=False, queue_size=10)
+    target_pub = rospy.Publisher("target/pose", PoseStamped, latch=False, queue_size=10)
     #hokuyo_lidar_pub = rospy.Publisher("hokuyo_scan", LaserScan, latch=False, queue_size=10)
 
     joy_sub = rospy.Subscriber("/drone/joy", Joy, joy_callback)       #/dji_sdk/local_position
