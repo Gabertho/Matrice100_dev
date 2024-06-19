@@ -24,6 +24,9 @@ class GotoTrajectory:
         self.target_yaw = 0.0
 
 
+    def enabled(self):
+        return self.enabled_flag
+
     def enable(self):
         self.enabled_flag = True
 

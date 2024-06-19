@@ -22,7 +22,6 @@ from optparse import OptionParser
 from threading import Lock, Event
 
 inside_timer_callback = False
-enable_flag = False
 current_pose = PoseStamped()
 current_pose.pose.position.x = 0.0
 current_pose.pose.position.y = 0.0
@@ -35,7 +34,6 @@ parser.add_option("", "--trajectory_type", action="store", dest="trajectory_type
 (options, args) = parser.parse_args()
 
 def joy_callback(data):
-    global enable_flag
     global set_initial_position_flag
     #if data.axes[6] > 0.5:
     #    trajectory.set_target0()
@@ -79,8 +77,9 @@ def timer_callback(event):
     msg = trajectory.get_point_stamped()
     trajectory_pub.publish(msg)
 
-    msg3 = trajectory.get_target_yaw()
-    yaw_pub.publish(msg3)
+    if trajectory.enabled():
+        msg3 = trajectory.get_target_yaw()
+        yaw_pub.publish(msg3)
 
     inside_timer_callback = False
 
