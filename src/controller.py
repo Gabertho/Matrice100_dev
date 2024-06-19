@@ -65,7 +65,6 @@ class Controller:
         self.trajectory_flag = True
 
     def disable_trajectory(self):
-
         self.trajectory_flag = False
 
     def reset(self):
@@ -211,8 +210,6 @@ class Controller:
         #pthrust = 1.5
         #ithrust = 0.0
         #dthrust = 6.0
-
-        self.hover_thrust = 37.2
 
         print("TARGET:", self.target)
         print("CUPOS:", self.current_position)
