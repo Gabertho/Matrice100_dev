@@ -342,7 +342,7 @@ def timer_callback(event):
 
     if control_counter > 2:
         publish_controls(u)
-        ctrl_pub.publish(msg)
+    ctrl_pub.publish(msg)
 
     control_counter += 1
 
