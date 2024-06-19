@@ -34,6 +34,7 @@ z_vel=[]
 avel_index = 0
 current_roll = 0.0
 current_pitch = 0.0
+control_counter = 0
 
 auto_flag = False
 inside_timer_callback = False
@@ -302,6 +303,8 @@ def publish_target(pub):
 def timer_callback(event): 
     # print("timer_callback")
 
+    global control_counter
+
     if not controlled_flag:
         return
 
@@ -336,7 +339,10 @@ def timer_callback(event):
     if control_mode == "rates":
         msg.axes.append(0xC0 | 0x02 | 0x01 | 0x08 | 0x20) # Is 0x01 relevant here (Actively break to hold position after stop sending setpoint)
 
-    ctrl_pub.publish(msg)
+    if control_counter > 2:
+        ctrl_pub.publish(msg)
+
+    control_counter += 1
 
     inside_timer_callback = False
 
