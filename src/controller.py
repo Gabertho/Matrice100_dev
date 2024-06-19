@@ -52,9 +52,9 @@ class Controller:
             msg = PoseStamped()
             msg.header.frame_id = "world"
             msg.header.stamp = rospy.Time.now()
-            mgs.pose.position.x = self.target[0]
-            mgs.pose.position.y = self.target[1]
-            mgs.pose.position.z = self.target[2]
+            msg.pose.position.x = self.target[0]
+            msg.pose.position.y = self.target[1]
+            msg.pose.position.z = self.target[2]
             msg.pose.orientation.x = 0.0
             msg.pose.orientation.y = 0.0
             msg.pose.orientation.z = 0.0
