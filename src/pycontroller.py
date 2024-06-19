@@ -323,7 +323,8 @@ def timer_callback(event):
     # test
     #### u[3] = math.radians(20.0)  # rotate 3 degreesper second
 
-    publish_controls(u)
+    if control_counter > 2:    
+        publish_controls(u)
 
     publish_target(target_pub)
 
