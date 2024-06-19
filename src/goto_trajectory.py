@@ -21,6 +21,14 @@ class GotoTrajectory:
         self.joy_z = 0.0
         self.enabled_flag = False
 
+
+    def enable(self):
+        self.enabled_flag = True
+
+    def disable(self):
+        self.enabled_flag = False
+
+        
     def set_target(self, x, y, z):
         print("set_target:", x, y, z)
         self.target_x = x
@@ -80,7 +88,7 @@ class GotoTrajectory:
             self.have_initial_position = True
 
     def tick(self, dt):
-        print("goto_trajectory tick:", dt, self.phase)
+        print("goto_trajectory tick:", dt, self.phase, self.enabled_flag)
 
         self.target_x += self.joy_x
         self.target_y += self.joy_y

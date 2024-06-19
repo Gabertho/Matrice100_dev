@@ -41,9 +41,9 @@ def joy_callback(data):
     #    trajectory.set_target1()
 
     if data.buttons[6]:
-        trajectory.enable_flag = True
+        trajectory.enable()
     else:
-        trajectory.enable_flag = False
+        trajectory.disable()
         # trajectory.reset(current_pose.pose.position.x, current_pose.pose.position.z, current_pose.pose.position.z)
         trajectory.have_initial_position
 
