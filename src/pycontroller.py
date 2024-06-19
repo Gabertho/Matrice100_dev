@@ -297,8 +297,8 @@ def publish_value(pub, value):
     pub.publish(msg)
 
 def publish_controls(u):
-    publish_value(ctrl0_pub, u[0])
-    publish_value(ctrl1_pub, u[1])
+    publish_value(ctrl0_pub, math.degrees(u[0]))
+    publish_value(ctrl1_pub, math.degrees(u[1]))
     publish_value(ctrl2_pub, u[2])
     publish_value(ctrl3_pub, u[3])
 
