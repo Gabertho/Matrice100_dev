@@ -29,7 +29,7 @@ current_pose.pose.position.z = 2.5
 set_initial_position_flag = True
 
 parser = OptionParser()
-parser.add_option("", "--dt", action="store", dest="dt", type="float", default=0.02, help='Perions, default 0.1')
+parser.add_option("", "--dt", action="store", dest="dt", type="float", default=0.01, help='Perions, default 0.1')
 parser.add_option("", "--trajectory_type", action="store", dest="trajectory_type", type="string", help="Trajectory type (e.g., sinusoidal, step_z, step_xyz, spline, long_spline, rectangle, hexagon)", default="go_to_point")
 (options, args) = parser.parse_args()
 
