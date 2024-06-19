@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from geometry_msgs.msg import PoseStamped
 from tf.transformations import euler_from_quaternion
 import numpy as np
 import scipy
