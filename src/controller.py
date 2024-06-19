@@ -181,6 +181,8 @@ class Controller:
         ithrust = 0.0
         dthrust = 6.0
 
+        self.hover_thrust = 37.0
+
         print("TARGET:", self.target)
         print("CUPOS:", self.current_position)
         print("THRUSTERROR:", error[2])
