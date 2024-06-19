@@ -80,6 +80,8 @@ class GotoTrajectory:
         return msg
 
     def set_initial_position(self, x, y, z):
+        if self.enabled_flag:
+            return
         print("set_initial_position:", x, y, z)
         self.x = x
         self.y = y
