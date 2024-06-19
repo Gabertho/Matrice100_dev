@@ -47,7 +47,7 @@ def joy_callback(data):
         # trajectory.reset(current_pose.pose.position.x, current_pose.pose.position.z, current_pose.pose.position.z)
         trajectory.have_initial_position
 
-    trajectory.move_target(-data.axes[3], data.axes[4], data.axes[1]*data.buttons[4])
+    trajectory.move_target(-data.axes[3]/2.0, data.axes[4]/2.0, data.axes[1]*data.buttons[4])
         
         
 def pose_callback(data):
