@@ -27,6 +27,7 @@ current_pose = PoseStamped()
 current_pose.pose.position.x = 0.0
 current_pose.pose.position.y = 0.0
 current_pose.pose.position.z = 2.5
+set_initial_position_flag = True
 
 parser = OptionParser()
 parser.add_option("", "--dt", action="store", dest="dt", type="float", default=0.1, help='Perions, default 0.1')
@@ -46,6 +47,7 @@ def joy_callback(data):
         trajectory.disable()
         # trajectory.reset(current_pose.pose.position.x, current_pose.pose.position.z, current_pose.pose.position.z)
         trajectory.have_initial_position
+        set_initial_position_flag := True
 
     trajectory.move_target(-data.axes[3]/2.0, data.axes[4]/2.0, data.axes[1]*data.buttons[4])
         
@@ -54,8 +56,9 @@ def pose_callback(data):
     global current_pose
     # print("pose_callback:", data)
     current_pose = data
-    if not enable_flag:
+    if not set_initial_position_flag:
         trajectory.set_initial_position(current_pose.pose.position.x, current_pose.pose.position.y, current_pose.pose.position.z)
+        set_initial_position_flag := False
 
 def timer_callback(event): 
     # print("trajectory timer_callback")
