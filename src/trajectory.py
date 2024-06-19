@@ -58,7 +58,7 @@ def pose_callback(data):
     global set_initial_position_flag
     # print("pose_callback:", data)
     current_pose = data
-    if not set_initial_position_flag:
+    if set_initial_position_flag:
         trajectory.set_initial_position(current_pose.pose.position.x, current_pose.pose.position.y, current_pose.pose.position.z)
         set_initial_position_flag = False
 
