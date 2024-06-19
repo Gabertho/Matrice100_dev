@@ -294,7 +294,7 @@ def publish_controls(u):
     publish_value(ctrl2_pub, u[2])
     publish_value(ctrl3_pub, u[3])
 
-def publist_target(pub):
+def publish_target(pub):
     msg = controller.get_target_pose()
     pub.publish(msg)
 
