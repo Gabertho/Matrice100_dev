@@ -185,6 +185,10 @@ class Controller:
         self.int_err_z += error[2]
         d_err_z = (error[2] - self.old_err_z)/dt
 
+        print("INTERROR:", self.int_error)
+        print("D_ERR_Z:", d_err_z)
+
+
         delta = error[2]*pthrust + ithrust*self.int_err_z + dthrust*d_err_z
 
         print("DELTATHRUST:", delta)
