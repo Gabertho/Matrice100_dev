@@ -323,9 +323,6 @@ def timer_callback(event):
     # test
     #### u[3] = math.radians(20.0)  # rotate 3 degreesper second
 
-    if control_counter > 2:    
-        publish_controls(u)
-
     publish_target(target_pub)
 
     # print("U:", u)
@@ -344,6 +341,7 @@ def timer_callback(event):
         msg.axes.append(0xC0 | 0x02 | 0x01 | 0x08 | 0x20) # Is 0x01 relevant here (Actively break to hold position after stop sending setpoint)
 
     if control_counter > 2:
+        publish_controls(u)
         ctrl_pub.publish(msg)
 
     control_counter += 1
