@@ -371,7 +371,7 @@ if __name__ == "__main__":
     controller = Controller(control_mode)
 
     battery_sub = rospy.Subscriber("dji_sdk/battery_state", BatteryState, battery_callback)
-    dt = 0.1
+    dt = 0.05
 
     # ----------------------------------------------------------------
     marker_array_pub = rospy.Publisher("/visualization_marker_array", MarkerArray, latch=False, queue_size=1000)
