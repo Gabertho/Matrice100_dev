@@ -180,11 +180,15 @@ class Controller:
         print("TARGET:", self.target)
         print("CUPOS:", self.current_position)
         print("THRUSTERROR:", error[2])
+        print("HOVERTHRUST:", self.hover_thrust)
 
         self.int_err_z += error[2]
         d_err_z = (error[2] - self.old_err_z)/dt
 
         delta = error[2]*pthrust + ithrust*self.int_err_z + dthrust*d_err_z
+
+        print("DELTATHRUST:", delta)
+        
         u[2] = self.hover_thrust + delta
 
         if u[2] < 20.0:
