@@ -3,6 +3,7 @@ import rospy
 import math
 
 from geometry_msgs.msg import PointStamped
+from std_msgs.msg import Float64
 
 
 class GotoTrajectory:
