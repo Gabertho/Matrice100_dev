@@ -51,7 +51,7 @@ class Controller:
         if self.target.any():
             msg = PoseStamped()
             msg.header.frame_id = "world"
-            msg.header.stamp = rospy.time.now()
+            msg.header.stamp = rospy.Time.now()
             mgs.pose.position.x = self.target[0]
             mgs.pose.position.y = self.target[1]
             mgs.pose.position.z = self.target[2]
