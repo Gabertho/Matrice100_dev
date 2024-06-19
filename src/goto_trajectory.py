@@ -47,6 +47,8 @@ class GotoTrajectory:
         # self.reset()
         
     def reset(self):
+        if not self.have_initial_position:
+            return
         dx = self.target_x - self.x
         dy = self.target_y - self.y
         dz = self.target_z - self.z
