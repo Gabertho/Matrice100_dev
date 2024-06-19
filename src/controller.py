@@ -2,6 +2,7 @@
 
 import rospy
 
+from tf.transformations import euler_from_quaternion, quaternion_from_euler
 from geometry_msgs.msg import PoseStamped
 from tf.transformations import euler_from_quaternion
 import numpy as np
@@ -55,6 +56,8 @@ class Controller:
             msg.pose.position.x = self.target[0]
             msg.pose.position.y = self.target[1]
             msg.pose.position.z = self.target[2]
+            quat = quaternion_from_euler(0.0, 0.0, self.target_yaw)
+            print("QUAT:", quat)
             msg.pose.orientation.x = 0.0
             msg.pose.orientation.y = 0.0
             msg.pose.orientation.z = 0.0
@@ -208,7 +211,7 @@ class Controller:
         dthrust = 6.0
 
         #pthrust = 1.5
-        #ithrust = 0.0
+        ithrust = 0.004
         #dthrust = 6.0
 
         print("TARGET:", self.target)
