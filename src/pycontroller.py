@@ -63,6 +63,7 @@ parser.add_option("", "--name", action="store", dest="name", type="str", default
 
 def joy_callback(data):
     global controlled_flag
+    global control_counter
 
     if data.axes[7] < -0.5:
         controller.set_yaw_control(False)
@@ -83,6 +84,8 @@ def joy_callback(data):
         controller.auto()
         controlled_flag = True
         controller.reset()
+        control_counter = 0
+
 
     if data.buttons[1]:
         controlled_flag = False
