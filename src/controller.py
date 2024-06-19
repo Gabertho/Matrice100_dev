@@ -177,9 +177,9 @@ class Controller:
         ithrust = 0.0019
         dthrust = 6.0
 
-        pthrust = 0.0
-        ithrust = 0.0
-        dthrust = 6.0
+        #pthrust = 1.5
+        #ithrust = 0.0
+        #dthrust = 6.0
 
         self.hover_thrust = 37.2
 
