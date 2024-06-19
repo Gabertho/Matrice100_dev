@@ -100,7 +100,7 @@ def trajectory_callback(data):
     controller.notify_trajectory(data.point.x, data.point.y, data.point.z)
         
 def yaw_trajectory_callback(data):
-    print("yaw_trajectory_callback:", data.data)
+    # print("yaw_trajectory_callback:", data.data)
     controller.notify_yaw_trajectory(data.data)
         
 def battery_callback(data):

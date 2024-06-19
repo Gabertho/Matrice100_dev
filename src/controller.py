@@ -61,7 +61,7 @@ class Controller:
         self.have_target = True
         
     def notify_yaw_trajectory(self, yaw):
-        self.yaw_target = yaw
+        self.target_yaw = yaw
 
     def notify_velocity(self, x, y, z):
         self.velocity = np.array([x, y, z])
