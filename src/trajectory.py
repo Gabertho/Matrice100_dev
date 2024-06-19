@@ -80,7 +80,7 @@ def timer_callback(event):
     trajectory_pub.publish(msg)
 
     msg3 = trajectory.get_target_yaw()
-    yaw_pub.publisg(msg3)
+    yaw_pub.publish(msg3)
 
     inside_timer_callback = False
 
