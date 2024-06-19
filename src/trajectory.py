@@ -36,6 +36,7 @@ parser.add_option("", "--trajectory_type", action="store", dest="trajectory_type
 
 def joy_callback(data):
     global enable_flag
+    global set_initial_position_flag
     #if data.axes[6] > 0.5:
     #    trajectory.set_target0()
     #if data.axes[6] < -0.5:
@@ -54,6 +55,7 @@ def joy_callback(data):
         
 def pose_callback(data):
     global current_pose
+    global set_initial_position_flag
     # print("pose_callback:", data)
     current_pose = data
     if not set_initial_position_flag:
