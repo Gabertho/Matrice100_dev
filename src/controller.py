@@ -211,7 +211,7 @@ class Controller:
         dthrust = 6.0
 
         #pthrust = 1.5
-        ithrust = 0.004
+        ithrust = 0.04
         #dthrust = 0.0
 
         print("TARGET:", self.target)
