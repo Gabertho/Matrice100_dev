@@ -99,6 +99,10 @@ def trajectory_callback(data):
     # print("trajectory_callback:", data.point.x, data.point.y, data.point.z)
     controller.notify_trajectory(data.point.x, data.point.y, data.point.z)
         
+def yaw_trajectory_callback(data):
+    print("yaw_trajectory_callback:", data.data)
+    controller.notify_yaw_trajectory(data.data)
+        
 def battery_callback(data):
     if controlled_flag:
         return
@@ -369,6 +373,7 @@ if __name__ == "__main__":
     # Seems like attitude callback is not needed
     ###attitude_sub = rospy.Subscriber("dji_sdk/attitude", QuaternionStamped, attitude_callback)
     trajectory_sub = rospy.Subscriber("trajectory", PointStamped, trajectory_callback)
+    yaw_trajectory_sub = rospy.Subscriber("yaw_trajectory", Float64, yaw_trajectory_callback)
 
     rc_sub = rospy.Subscriber("dji_sdk/rc", Joy, rc_callback)
 
