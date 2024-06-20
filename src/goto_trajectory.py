@@ -191,7 +191,7 @@ class GotoTrajectory:
             x += self.frac_x*len
             y += self.frac_y*len
             z += self.frac_z*len
-            # print("POSITION:", x, y, z)
+            print("POSITION:", phase, x, y, z)
             if phase == "acc":
                 acc_len += len
 
