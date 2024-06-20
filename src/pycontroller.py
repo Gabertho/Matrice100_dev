@@ -46,6 +46,7 @@ parser = OptionParser()
 parser.add_option ("", "--vicon", action="store_true", dest="vicon", help="Vicon")
 parser.add_option ("", "--hover", action="store_true", dest="hover", help="Hover")
 parser.add_option ("", "--djisim", action="store_true", dest="djisim", help="Dji Hardware Sim")
+parser.add_option("", "--dt", action="store", dest="dt", type="float", default=0.01, help='Period, default 0.01')
 
 parser.add_option("-x", "", action="store", dest="x", type="float", default=0.0, help='pick a point for x')
 parser.add_option("-y", "", action="store", dest="y", type="float", default=0.0, help='pick a point for y')
@@ -371,7 +372,7 @@ if __name__ == "__main__":
     controller = Controller(control_mode)
 
     battery_sub = rospy.Subscriber("dji_sdk/battery_state", BatteryState, battery_callback)
-    dt = 0.05
+    dt = options.dt
 
     # ----------------------------------------------------------------
     marker_array_pub = rospy.Publisher("/visualization_marker_array", MarkerArray, latch=False, queue_size=1000)
