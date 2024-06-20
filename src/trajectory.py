@@ -80,6 +80,7 @@ def timer_callback(event):
         if counter >= 2.0/options.dt:
             print("SEND BIG PATH/TRAJECTORY")
             msg = trajectory.get_path(options.dt)
+            print("GOT BIG PATH/TRAJECTORY")
             counter = 0
             full_trajectory_pub.publish(msg)
     else:
