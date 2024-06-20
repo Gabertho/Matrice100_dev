@@ -183,7 +183,7 @@ class GotoTrajectory:
 
             # Calculate new trajectory point (distance = s0+v.t)
             len = speed*dt
-            print("SPEED:", speed, self.frac_x, self.frac_y, self.frac_z, len)
+            print("FULL TRAJECTORY SPEED:", speed, self.frac_x, self.frac_y, self.frac_z, len)
             # Updates trajectory position.
             x += self.frac_x*len
             y += self.frac_y*len
