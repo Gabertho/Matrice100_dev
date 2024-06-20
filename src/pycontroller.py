@@ -432,6 +432,8 @@ if __name__ == "__main__":
 
     battery_sub = rospy.Subscriber("dji_sdk/battery_state", BatteryState, battery_callback)
     dt = options.dt
+    if options.sync:
+        dt = 0.02     # 50 Hz pose update
 
     # ----------------------------------------------------------------
     marker_array_pub = rospy.Publisher("/visualization_marker_array", MarkerArray, latch=False, queue_size=1000)
