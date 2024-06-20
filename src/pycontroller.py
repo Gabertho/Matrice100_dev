@@ -109,6 +109,7 @@ def pose_callback(data):
         controller.notify_position(data.pose.position.x, data.pose.position.y, data.pose.position.z)
         controller.notify_attitude(data.pose.orientation.x, data.pose.orientation.y, data.pose.orientation.z, data.pose.orientation.w)        
         ## rospy.loginfo(f"After update: {controller.current_state[:3]}")
+        do_work()
 
 # Trajectory callback: notify trajectory (x,y,z), i.e reference position, to controller.
 def trajectory_callback(data):
@@ -350,8 +351,7 @@ def publish_error(x, y, z):
     err_y_pub.publish(ymsg)
     err_z_pub.publish(zmsg)
 
-# Timer callback: Calls controller and publish control signal.
-def timer_callback(event): 
+def do_work():
     # print("timer_callback")
 
     global control_counter
@@ -396,6 +396,13 @@ def timer_callback(event):
     control_counter += 1
 
     inside_timer_callback = False
+    
+
+# Timer callback: Calls controller and publish control signal.
+def timer_callback(event): 
+    # print("timer_callback")
+
+    do_work()
 
 
 if __name__ == "__main__":
@@ -452,7 +459,7 @@ if __name__ == "__main__":
     if options.vicon:
         tf_sub = rospy.Subscriber("/tf", TFMessage, tf_callback)
 
-    rospy.Timer(rospy.Duration(dt), timer_callback)
+        #### rospy.Timer(rospy.Duration(dt), timer_callback)
     
     print("Spinning pycontroller node")
     
