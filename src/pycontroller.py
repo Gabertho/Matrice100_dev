@@ -312,7 +312,7 @@ def publish_target(pub):
     msg = controller.get_target_pose()
     pub.publish(msg)
 
-def publish_errort(x, y, z):
+def publish_error(x, y, z):
     xmsg = Float64()
     ymsg = Float64()
     zmsg = Float64()
