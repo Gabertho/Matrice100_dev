@@ -186,7 +186,7 @@ class GotoTrajectory:
 
             # Calculate new trajectory point (distance = s0+v.t)
             len = speed*dt
-            # print("FULL TRAJECTORY SPEED:", speed, self.frac_x, self.frac_y, self.frac_z, len)
+            print("FULL TRAJECTORY SPEED:", speed, self.frac_x, self.frac_y, self.frac_z, len, acc_len)
             # Updates trajectory position.
             x += self.frac_x*len
             y += self.frac_y*len
@@ -197,9 +197,9 @@ class GotoTrajectory:
 
             msg = PoseStamped()
             msg.header.frame_id = "world"
-            msg.pose.position.x = self.x
-            msg.pose.position.y = self.y
-            msg.pose.position.z = self.z
+            msg.pose.position.x = x
+            msg.pose.position.y = y
+            msg.pose.position.z = z
             msg.pose.orientation.x = 0.0
             msg.pose.orientation.y = 0.0
             msg.pose.orientation.z = 0.0
