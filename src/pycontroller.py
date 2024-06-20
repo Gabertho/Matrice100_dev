@@ -119,11 +119,30 @@ def yaw_trajectory_callback(data):
     # print("yaw_trajectory_callback:", data.data)
     controller.notify_yaw_trajectory(data.data)
 
+
+def publish_full_trajectory(points):
+    m = Marker()
+    m.header.frame_id = "world"
+    m.header.stamp = rospy.Time.now()
+    m.ns = "full_trajetory"
+    m.id = 1
+    m.type = m.LINE_STRIP
+    m.action = 0
+    m.lifetime = 0
+    m.points = points
+    m.color.r = 1.0
+    m.color.g = 0.0
+    m.color.b = 0.0
+    m.color.z = 1.0
+    m.scale.x = 0.5
+    marker_pub.publish(m)
+
 def full_trajectory_callback(data):
     ## print("full_trajectory_callback:", data.header)
     controller.set_full_trajectory(data)
     points = controller.get_full_trajectory_points()
     print("POINTS:", points)
+    publish_full_trajectory(points)
     
 def battery_callback(data):
     if controlled_flag:
