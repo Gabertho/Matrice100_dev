@@ -8,6 +8,7 @@ from tf.transformations import euler_from_quaternion, quaternion_from_euler
 import numpy as np
 import pandas as pd
 
+from nav_mssg.msg import Path
 from geometry_msgs.msg import PoseStamped, PointStamped, QuaternionStamped, Vector3Stamped, Vector3, Point, Quaternion
 from tf2_msgs.msg import TFMessage
 from std_msgs.msg import Float64, Header, ColorRGBA, Empty
