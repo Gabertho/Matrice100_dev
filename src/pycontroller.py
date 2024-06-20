@@ -43,6 +43,7 @@ control_mode = "velocity"
 battery_file = f'{os.environ["HOME"]}/lrs_ws/src/Matrice100_dev/config/matrice_battery_thrust.ods'
 
 parser = OptionParser()
+parser.add_option ("", "--trajectory", action="store_true", dest="trajectory", help="Vicon")
 parser.add_option ("", "--vicon", action="store_true", dest="vicon", help="Vicon")
 parser.add_option ("", "--hover", action="store_true", dest="hover", help="Hover")
 parser.add_option ("", "--djisim", action="store_true", dest="djisim", help="Dji Hardware Sim")

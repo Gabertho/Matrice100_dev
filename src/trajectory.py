@@ -10,6 +10,7 @@ import sys
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 import numpy as np
 
+from nav_msgs.msg import Path
 from geometry_msgs.msg import PoseStamped, PointStamped, QuaternionStamped, Vector3Stamped, Vector3, Point, Quaternion
 from tf2_msgs.msg import TFMessage
 from std_msgs.msg import Float64, Header, ColorRGBA, Empty
@@ -26,9 +27,11 @@ current_pose = PoseStamped()
 current_pose.pose.position.x = 0.0
 current_pose.pose.position.y = 0.0
 current_pose.pose.position.z = 2.5
+counter = 0
 set_initial_position_flag = True
 
 parser = OptionParser()
+parser.add_option ("", "--trajectory", action="store_true", dest="trajectory", help="Vicon")
 parser.add_option("", "--dt", action="store", dest="dt", type="float", default=0.02, help='Perions, default 0.02')
 parser.add_option("", "--trajectory_type", action="store", dest="trajectory_type", type="string", help="Trajectory type (e.g., sinusoidal, step_z, step_xyz, spline, long_spline, rectangle, hexagon)", default="go_to_point")
 (options, args) = parser.parse_args()
@@ -65,25 +68,33 @@ def pose_callback(data):
 def timer_callback(event): 
     # print("trajectory timer_callback")
 
-    global inside_timer_callback
+    global inside_timer_callback, counter
 
     if inside_timer_callback:
         return
     inside_timer_callback = True
 
-    trajectory.tick(options.dt)
+    trajectory.move_tick()
 
-    msg2 = trajectory.get_target_point_stamped()
-    target_pub.publish(msg2)
+    if options.trajectory:
+        if counter >= 2.0/options.dt:
+            print("SEND BIG PATH/TRAJECTORY")
+            msg = trajectory.get_path(options.dt)
+            counter = 0
+    else:
+        trajectory.tick(options.dt)
+        msg2 = trajectory.get_target_point_stamped()
+        target_pub.publish(msg2)
 
-    msg = trajectory.get_point_stamped()
-    trajectory_pub.publish(msg)
+        msg = trajectory.get_point_stamped()
+        trajectory_pub.publish(msg)
 
-    if trajectory.enabled():
-        msg3 = trajectory.get_target_yaw()
-        yaw_pub.publish(msg3)
+        if trajectory.enabled():
+            msg3 = trajectory.get_target_yaw()
+            yaw_pub.publish(msg3)
 
     inside_timer_callback = False
+    counter += 1
 
 
 if __name__ == "__main__":
@@ -101,6 +112,7 @@ if __name__ == "__main__":
 
     trajectory = GotoTrajectory(x, y, z, speed)
 
+    full_trajectory_pub = rospy.Publisher("full_trajectory", Path, latch=False, queue_size=10)
     trajectory_pub = rospy.Publisher("trajectory", PointStamped, latch=False, queue_size=10)
     yaw_pub = rospy.Publisher("yaw_trajectory", Float64, latch=False, queue_size=10)
     target_pub = rospy.Publisher("target", PointStamped, latch=False, queue_size=10)

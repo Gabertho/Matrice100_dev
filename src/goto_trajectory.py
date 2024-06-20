@@ -2,6 +2,7 @@ import rospy
 
 import math
 
+from nav_msgs.msg import Path
 from geometry_msgs.msg import PointStamped
 from std_msgs.msg import Float64
 
@@ -86,6 +87,18 @@ class GotoTrajectory:
         msg.point.z = self.z
         return msg
 
+    def get_pose_stamped(self):
+        msg = PoseStamped()
+        msg.header.frame_id = "world"
+        msg.pose.position..x = self.x
+        msg.pose.position.y = self.y
+        msg.pose.position.z = self.z
+        msg.pose.orientation.x = 0.0
+        msg.pose.orientation.y = 0.0
+        msg.pose.orientation.z = 0.0
+        msg.pose.orientation.w = 1.0
+        return msg
+
     def get_target_point_stamped(self):
         msg = PointStamped()
         msg.header.frame_id = "world"
@@ -111,10 +124,86 @@ class GotoTrajectory:
             self.reset()
             self.have_initial_position = True
 
-    # Tick: Updates trajectory position in each iteration.
-    def tick(self, dt):
-        print("goto_trajectory tick:", dt, self.phase, self.enabled_flag)
 
+    def get_path(self, dt):
+        x = self.x
+        y = self.y
+        z = self.z
+        phase = "acc"
+        speed = 0.0
+        acc_len = 0.0
+
+        dx = self.target_x - x
+        dy = self.target_y - y
+        dz = self.target_z - z
+        dist_to_target = math.sqrt(dx*dx+dy*dy+dz*dz)
+        print("dist_to_target:", dist_to_target)
+
+        pathmsg = Path()
+
+        path.header.frame_id = "world"
+        path.header.stamp.sec = 0
+        path.header.stamp.nsec = 1000000000.0*dt
+
+        while phase != "hover":
+            # If we are accelerating, then increase speed (v = v0 + a.t)
+            if phase == "acc":
+                speed += self.acc*dt
+                # If speed becomes higher than target desired speed, than cruise (moves with constant target speed).
+                if speed > self.target_speed:
+                    speed = self.target_speed
+                    phase = "cruise"
+                    print("ACCLEN:", acc_len)
+                else:
+                    # If we the total distance traveled in acceleration phase becomes equal/higher than half of total distance, than go brake (desacelerate)
+                    if acc_len >= self.travel_length/2.0:
+                        phase = "brake"
+                
+            # If we are braking, then decrease speed (v = v0 - a.t)
+            if phase == "brake":
+                speed -= self.acc*dt
+                # If our speed becomes negative, than hover (stops moving -> reached target).
+                if speed < 0.0:
+                    speed = 0.0
+                    phase = "hover"
+                    print("HOVER:")
+    
+            if phase == "cruise":
+                # If we are cruisng and the distance to target becomes smaller than distance traveled in acceleration, then go brake.
+                if dist_to_target < acc_len:
+                    phase = "brake"
+
+            # If we are hovering, than our position is equal target position (because we reached it)
+            if phase == "hover":
+                x = self.target_x
+                y = self.target_y
+                z = self.target_z
+
+            # Calculate new trajectory point (distance = s0+v.t)
+            len = speed*dt
+            print("SPEED:", speed, self.frac_x, self.frac_y, self.frac_z, len)
+            # Updates trajectory position.
+            x += self.frac_x*len
+            y += self.frac_y*len
+            z += self.frac_z*len
+            print("POSITION:", x, y, z)
+            if phase == "acc":
+                acc_len += len
+
+            msg = PoseStamped()
+            msg.header.frame_id = "world"
+            msg.pose.position..x = self.x
+            msg.pose.position.y = self.y
+            msg.pose.position.z = self.z
+            msg.pose.orientation.x = 0.0
+            msg.pose.orientation.y = 0.0
+            msg.pose.orientation.z = 0.0
+            msg.pose.orientation.w = 1.0
+
+            path.poses.append(msg)
+        
+
+    def move_tick(self):
         # Moving target position with joystick.
         self.target_x += self.joy_x
         self.target_y += self.joy_y
@@ -124,6 +213,14 @@ class GotoTrajectory:
         if not self.enabled_flag:
             self.reset()
             return
+
+    # Tick: Updates trajectory position in each iteration.
+    def tick(self, dt):
+        if not self.enabled_flag:
+            return
+        
+        print("goto_trajectory tick:", dt, self.phase, self.enabled_flag)
+
         
         # Calculating distance from trajectory position to target.
         dx = self.target_x - self.x
