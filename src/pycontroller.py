@@ -133,7 +133,7 @@ def publish_full_trajectory(points):
     m.color.r = 1.0
     m.color.g = 0.0
     m.color.b = 0.0
-    m.color.z = 1.0
+    m.color.a = 1.0
     m.scale.x = 0.5
     marker_pub.publish(m)
 
