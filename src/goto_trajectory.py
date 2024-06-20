@@ -133,12 +133,6 @@ class GotoTrajectory:
         speed = 0.0
         acc_len = 0.0
 
-        dx = self.target_x - x
-        dy = self.target_y - y
-        dz = self.target_z - z
-        dist_to_target = math.sqrt(dx*dx+dy*dy+dz*dz)
-        print("dist_to_target:", dist_to_target)
-
         print("X Y Z", x, y, z)
         print("TARGET X Y Z", self.target_x, self.target_y, self.target_z)
 
@@ -152,6 +146,10 @@ class GotoTrajectory:
 
         while phase != "hover":
             # If we are accelerating, then increase speed (v = v0 + a.t)
+            dx = self.target_x - x
+            dy = self.target_y - y
+            dz = self.target_z - z
+            dist_to_target = math.sqrt(dx*dx+dy*dy+dz*dz)
             if phase == "acc":
                 speed += self.acc*dt
                 # If speed becomes higher than target desired speed, than cruise (moves with constant target speed).
@@ -186,7 +184,7 @@ class GotoTrajectory:
 
             # Calculate new trajectory point (distance = s0+v.t)
             len = speed*dt
-            print("FULL TRAJECTORY SPEED:", speed, self.frac_x, self.frac_y, self.frac_z, len, acc_len)
+            print("FULL TRAJECTORY SPEED:", speed, self.frac_x, self.frac_y, self.frac_z, len, acc_len, dist_to_target)
             # Updates trajectory position.
             x += self.frac_x*len
             y += self.frac_y*len
