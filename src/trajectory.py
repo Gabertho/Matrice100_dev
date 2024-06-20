@@ -75,6 +75,8 @@ def timer_callback(event):
     inside_timer_callback = True
 
     trajectory.move_tick()
+    msg2 = trajectory.get_target_point_stamped()
+    target_pub.publish(msg2)
 
     if options.trajectory:
         if counter >= 2.0/options.dt:
@@ -85,8 +87,6 @@ def timer_callback(event):
             full_trajectory_pub.publish(msg)
     else:
         trajectory.tick(options.dt)
-        msg2 = trajectory.get_target_point_stamped()
-        target_pub.publish(msg2)
 
         msg = trajectory.get_point_stamped()
         trajectory_pub.publish(msg)

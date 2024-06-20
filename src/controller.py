@@ -2,9 +2,8 @@
 
 import rospy
 
-from nav_msgs.msg import Path
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
-from geometry_msgs.msg import PoseStamped, Point
+from geometry_msgs.msg import PoseStamped
 from tf.transformations import euler_from_quaternion
 import numpy as np
 import scipy
@@ -48,44 +47,6 @@ class Controller:
         self.yaw_control_flag = False
         self.mode = "simple_pid"
         self.trajectory_flag = False
-        self.full_trajectory_x = None
-        self.full_trajectory_y = None
-        self.full_trajectory_z = None
-        self.full_trajectory_time = None
-        self.have_full_trajectory = False
-        self.full_trajectory_flag = True
-        self.current_time = 0.0
-
-    def set_full_trajectory(self, path):
-        if self.have_full_trajectory:
-            return
-        x = [data.pose.position.x for data in path.poses]
-        y = [data.pose.position.y for data in path.poses]
-        z = [data.pose.position.z for data in path.poses]
-        time = []
-        dt = path.header.stamp.nsecs/1000000000.0;
-        t = 0.0
-        for data in path.poses:
-            time.append(t)
-            t += dt
-        self.full_trajectory_x = np.array(x)
-        self.full_trajectory_y = np.array(y)
-        self.full_trajectory_z = np.array(z)
-        self.full_trajectory_time = np.array(time)
-        print(self.full_trajectory_time)
-        print(self.full_trajectory_x)
-        self.have_full_trajectory = True
-
-
-    def get_full_trajectory_points(self):
-        res = []
-        for i in range(len(self.full_trajectory_x)):
-            p = Point()
-            p.x = self.full_trajectory_x[i]
-            p.y = self.full_trajectory_y[i]
-            p.z = self.full_trajectory_z[i]
-            res.append(p)
-        return res
 
     def get_target_pose(self):
         if self.target.any():
@@ -112,8 +73,7 @@ class Controller:
     def reset(self):
         self.int_err_z = 0.0
         self.int_err_yaw = 0.0        
-        self.have_full_trajectory = False
-        
+
     def auto(self):
         self.target = np.array([self.current_position[0], self.current_position[1], self.current_position[2] ])
 
@@ -241,17 +201,6 @@ class Controller:
             print("Do not have current_yaw")
             return (u, 0.0, 0.0, 0.0)
 
-        if self.full_trajectory_flag and not self.have_full_trajectory:
-            print("Do not have full trajectory")
-            return (u, 0.0, 0.0, 0.0)
-
-        self.current_time += dt
-
-        target_x = np.interp(self.current_time, self.full_trajectory_time, self.full_trajectory_x)
-        target_y = np.interp(self.current_time, self.full_trajectory_time, self.full_trajectory_y)
-        target_z = np.interp(self.current_time, self.full_trajectory_time, self.full_trajectory_z)
-        self.target = np.array([target_x, target_y, target_z])
-        
         error = self.target - self.current_position
 
         #
