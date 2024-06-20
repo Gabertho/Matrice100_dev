@@ -47,6 +47,7 @@ parser.add_option ("", "--vicon", action="store_true", dest="vicon", help="Vicon
 parser.add_option ("", "--hover", action="store_true", dest="hover", help="Hover")
 parser.add_option ("", "--djisim", action="store_true", dest="djisim", help="Dji Hardware Sim")
 parser.add_option("", "--adjust-thrust", action="store", dest="adjust_thrust", type="float", default=2.5, help='Subtract from thurts, defaulk 2.5')
+parser.add_option("", "--dt", action="store", dest="dt", type="float", default=0.01, help='Period, default 0.01')
 
 parser.add_option("-x", "", action="store", dest="x", type="float", default=0.0, help='pick a point for x')
 parser.add_option("-y", "", action="store", dest="y", type="float", default=0.0, help='pick a point for y')
@@ -62,6 +63,7 @@ parser.add_option("", "--name", action="store", dest="name", type="str", default
                         help='current or full')
 (options, args) = parser.parse_args()
 
+#Joystick callback: Enable/disable yaw control, enable/disable trajectory tracking, gets/release dji sdk control autority.
 def joy_callback(data):
     global controlled_flag
     global control_counter
@@ -97,7 +99,7 @@ def joy_callback(data):
         print("AUTH RESP:", resp)
         controller.reset()
 
-
+# Pose callback: notify position (x,y,z) and quaternium orientation (x,y,z,w) to controller.
 def pose_callback(data):
     # print("pose_callback:", data)
     if not options.vicon:
@@ -106,10 +108,11 @@ def pose_callback(data):
         controller.notify_attitude(data.pose.orientation.x, data.pose.orientation.y, data.pose.orientation.z, data.pose.orientation.w)        
         ## rospy.loginfo(f"After update: {controller.current_state[:3]}")
 
+# Trajectory callback: notify trajectory (x,y,z), i.e reference position, to controller.
 def trajectory_callback(data):
     # print("trajectory_callback:", data.point.x, data.point.y, data.point.z)
     controller.notify_trajectory(data.point.x, data.point.y, data.point.z)
-        
+
 def yaw_trajectory_callback(data):
     # print("yaw_trajectory_callback:", data.data)
     controller.notify_yaw_trajectory(data.data)
@@ -210,7 +213,8 @@ def attitude_callback(data):
             old_yaw = yaw
     except Exception as e:
         print(f"Exception occurred: {e}")
-    
+
+# Notify velocity (dx,dy,dz) to controller.
 def velocity_callback(data):
     # print("velocity_callback:", data)
     if not options.vicon:
@@ -223,7 +227,8 @@ def rc_callback(data):
     auto_flag = data.axes[4] > 5000.0
     if old_auto_flag != auto_flag:
         print("AUTO FLAG CHANGED TO:", auto_flag)
-    
+
+# Tf callback: gets pose and velocity estimated by Vicon.
 def tf_callback(data):
     ## print(data)
     global old_x, old_y, old_z, n_samples, avel_index
@@ -307,6 +312,7 @@ def publish_target(pub):
     msg = controller.get_target_pose()
     pub.publish(msg)
 
+# Timer callback: Calls controller and publish control signal.
 def timer_callback(event): 
     # print("timer_callback")
 
@@ -372,7 +378,7 @@ if __name__ == "__main__":
     controller = Controller(control_mode)
 
     battery_sub = rospy.Subscriber("dji_sdk/battery_state", BatteryState, battery_callback)
-    dt = 0.05
+    dt = options.dt
 
     # ----------------------------------------------------------------
     marker_array_pub = rospy.Publisher("/visualization_marker_array", MarkerArray, latch=False, queue_size=1000)

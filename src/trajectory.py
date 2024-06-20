@@ -29,10 +29,11 @@ current_pose.pose.position.z = 2.5
 set_initial_position_flag = True
 
 parser = OptionParser()
-parser.add_option("", "--dt", action="store", dest="dt", type="float", default=0.01, help='Perions, default 0.1')
+parser.add_option("", "--dt", action="store", dest="dt", type="float", default=0.02, help='Perions, default 0.02')
 parser.add_option("", "--trajectory_type", action="store", dest="trajectory_type", type="string", help="Trajectory type (e.g., sinusoidal, step_z, step_xyz, spline, long_spline, rectangle, hexagon)", default="go_to_point")
 (options, args) = parser.parse_args()
 
+#Joystick callback: enable/disable trajectory tracking and move target with joystick.
 def joy_callback(data):
     global set_initial_position_flag
     #if data.axes[6] > 0.5:
@@ -50,7 +51,7 @@ def joy_callback(data):
 
     trajectory.move_target(-data.axes[3]/2.0, data.axes[4]/2.0, data.axes[1]*data.buttons[4])
         
-        
+# Pose callback: gets x,y,z position and set trajectory initial position (if flag enabled) to it.
 def pose_callback(data):
     global current_pose
     global set_initial_position_flag
@@ -60,6 +61,7 @@ def pose_callback(data):
         trajectory.set_initial_position(current_pose.pose.position.x, current_pose.pose.position.y, current_pose.pose.position.z)
         set_initial_position_flag = False
 
+# Timer callback: Calls trajectory updates and publish both trajectory and target.
 def timer_callback(event): 
     # print("trajectory timer_callback")
 
@@ -88,6 +90,7 @@ if __name__ == "__main__":
     rospy.init_node ("pycontroller")
     ns = rospy.get_namespace ().rstrip("/")
 
+    # If don't specify desired target (x,y,z) and speed, it will be (3,0,2.5) and 3 m/s.
     x = rospy.get_param("~x", 3.0)
     y = rospy.get_param("~y", 0.0)
     z = rospy.get_param("~z", 2.5)
