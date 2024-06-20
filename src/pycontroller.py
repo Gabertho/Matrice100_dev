@@ -128,7 +128,7 @@ def publish_full_trajectory(points):
     m.id = 1
     m.type = m.LINE_STRIP
     m.action = 0
-    m.lifetime = 0
+    m.lifetime = rospy.Duration(0)
     m.points = points
     m.color.r = 1.0
     m.color.g = 0.0
