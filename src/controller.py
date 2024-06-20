@@ -251,7 +251,7 @@ class Controller:
             print("Do not have full trajectory")
             return (u, 0.0, 0.0, 0.0)
 
-        if self.trajectory_flag:
+        if self.full_trajectory_flag:
             self.current_time += dt
 
             target_x = np.interp(self.current_time, self.full_trajectory_time, self.full_trajectory_x)
