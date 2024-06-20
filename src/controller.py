@@ -317,7 +317,7 @@ class Controller:
                 self.old_err_pitch = rherror[0]
                 self.old_err_roll = rherror[1]
             
-                P = 2.0
+                P = 1.0
                 D = 4.0
                 u[0] = math.radians(-(P*rherror[1] + D*derr_roll))       # roll
                 u[1] = math.radians(P*rherror[0] + D*derr_pitch)         # pitch
