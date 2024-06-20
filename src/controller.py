@@ -76,6 +76,17 @@ class Controller:
         print(self.full_trajectory_x)
         self.have_full_trajectory = True
 
+
+    def get_full_trajectory_points(self):
+        res = []
+        for i in range(len(self.full_trajectory_x)):
+            p = Point()
+            p.x = self.full_trajectory_x[i]
+            p.y = self.full_trajectory_y[i]
+            p.z = self.full_trajectory_z[i]
+            res.append(p)
+        return res
+
     def get_target_pose(self):
         if self.target.any():
             msg = PoseStamped()
