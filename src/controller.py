@@ -53,7 +53,7 @@ class Controller:
         self.full_trajectory_z = None
         self.full_trajectory_time = None
         self.have_full_trajectory = False
-        self.full_trajectory_flag = True
+        self.full_trajectory_flag = False
         self.current_time = 0.0
 
     def set_full_trajectory(self, path):
