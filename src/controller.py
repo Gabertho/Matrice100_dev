@@ -4,7 +4,7 @@ import rospy
 
 from nav_msgs.msg import Path
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, Point
 from tf.transformations import euler_from_quaternion
 import numpy as np
 import scipy
