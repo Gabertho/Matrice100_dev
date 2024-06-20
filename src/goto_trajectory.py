@@ -141,9 +141,9 @@ class GotoTrajectory:
 
         pathmsg = Path()
 
-        path.header.frame_id = "world"
-        path.header.stamp.sec = 0
-        path.header.stamp.nsec = 1000000000.0*dt
+        pathmsg.header.frame_id = "world"
+        pathmsg.header.stamp.sec = 0
+        pathmsg.header.stamp.nsec = 1000000000.0*dt
 
         while phase != "hover":
             # If we are accelerating, then increase speed (v = v0 + a.t)
@@ -200,7 +200,7 @@ class GotoTrajectory:
             msg.pose.orientation.z = 0.0
             msg.pose.orientation.w = 1.0
 
-            path.poses.append(msg)
+            pathmsg.poses.append(msg)
         
 
     def move_tick(self):

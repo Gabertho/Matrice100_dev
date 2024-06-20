@@ -81,6 +81,7 @@ def timer_callback(event):
             print("SEND BIG PATH/TRAJECTORY")
             msg = trajectory.get_path(options.dt)
             counter = 0
+            full_trajectory_pub.publish(msg)
     else:
         trajectory.tick(options.dt)
         msg2 = trajectory.get_target_point_stamped()
