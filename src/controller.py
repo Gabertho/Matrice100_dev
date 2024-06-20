@@ -211,7 +211,7 @@ class Controller:
         dthrust = 6.0
 
         #pthrust = 1.5
-        ithrust = 0.04
+        ithrust = 0.0
         #dthrust = 0.0
 
         print("TARGET:", self.target)
@@ -267,8 +267,8 @@ class Controller:
 
         if self.control_mode == "angles":
             if self.mode == "gabriel":
-                thrust = self.control_thrust(dt)
-                yaw = self.control_yaw(dt)
+                #thrust = self.control_thrust(dt)
+                #yaw = self.control_yaw(dt)
                 pitch, roll = self.control_horizontal(dt)
                 u[0] = roll 
                 u[1] = pitch
