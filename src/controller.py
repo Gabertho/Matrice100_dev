@@ -380,7 +380,7 @@ class Controller:
                 self.old_err_pitch = rherror[0]
                 self.old_err_roll = rherror[1]
             
-                P = 2.0
+                P = 3.0
                 D = 4.0
                 if self.sync_flag:
                     P = 6.0
