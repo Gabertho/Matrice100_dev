@@ -142,7 +142,7 @@ class GotoTrajectory:
 
         pathmsg.header.frame_id = "world"
         pathmsg.header.stamp.secs = 0
-        pathmsg.header.stamp.nsecs = 1000000000.0*dt
+        pathmsg.header.stamp.nsecs = int(1000000000.0*dt)
 
         while phase != "hover":
             # If we are accelerating, then increase speed (v = v0 + a.t)
