@@ -109,7 +109,7 @@ if __name__ == "__main__":
     speed = rospy.get_param("~speed", 3.0)
     control_mode = rospy.get_param("control_mode", "velocity")
 
-    print("MODE X Y Z SPEED:", control_mode, x, y, z, speed)
+    print("MODE X Y Z SPEED - trajectory:", control_mode, x, y, z, speed, options.trajectory)
 
     trajectory = GotoTrajectory(x, y, z, speed)
 
