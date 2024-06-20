@@ -69,6 +69,7 @@ class Controller:
         self.full_trajectory_z = np.array(z)
         self.full_trajectory_time = np.array(time)
         print(self.full_trajectory_time)
+        print(self.full_trajectory_x)
 
     def get_target_pose(self):
         if self.target.any():
