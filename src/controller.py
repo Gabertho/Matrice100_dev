@@ -55,6 +55,10 @@ class Controller:
         self.have_full_trajectory = False
         self.full_trajectory_flag = False
         self.current_time = 0.0
+        self.sync_flag = False
+
+    def set_sync(self, flag):
+        self.sync_flag = flag
 
     def set_full_trajectory(self, path):
         if self.have_full_trajectory:
@@ -378,8 +382,9 @@ class Controller:
             
                 P = 2.0
                 D = 4.0
-                P = 6.0
-                D = 4.0
+                if sync_flag:
+                    P = 6.0
+                    D = 4.0
                 u[0] = math.radians(-(P*rherror[1] + D*derr_roll))       # roll
                 u[1] = math.radians(P*rherror[0] + D*derr_pitch)         # pitch
 

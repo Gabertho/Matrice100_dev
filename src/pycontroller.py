@@ -430,6 +430,8 @@ if __name__ == "__main__":
     if options.trajectory:
         controller.enable_full_trajectory()
 
+    controller.set_sync(options.sync)
+
     battery_sub = rospy.Subscriber("dji_sdk/battery_state", BatteryState, battery_callback)
     dt = options.dt
     if options.sync:
