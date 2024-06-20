@@ -192,7 +192,7 @@ class GotoTrajectory:
 
             msg = PoseStamped()
             msg.header.frame_id = "world"
-            msg.pose.position..x = self.x
+            msg.pose.position.x = self.x
             msg.pose.position.y = self.y
             msg.pose.position.z = self.z
             msg.pose.orientation.x = 0.0
