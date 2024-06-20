@@ -2,6 +2,7 @@
 
 import rospy
 
+from nav_msgs.msg import Path
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 from geometry_msgs.msg import PoseStamped
 from tf.transformations import euler_from_quaternion
@@ -47,6 +48,27 @@ class Controller:
         self.yaw_control_flag = False
         self.mode = "simple_pid"
         self.trajectory_flag = False
+        self.full_trajectory_x = None
+        self.full_trajectory_y = None
+        self.full_trajectory_z = None
+        self.full_trajectory_time = None
+
+
+    def set_full_trajectory(self, path):
+        x = [data.pose.position.x for data in path.poses]
+        y = [data.pose.position.y for data in path.poses]
+        z = [data.pose.position.z for data in path.poses]
+        time = []
+        dt = path.header.stamp.nsecs/1000000000.0;
+        t = 0.0
+        for data in path.poses:
+            time.append = t
+            t += dt
+        self.full_trajectory_x = np.array(x)
+        self.full_trajectory_y = np.array(y)
+        self.full_trajectory_z = np.array(z)
+        self.full_trajectory_time = np.array(time)
+        print(self.full_trajectory_time)
 
     def get_target_pose(self):
         if self.target.any():

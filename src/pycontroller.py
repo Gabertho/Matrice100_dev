@@ -121,6 +121,7 @@ def yaw_trajectory_callback(data):
 
 def full_trajectory_callback(data):
     print("full_trajectory_callback:", data.header)
+    controller.set_full_trajectory(data)
     
 def battery_callback(data):
     if controlled_flag:
