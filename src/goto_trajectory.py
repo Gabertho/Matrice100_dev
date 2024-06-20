@@ -5,6 +5,8 @@ import math
 from geometry_msgs.msg import PointStamped
 from std_msgs.msg import Float64
 
+# Target: is the final desired position to reach.
+# Trajectory: point in space and time (x,y,z,t).
 
 class GotoTrajectory:
     def __init__(self, x, y, z, speed):
@@ -57,6 +59,7 @@ class GotoTrajectory:
     def reset(self):
         if not self.have_initial_position:
             return
+        # Calcule distance from actual trajectory position to target.
         dx = self.target_x - self.x
         dy = self.target_y - self.y
         dz = self.target_z - self.z
@@ -65,9 +68,11 @@ class GotoTrajectory:
         if len < 0.001:
             return
         self.travel_length = len
+        #Calculate distance in x,y,z directions
         self.frac_x = dx/len
         self.frac_y = dy/len
         self.frac_z = dz/len
+        # Reset acc_len and speed and starts acc phase.
         self.phase = "acc"
         self.acc_len = 0.0
         self.speed = 0.0
@@ -106,52 +111,64 @@ class GotoTrajectory:
             self.reset()
             self.have_initial_position = True
 
+    # Tick: Updates trajectory position in each iteration.
     def tick(self, dt):
         print("goto_trajectory tick:", dt, self.phase, self.enabled_flag)
 
+        # Moving target position with joystick.
         self.target_x += self.joy_x
         self.target_y += self.joy_y
         self.target_z += self.joy_z
-
+        
+        # If control is not enabled, than reset in every iteration (to update trajectory initial position in case we start control)
         if not self.enabled_flag:
             self.reset()
             return
         
+        # Calculating distance from trajectory position to target.
         dx = self.target_x - self.x
         dy = self.target_y - self.y
         dz = self.target_z - self.z
         dist_to_target = math.sqrt(dx*dx+dy*dy+dz*dz)
         print("dist_to_target:", dist_to_target)
 
+        # If we are accelerating, then increase speed (v = v0 + a.t)
         if self.phase == "acc":
             self.speed += self.acc*dt
+            # If speed becomes higher than target desired speed, than cruise (moves with constant target speed).
             if self.speed > self.target_speed:
                 self.speed = self.target_speed
                 self.phase = "cruise"
                 print("ACCLEN:", self.acc_len)
             else:
+                # If we the total distance traveled in acceleration phase becomes equal/higher than half of total distance, than go brake (desacelerate)
                 if self.acc_len >= self.travel_length/2.0:
                     self.phase = "brake"
                 
-
+        # If we are braking, then decrease speed (v = v0 - a.t)
         if self.phase == "brake":
             self.speed -= self.acc*dt
+            # If our speed becomes negative, than hover (stops moving -> reached target).
             if self.speed < 0.0:
                 self.speed = 0.0
                 self.phase = "hover"
                 print("HOVER:")
-
+    
         if self.phase == "cruise":
+            # If we are cruisng and the distance to target becomes smaller than distance traveled in acceleration, then go brake.
             if dist_to_target < self.acc_len:
                 self.phase = "brake"
 
+        # If we are hovering, than our position is equal target position (because we reached it)
         if self.phase == "hover":
             self.x = self.target_x
             self.y = self.target_y
             self.z = self.target_z
 
+        # Calculate new trajectory point (distance = s0+v.t)
         len = self.speed*dt
         print("SPEED:", self.speed, self.frac_x, self.frac_y, self.frac_z, len)
+        # Updates trajectory position.
         self.x += self.frac_x*len
         self.y += self.frac_y*len
         self.z += self.frac_z*len
