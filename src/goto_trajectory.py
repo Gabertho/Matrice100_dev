@@ -184,12 +184,12 @@ class GotoTrajectory:
 
             # Calculate new trajectory point (distance = s0+v.t)
             len = speed*dt
-            print("FULL TRAJECTORY SPEED:", speed, self.frac_x, self.frac_y, self.frac_z, len, acc_len, dist_to_target)
+            ## print("FULL TRAJECTORY SPEED:", speed, self.frac_x, self.frac_y, self.frac_z, len, acc_len, dist_to_target)
             # Updates trajectory position.
             x += self.frac_x*len
             y += self.frac_y*len
             z += self.frac_z*len
-            print("POSITION:", phase, x, y, z)
+            ## print("POSITION:", phase, x, y, z)
             if phase == "acc":
                 acc_len += len
 
@@ -204,6 +204,8 @@ class GotoTrajectory:
             msg.pose.orientation.w = 1.0
 
             pathmsg.poses.append(msg)
+
+        print("RETURN pathmsg)
         return pathmsg
 
     def move_tick(self):
