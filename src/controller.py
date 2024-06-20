@@ -62,7 +62,7 @@ class Controller:
         dt = path.header.stamp.nsecs/1000000000.0;
         t = 0.0
         for data in path.poses:
-            time.append = t
+            time.append(t)
             t += dt
         self.full_trajectory_x = np.array(x)
         self.full_trajectory_y = np.array(y)
