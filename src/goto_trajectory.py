@@ -139,6 +139,8 @@ class GotoTrajectory:
         dist_to_target = math.sqrt(dx*dx+dy*dy+dz*dz)
         print("dist_to_target:", dist_to_target)
 
+        self.reset()
+
         pathmsg = Path()
 
         pathmsg.header.frame_id = "world"
