@@ -46,6 +46,7 @@ parser = OptionParser()
 parser.add_option ("", "--vicon", action="store_true", dest="vicon", help="Vicon")
 parser.add_option ("", "--hover", action="store_true", dest="hover", help="Hover")
 parser.add_option ("", "--djisim", action="store_true", dest="djisim", help="Dji Hardware Sim")
+parser.add_option("", "--adjust-thrust", action="store", dest="adjust_thrust", type="float", default=2.5, help='Subtract from thurts, defaulk 2.5')
 
 parser.add_option("-x", "", action="store", dest="x", type="float", default=0.0, help='pick a point for x')
 parser.add_option("-y", "", action="store", dest="y", type="float", default=0.0, help='pick a point for y')
@@ -124,7 +125,7 @@ def battery_callback(data):
         thrust = 45.0 - (45.0-39.0)*current_battery_level/80.0
     # rospy.loginfo(f"Received battery level: {current_battery_level} - {thrust}")
 
-    thrust -= 2.5  # it goes up in real flight with original value
+    thrust -= options.adjust_thust  # it goes up in real flight with original value
     
     if options.djisim:
         thrust = 37.2
