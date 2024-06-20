@@ -139,6 +139,9 @@ class GotoTrajectory:
         dist_to_target = math.sqrt(dx*dx+dy*dy+dz*dz)
         print("dist_to_target:", dist_to_target)
 
+        print("X Y Z", x, y, z)
+        print("TARGET X Y Z", self.target_x, self.target_y, self.target_z)
+
         self.reset()
 
         pathmsg = Path()
@@ -183,12 +186,12 @@ class GotoTrajectory:
 
             # Calculate new trajectory point (distance = s0+v.t)
             len = speed*dt
-            print("FULL TRAJECTORY SPEED:", speed, self.frac_x, self.frac_y, self.frac_z, len)
+            # print("FULL TRAJECTORY SPEED:", speed, self.frac_x, self.frac_y, self.frac_z, len)
             # Updates trajectory position.
             x += self.frac_x*len
             y += self.frac_y*len
             z += self.frac_z*len
-            print("POSITION:", x, y, z)
+            # print("POSITION:", x, y, z)
             if phase == "acc":
                 acc_len += len
 
