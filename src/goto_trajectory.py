@@ -3,7 +3,7 @@ import rospy
 import math
 
 from nav_msgs.msg import Path
-from geometry_msgs.msg import PointStamped
+from geometry_msgs.msg import PointStamped, PoseStamped
 from std_msgs.msg import Float64
 
 # Target: is the final desired position to reach.
