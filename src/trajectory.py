@@ -99,7 +99,7 @@ def timer_callback(event):
 
 
 if __name__ == "__main__":
-    rospy.init_node ("pycontroller")
+    rospy.init_node ("trajectory")
     ns = rospy.get_namespace ().rstrip("/")
 
     # If don't specify desired target (x,y,z) and speed, it will be (3,0,2.5) and 3 m/s.
