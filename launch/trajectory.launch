@@ -10,6 +10,6 @@
   
   <rosparam command="load" file="$(find drone_dev)/config/common.yaml" ns="/dji2" />
   <node name="trajectory" pkg="drone_dev" type="trajectory.py" args="--dt $(arg dt) _x:=$(arg x) _y:=$(arg y) _z:=$(arg z) _speed:=$(arg speed) __ns:=/dji2" output="screen" unless="$(arg trajectory)" />
-  <node name="trajectory" pkg="drone_dev" type="trajectory.py" args="--trajectory --dt $(arg dt) _x:=$(arg x) _y:=$(arg y) _z:=$(arg z) _speed:=$(arg speed) __ns:=/dji2" output="screen" if="$(arg trajectory)/>
+  <node name="trajectory" pkg="drone_dev" type="trajectory.py" args="--trajectory --dt $(arg dt) _x:=$(arg x) _y:=$(arg y) _z:=$(arg z) _speed:=$(arg speed) __ns:=/dji2" output="screen" if="$(arg trajectory)" />
 </launch>
 
