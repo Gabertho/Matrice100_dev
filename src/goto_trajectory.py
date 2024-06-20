@@ -204,7 +204,7 @@ class GotoTrajectory:
             msg.pose.orientation.w = 1.0
 
             pathmsg.poses.append(msg)
-        
+        return pathmsg
 
     def move_tick(self):
         # Moving target position with joystick.
