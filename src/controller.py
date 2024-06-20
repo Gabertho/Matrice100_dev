@@ -109,6 +109,12 @@ class Controller:
     def disable_trajectory(self):
         self.trajectory_flag = False
 
+    def enable_full_trajectory(self):
+        self.full_trajectory_flag = True
+
+    def disable_full_trajectory(self):
+        self.full_trajectory_flag = False
+
     def reset(self):
         self.int_err_z = 0.0
         self.int_err_yaw = 0.0        
@@ -245,12 +251,14 @@ class Controller:
             print("Do not have full trajectory")
             return (u, 0.0, 0.0, 0.0)
 
-        self.current_time += dt
+        if self.trajectory_flag:
+            self.current_time += dt
 
-        target_x = np.interp(self.current_time, self.full_trajectory_time, self.full_trajectory_x)
-        target_y = np.interp(self.current_time, self.full_trajectory_time, self.full_trajectory_y)
-        target_z = np.interp(self.current_time, self.full_trajectory_time, self.full_trajectory_z)
-        self.target = np.array([target_x, target_y, target_z])
+            target_x = np.interp(self.current_time, self.full_trajectory_time, self.full_trajectory_x)
+            target_y = np.interp(self.current_time, self.full_trajectory_time, self.full_trajectory_y)
+            target_z = np.interp(self.current_time, self.full_trajectory_time, self.full_trajectory_z)
+            self.target = np.array([target_x, target_y, target_z])
+            
         
         error = self.target - self.current_position
 

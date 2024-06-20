@@ -44,7 +44,8 @@ control_mode = "velocity"
 battery_file = f'{os.environ["HOME"]}/lrs_ws/src/Matrice100_dev/config/matrice_battery_thrust.ods'
 
 parser = OptionParser()
-parser.add_option ("", "--trajectory", action="store_true", dest="trajectory", help="Vicon")
+parser.add_option ("", "--sync", action="store_true", dest="sync", help="Sync controle with position update")
+parser.add_option ("", "--trajectory", action="store_true", dest="trajectory", help="Use full trajectory")
 parser.add_option ("", "--vicon", action="store_true", dest="vicon", help="Vicon")
 parser.add_option ("", "--hover", action="store_true", dest="hover", help="Hover")
 parser.add_option ("", "--djisim", action="store_true", dest="djisim", help="Dji Hardware Sim")
@@ -109,7 +110,8 @@ def pose_callback(data):
         controller.notify_position(data.pose.position.x, data.pose.position.y, data.pose.position.z)
         controller.notify_attitude(data.pose.orientation.x, data.pose.orientation.y, data.pose.orientation.z, data.pose.orientation.w)        
         ## rospy.loginfo(f"After update: {controller.current_state[:3]}")
-        do_work()
+        if options.sync:
+            do_work()
 
 # Trajectory callback: notify trajectory (x,y,z), i.e reference position, to controller.
 def trajectory_callback(data):
@@ -325,6 +327,9 @@ def tf_callback(data):
                 old_y = y
                 old_z = z
 
+                if options.sync:
+                    do_work()
+                    
 def publish_value(pub, value):
     msg = Float64()
     msg.data = value
@@ -401,7 +406,6 @@ def do_work():
 # Timer callback: Calls controller and publish control signal.
 def timer_callback(event): 
     # print("timer_callback")
-
     do_work()
 
 
@@ -422,6 +426,9 @@ if __name__ == "__main__":
     print("CONTROL_MODE:", control_mode)
 
     controller = Controller(control_mode)
+
+    if options.trajectory:
+        controller.enable_full_trajectory()
 
     battery_sub = rospy.Subscriber("dji_sdk/battery_state", BatteryState, battery_callback)
     dt = options.dt
@@ -459,7 +466,8 @@ if __name__ == "__main__":
     if options.vicon:
         tf_sub = rospy.Subscriber("/tf", TFMessage, tf_callback)
 
-        #### rospy.Timer(rospy.Duration(dt), timer_callback)
+    if not options.sync:
+        rospy.Timer(rospy.Duration(dt), timer_callback)
     
     print("Spinning pycontroller node")
     
