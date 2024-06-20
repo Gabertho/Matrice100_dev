@@ -312,6 +312,17 @@ def publish_target(pub):
     msg = controller.get_target_pose()
     pub.publish(msg)
 
+def publish_errort(x, y, z):
+    xmsg = Float64()
+    ymsg = Float64()
+    zmsg = Float64()
+    xmsg.data = x
+    ymsg.data = y
+    zmsg.data = z
+    err_x_pub.publish(xmsg)
+    err_y_pub.publish(ymsg)
+    err_z_pub.publish(zmsg)
+
 # Timer callback: Calls controller and publish control signal.
 def timer_callback(event): 
     # print("timer_callback")
@@ -328,7 +339,7 @@ def timer_callback(event):
 
     inside_timer_callback = True
 
-    u = controller.control(dt)
+    (u, err_x, err_y, err_z) = controller.control(dt)
 
     # test
     #### u[3] = math.radians(20.0)  # rotate 3 degreesper second
@@ -353,6 +364,7 @@ def timer_callback(event):
     if control_counter > 2:
         ctrl_pub.publish(msg)
         publish_controls(u)
+        publish_error(err_x, err_y, err_z)
 
     control_counter += 1
 

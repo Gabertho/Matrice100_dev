@@ -199,7 +199,7 @@ class Controller:
 
         if not self.have_current_yaw:
             print("Do not have current_yaw")
-            return u
+            return (u, 0.0, 0.0, 0.0)
 
         error = self.target - self.current_position
 
@@ -363,6 +363,6 @@ class Controller:
             if u[1] < -max:
                 u[1] = -max
 
-        return u
+        return (u, error[0], error[1], error[2])
 
         
