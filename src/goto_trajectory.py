@@ -205,7 +205,7 @@ class GotoTrajectory:
 
             pathmsg.poses.append(msg)
 
-        print("RETURN pathmsg)
+        print("RETURN pathmsg")
         return pathmsg
 
     def move_tick(self):
