@@ -29,9 +29,9 @@ current_pose.pose.position.y = 0.0
 current_pose.pose.position.z = 2.5
 counter = 0
 set_initial_position_flag = True
+full_trajectory_flag = False
 
 parser = OptionParser()
-parser.add_option ("", "--trajectory", action="store_true", dest="trajectory", help="Vicon")
 parser.add_option("", "--dt", action="store", dest="dt", type="float", default=0.02, help='Perions, default 0.02')
 parser.add_option("", "--trajectory_type", action="store", dest="trajectory_type", type="string", help="Trajectory type (e.g., sinusoidal, step_z, step_xyz, spline, long_spline, rectangle, hexagon)", default="go_to_point")
 (options, args) = parser.parse_args()
@@ -78,11 +78,11 @@ def timer_callback(event):
     msg2 = trajectory.get_target_point_stamped()
     target_pub.publish(msg2)
 
-    if options.trajectory:
+    if full_trajectory_flag:
         if counter >= 2.0/options.dt:
             print("SEND BIG PATH/TRAJECTORY")
             msg = trajectory.get_path(options.dt)
-            print("GOT BIG PATH/TRAJECTORY")
+            print("GOT BIG PATH/TRAJECTORY MSG from tracetoryclass")
             counter = 0
             full_trajectory_pub.publish(msg)
     else:
@@ -110,7 +110,9 @@ if __name__ == "__main__":
     speed = rospy.get_param("~speed", 3.0)
     control_mode = rospy.get_param("control_mode", "velocity")
 
-    print("MODE X Y Z SPEED - trajectory:", control_mode, x, y, z, speed, options.trajectory)
+    full_trajectory_flag = rospy.get_param("full_trajectory", False)
+
+    print("MODE X Y Z SPEED - trajectory:", control_mode, x, y, z, speed, full_trajectory_flag)
 
     trajectory = GotoTrajectory(x, y, z, speed)
 

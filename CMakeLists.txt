@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   nav_msgs
   tf
+  dji_sdk
   cmake_modules
   message_generation
 )
@@ -111,7 +112,7 @@ find_package(Eigen REQUIRED)
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES drone_dev
-CATKIN_DEPENDS roscpp rospy std_msgs geometry_msgs sensor_msgs nav_msgs
+CATKIN_DEPENDS roscpp rospy std_msgs geometry_msgs sensor_msgs nav_msgs dji_sdk
 #  DEPENDS system_lib
 )
 

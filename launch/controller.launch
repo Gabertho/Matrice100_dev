@@ -3,49 +3,33 @@
   <arg name="vicon" default="false" />
   <arg name="djisim" default="false" />
   <arg name="dt" default="0.01" />
-  <arg name="trajectory" default="false" />  
   <arg name="sync" default="false" />  
   
   <rosparam command="load" file="$(find drone_dev)/config/common.yaml" ns="/dji2" />
 
   <group if="$(arg sync)">
 
-  <group if="$(arg djisim)">
-    <node name="controller" pkg="drone_dev" type="pycontroller.py" args="--sync --trajectory --djisim __ns:=/dji2" output="screen" if="$(arg trajectory)" />
-    <node name="controller" pkg="drone_dev" type="pycontroller.py" args="--sync --djisim __ns:=/dji2" output="screen" unless="$(arg trajectory)"/>
-  </group>
+    <group if="$(arg djisim)">
+      <node name="controller" pkg="drone_dev" type="pycontroller.py" args="--sync --djisim __ns:=/dji2" output="screen" />
+    </group>
   
-  <group unless="$(arg djisim)">
-    <group unless="$(arg trajectory)">
+    <group unless="$(arg djisim)">
       <node name="controller" pkg="drone_dev" type="pycontroller.py" args="--sync --vicon --dt $(arg dt) __ns:=/dji2" output="screen" if="$(arg vicon)" />
       <node name="controller" pkg="drone_dev" type="pycontroller.py" args="--sync --dt $(arg dt) __ns:=/dji2" output="screen" unless="$(arg vicon)" />
     </group>
-    <group if="$(arg trajectory)">
-      <node name="controller" pkg="drone_dev" type="pycontroller.py" args="--sync --trajectory --vicon --dt $(arg dt) __ns:=/dji2" output="screen" if="$(arg vicon)" />
-      <node name="controller" pkg="drone_dev" type="pycontroller.py" args="--sync --trajectory --dt $(arg dt) __ns:=/dji2" output="screen" unless="$(arg vicon)" />
-    </group>
-  </group>
-
+    
   </group>
 
   <group unless="$(arg sync)">
 
-  <group if="$(arg djisim)">
-    <node name="controller" pkg="drone_dev" type="pycontroller.py" args="--trajectory --djisim __ns:=/dji2" output="screen" if="$(arg trajectory)" />
-    <node name="controller" pkg="drone_dev" type="pycontroller.py" args="--djisim __ns:=/dji2" output="screen" unless="$(arg trajectory)"/>
-  </group>
+    <group if="$(arg djisim)">
+      <node name="controller" pkg="drone_dev" type="pycontroller.py" args="--djisim __ns:=/dji2" output="screen" />
+    </group>
   
-  <group unless="$(arg djisim)">
-    <group unless="$(arg trajectory)">
+    <group unless="$(arg djisim)">
       <node name="controller" pkg="drone_dev" type="pycontroller.py" args="--vicon --dt $(arg dt) __ns:=/dji2" output="screen" if="$(arg vicon)" />
       <node name="controller" pkg="drone_dev" type="pycontroller.py" args="--dt $(arg dt) __ns:=/dji2" output="screen" unless="$(arg vicon)" />
     </group>
-    <group if="$(arg trajectory)">
-      <node name="controller" pkg="drone_dev" type="pycontroller.py" args="--trajectory --vicon --dt $(arg dt) __ns:=/dji2" output="screen" if="$(arg vicon)" />
-      <node name="controller" pkg="drone_dev" type="pycontroller.py" args="--trajectory --dt $(arg dt) __ns:=/dji2" output="screen" unless="$(arg vicon)" />
-    </group>
-  </group>
-
 
   </group>
 

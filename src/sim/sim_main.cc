@@ -7,6 +7,9 @@
 #include "sensor_msgs/Joy.h"
 #include "sensor_msgs/BatteryState.h"
 
+#include "dji_sdk/SDKControlAuthority.h"
+
+
 ros::Publisher pose_publisher;
 ros::Publisher vel_publisher;
 ros::Publisher battery_state_publisher;
@@ -21,6 +24,27 @@ bool controlled_flag = false;
 bool use_joy = true;
 std::string control_mode = "velocity";
 int button_index = -1;
+
+
+
+bool sdkCtrlAuthorityCallback(dji_sdk::SDKControlAuthority::Request&  request,
+                              dji_sdk::SDKControlAuthority::Response& response) {
+
+  ROS_DEBUG("called sdkCtrlAuthorityCallback");
+
+  if (request.control_enable) {
+
+  } else {
+
+  }
+
+  response.cmd_set  = 0;
+  response.cmd_id   = 0;
+  response.ack_data = 0;
+  response.result = true;
+
+  return true;
+}
 
 void cmd_vel_callback(const geometry_msgs::Twist::ConstPtr& msg) {
   if (controlled_flag) {
@@ -221,6 +245,8 @@ int main(int argc, char **argv) {
   pose_publisher = nh.advertise<geometry_msgs::PoseStamped>("pose",1);
   vel_publisher = nh.advertise<geometry_msgs::Vector3Stamped>("dji_sdk/velocity",1);
   battery_state_publisher = nh.advertise<sensor_msgs::BatteryState>("dji_sdk/battery_state",1);
+
+  ros::ServiceServer sdk_ctrlAuthority_server  = nh.advertiseService("dji_sdk/sdk_control_authority",  &sdkCtrlAuthorityCallback);
 
   //  ros::Subscriber cmd_vel_subscriber = nh.subscribe<geometry_msgs::Twist>("cmd_vel", 1, cmd_vel_callback);
   ros::Subscriber dji_control_subscriber = nh.subscribe<sensor_msgs::Joy>("dji_sdk/flight_control_setpoint_ENUvelocity_yawrate", 1, dji_control_callback);

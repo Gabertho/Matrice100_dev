@@ -150,8 +150,8 @@ void Sim::tick(double time, bool controlled_flag) {
 
     if ((control_mode == "angles") || (control_mode == "rates")) {
 
-      double pitch_C = -10.0;
-      double roll_C = 10.0;
+      double pitch_C = 10.0*3.0;
+      double roll_C = -10.0*3.0;
       
       double F_forward = pitch * pitch_C;
       double F_left = roll * roll_C;    

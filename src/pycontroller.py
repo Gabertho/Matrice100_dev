@@ -45,7 +45,6 @@ battery_file = f'{os.environ["HOME"]}/lrs_ws/src/Matrice100_dev/config/matrice_b
 
 parser = OptionParser()
 parser.add_option ("", "--sync", action="store_true", dest="sync", help="Sync controle with position update")
-parser.add_option ("", "--trajectory", action="store_true", dest="trajectory", help="Use full trajectory")
 parser.add_option ("", "--vicon", action="store_true", dest="vicon", help="Vicon")
 parser.add_option ("", "--hover", action="store_true", dest="hover", help="Hover")
 parser.add_option ("", "--djisim", action="store_true", dest="djisim", help="Dji Hardware Sim")
@@ -422,12 +421,13 @@ if __name__ == "__main__":
 
 
     control_mode = rospy.get_param("control_mode", "velocity")
+    full_trajectory_flag = rospy.get_param("full_trajectory", False)
 
     print("CONTROL_MODE:", control_mode)
 
     controller = Controller(control_mode)
 
-    if options.trajectory:
+    if full_trajectory_flag:
         controller.enable_full_trajectory()
 
     controller.set_sync(options.sync)
