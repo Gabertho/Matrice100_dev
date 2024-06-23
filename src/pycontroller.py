@@ -70,6 +70,12 @@ def joy_callback(data):
     global controlled_flag
     global control_counter
 
+    if data.buttons[2]:
+        controller.disable_full_trajectory()
+    
+    if data.buttons[3]:
+        controller.enable_full_trajectory()
+    
     if data.axes[7] < -0.5:
         controller.set_yaw_control(False)
     if data.axes[7] > 0.5:
@@ -136,14 +142,14 @@ def publish_full_trajectory(points):
     m.color.g = 0.0
     m.color.b = 0.0
     m.color.a = 1.0
-    m.scale.x = 0.5
+    m.scale.x = 0.1
     marker_pub.publish(m)
 
 def full_trajectory_callback(data):
     ## print("full_trajectory_callback:", data.header)
     controller.set_full_trajectory(data)
     points = controller.get_full_trajectory_points()
-    print("POINTS:", points)
+    ## print("POINTS:", points)
     publish_full_trajectory(points)
     
 def battery_callback(data):
@@ -377,7 +383,7 @@ def do_work():
 
     publish_target(target_pub)
 
-    # print("U:", u)
+    print("U:", u, err_x, err_y, err_z)
 
     msg = Joy()
     msg.axes = u

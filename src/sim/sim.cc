@@ -21,10 +21,10 @@ Sim::~Sim() {
 }
 
 void Sim::init() {
-  x = init_x;
-  y = init_y;
-  z = init_z;
-  yaw = init_yaw;
+//  x = init_x;
+//  y = init_y;
+//  z = init_z;
+//  yaw = init_yaw;
   //  yaw = M_PI/2.0;
   //  yaw = M_PI;
   //yaw = M_PI/4.0;

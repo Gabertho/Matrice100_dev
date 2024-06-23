@@ -94,12 +94,6 @@ void dji_generic_control_callback(const sensor_msgs::Joy::ConstPtr& msg) {
 }
 
 void joy_callback(const sensor_msgs::Joy::ConstPtr& msg) {
-  if (msg->axes[7] > 0.5) {
-    sim->set_update_flag(true);
-  }
-  if (msg->axes[7] < -0.5) {
-    sim->set_update_flag(false);
-  }
   if (msg->axes[6] > 0.5) {
     sim->add_to_yaw_deg(30.0);
   }
@@ -141,7 +135,19 @@ void joy_callback(const sensor_msgs::Joy::ConstPtr& msg) {
       sim->set_angle_control(0.0, 0.0, 38.0, 0.0);
     }
   }
+  if (msg->buttons[2]) {
+    controlled_flag = false;
+
+  }
+  if (msg->buttons[3]) {
+    controlled_flag = true;
+
+  }
+  if (msg->buttons[0]) {
+    //sim->set_update_flag(true);
+  }
   if (msg->buttons[1]) {
+    //sim->set_update_flag(false);
     sim->init();
     if (control_mode == "velocity") {
       sim->set_velocity_control(0.0, 0.0, 0.0, 0.0);

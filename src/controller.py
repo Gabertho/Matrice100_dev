@@ -243,7 +243,7 @@ class Controller:
         return(pitch * math.pi / 180.0, roll * math.pi / 180.0)
         
     def control(self, dt):
-        # print("DO CONTROL:", dt, self.control_mode)
+        print("DO CONTROL:", dt, self.control_mode, self.full_trajectory_flag)
 
         u = [0.0, 0.0, 38.0, 0.0]
 
@@ -261,6 +261,7 @@ class Controller:
             target_x = np.interp(self.current_time, self.full_trajectory_time, self.full_trajectory_x)
             target_y = np.interp(self.current_time, self.full_trajectory_time, self.full_trajectory_y)
             target_z = np.interp(self.current_time, self.full_trajectory_time, self.full_trajectory_z)
+            print("FULL TRAJ CONTROL:", dt, self.control_mode, target_x, target_y, target_z)
             self.target = np.array([target_x, target_y, target_z])
             
         
@@ -359,7 +360,9 @@ class Controller:
                 #Yaw
 
             if self.mode == "simple_pid":
-                # print("ERROR:", error, self.target)
+                print("========================================================================")
+                
+                print("ERROR:", error, self.target)
 
                 herror = np.array([error[0], error[1]])
                 print("HERROR:", math.degrees(self.current_yaw), herror)

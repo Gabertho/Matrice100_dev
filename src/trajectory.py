@@ -38,11 +38,14 @@ parser.add_option("", "--trajectory_type", action="store", dest="trajectory_type
 
 #Joystick callback: enable/disable trajectory tracking and move target with joystick.
 def joy_callback(data):
-    global set_initial_position_flag
-    #if data.axes[6] > 0.5:
-    #    trajectory.set_target0()
-    #if data.axes[6] < -0.5:
-    #    trajectory.set_target1()
+    global set_initial_position_flag, full_trajectory_flag
+
+    if data.buttons[2]:
+        full_trajectory_flag = False
+   
+    if data.buttons[3]:
+        print("Full trejectory")
+        full_trajectory_flag = True
 
     if data.buttons[6]:
         trajectory.enable()
@@ -66,9 +69,10 @@ def pose_callback(data):
 
 # Timer callback: Calls trajectory updates and publish both trajectory and target.
 def timer_callback(event): 
-    # print("trajectory timer_callback")
-
     global inside_timer_callback, counter
+
+    ### print("trajectory timer_callback:", full_trajectory_flag, counter)
+
 
     if inside_timer_callback:
         return
