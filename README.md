@@ -1,6 +1,16 @@
 # Matrice100_dev
 Control repository for the DJI Matrice 100 UAV.
 
+## Joystick
+
+- A: Auto
+- B: Manual
+- X: Send one position at the time for a trajectory
+- Y: Send whoöe trajectory in one message
+
+- D-pad left: Yaw - 30 Degree in simulator
+- D-pad right: Yaw + 30 Degree in simulator
+
 ## pycontroller.py
 
 Roscore (backpack):
