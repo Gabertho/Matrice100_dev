@@ -25,6 +25,7 @@ class Controller:
         self.thrust = 0.0
         self.yaw_rate = 0.0
         self.target = None
+        self.target0 = None
         self.targetvel = None
         self.target_speed = 1.0
         self.target_yaw = 0.0
@@ -57,6 +58,7 @@ class Controller:
         self.full_trajectory_flag = False
         self.current_time = 0.0
         self.sync_flag = False
+        self.dt = 0.02
 
     def set_sync(self, flag):
         self.sync_flag = flag
@@ -168,6 +170,10 @@ class Controller:
     def notify_trajectory(self, x, y, z):
         if self.trajectory_flag:
             self.target = np.array([x, y, z])
+            if self.have_target:
+                self.targetvel = (self.target - self.target0)/self.dt
+                pass
+            self.target0 = np.array([x, y, z])
             self.have_target = True
 
     #Notify yaw trajectory: set actual yaw position from trajectory callback.
@@ -284,6 +290,8 @@ class Controller:
 
     def control(self, dt):
         print("DO CONTROL:", dt, self.control_mode, self.full_trajectory_flag)
+
+        self.dt = dt
 
         u = [0.0, 0.0, 38.0, 0.0]
 
