@@ -438,6 +438,7 @@ class Controller:
             
                 P = 3.0
                 D = 0.0
+                Pvel = 10.0                
                 if self.sync_flag:
                     P = 4.0
                     D = 0.0
