@@ -272,9 +272,9 @@ class Controller:
             print("Do not have current_yaw")
             return (u, 0.0, 0.0, 0.0)
 
-        if self.full_trajectory_flag and not self.have_full_trajectory:
-            print("Do not have full trajectory")
-            return (u, 0.0, 0.0, 0.0)
+        #if self.full_trajectory_flag and not self.have_full_trajectory:
+        #    print("Do not have full trajectory")
+        #    return (u, 0.0, 0.0, 0.0)
 
         # Interpolation to get the target x,y,z in the current time, given full trajectory time (x-axis) and full trajectory position (x,y or z)
         # (y axis).
