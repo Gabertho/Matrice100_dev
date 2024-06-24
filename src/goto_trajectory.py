@@ -6,11 +6,19 @@ from nav_msgs.msg import Path
 from geometry_msgs.msg import PointStamped, PoseStamped
 from std_msgs.msg import Float64
 
-# Target: is the final desired position to reach.
-# Trajectory: point in space and time (x,y,z,t).
+# General idea: The drone movement is divided in four phases: acceleration, cruise, brake and hover. 
+# Acceleration: We begin in this phase and continue doing it until we reached the desired speed or half of the total travel lenght 
+# (because since we are moving with a constant acceleration, we would have the other half to brake and then hover). 
+# Cruise: We want to continue on it until the distance to target becomes smaller than the distance traveled in acceleration phase 
+# (because this would give the exact distance to brake it and hover, since we are moving on a constant speed).
+# Brake: We want to do it until our speed becomes 0, meaning we reached the target position, and then hover.
+# Hover: Just remain on the air without moving.
+# So the idea is:
+# --acc-->--cruise-->--brake-->hover or --acc-->--brake-->hover
 
 class GotoTrajectory:
     def __init__(self, x, y, z, speed):
+        # Coordinates of desired point (goal), and desired speed and acceleration to reach it.
         self.target_x = x
         self.target_y = y
         self.target_z = z
@@ -124,7 +132,7 @@ class GotoTrajectory:
             self.reset()
             self.have_initial_position = True
 
-
+    # Get the full path, i.e, sequence of points in time that lead the initial position to the target position.
     def get_path(self, dt):
         x = self.x
         y = self.y
@@ -144,13 +152,16 @@ class GotoTrajectory:
         pathmsg.header.stamp.secs = 0
         pathmsg.header.stamp.nsecs = int(1000000000.0*dt)
 
+        # While we are not hovering, i.e, we didn't reach the target position:
         while phase != "hover":
-            # If we are accelerating, then increase speed (v = v0 + a.t)
+            #Calculate distance from actual trajectory position to target.
             dx = self.target_x - x
             dy = self.target_y - y
             dz = self.target_z - z
             dist_to_target = math.sqrt(dx*dx+dy*dy+dz*dz)
+            # If we are accelerating:
             if phase == "acc":
+                # Increase the speed (v = v0+a.t)
                 speed += self.acc*dt
                 # If speed becomes higher than target desired speed, than cruise (moves with constant target speed).
                 if speed > self.target_speed:

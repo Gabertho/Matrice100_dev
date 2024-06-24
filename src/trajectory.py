@@ -67,7 +67,7 @@ def pose_callback(data):
         trajectory.set_initial_position(current_pose.pose.position.x, current_pose.pose.position.y, current_pose.pose.position.z)
         set_initial_position_flag = False
 
-# Timer callback: Calls trajectory updates and publish both trajectory and target.
+# Timer callback: Calls trajectory updates or full path, and publish them.
 def timer_callback(event): 
     global inside_timer_callback, counter
 
@@ -78,10 +78,12 @@ def timer_callback(event):
         return
     inside_timer_callback = True
 
+    # Move target with joystick.
     trajectory.move_tick()
     msg2 = trajectory.get_target_point_stamped()
     target_pub.publish(msg2)
 
+    # If we want the full path:
     if full_trajectory_flag:
         if counter >= 2.0/options.dt:
             print("SEND BIG PATH/TRAJECTORY")
@@ -89,6 +91,7 @@ def timer_callback(event):
             print("GOT BIG PATH/TRAJECTORY MSG from tracetoryclass")
             counter = 0
             full_trajectory_pub.publish(msg)
+    # If we want to use the trajectory position in each iteration:
     else:
         trajectory.tick(options.dt)
 
