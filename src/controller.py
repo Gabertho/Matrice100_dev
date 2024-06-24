@@ -278,7 +278,7 @@ class Controller:
 
         # Interpolation to get the target x,y,z in the current time, given full trajectory time (x-axis) and full trajectory position (x,y or z)
         # (y axis).
-        if self.full_trajectory_flag:
+        if self.full_trajectory_flag and self.have_full_trajectory:
             self.current_time += dt
 
             target_x = np.interp(self.current_time, self.full_trajectory_time, self.full_trajectory_x)
