@@ -67,8 +67,22 @@ class Controller:
         x = [data.pose.position.x for data in path.poses]
         y = [data.pose.position.y for data in path.poses]
         z = [data.pose.position.z for data in path.poses]
-        time = []
+        vx = []
+        vy = []
+        vz = dz
         dt = path.header.stamp.nsecs/1000000000.0;
+        for i in range(len(path.poses)-1):
+            dx = path.poses[i+1].position.x - path.poses[i].position.x
+            dy = path.poses[i+1].position.y - path.poses[i].position.y
+            dz = path.poses[i+1].position.z - path.poses[i].position.z
+            vx.append(dx/dt)
+            vy.append(dy/dt)
+            vz.append(dz/dt)
+        vx.append(0.0)
+        vy.append(0.0)
+        vz.append(0.0)
+            
+        time = []
         t = 0.0
         for data in path.poses:
             time.append(t)
@@ -76,6 +90,9 @@ class Controller:
         self.full_trajectory_x = np.array(x)
         self.full_trajectory_y = np.array(y)
         self.full_trajectory_z = np.array(z)
+        self.full_trajectory_vx = np.array(vx)
+        self.full_trajectory_vy = np.array(vy)
+        self.full_trajectory_vz = np.array(vz)
         self.full_trajectory_time = np.array(time)
         print(self.full_trajectory_time)
         print(self.full_trajectory_x)
@@ -284,11 +301,16 @@ class Controller:
             target_x = np.interp(self.current_time, self.full_trajectory_time, self.full_trajectory_x)
             target_y = np.interp(self.current_time, self.full_trajectory_time, self.full_trajectory_y)
             target_z = np.interp(self.current_time, self.full_trajectory_time, self.full_trajectory_z)
+            target_vx = np.interp(self.current_time, self.full_trajectory_time, self.full_trajectory_vx)
+            target_vy = np.interp(self.current_time, self.full_trajectory_time, self.full_trajectory_vy)
+            target_vz = np.interp(self.current_time, self.full_trajectory_time, self.full_trajectory_vz)
             print("FULL TRAJ CONTROL:", dt, self.control_mode, target_x, target_y, target_z)
             self.target = np.array([target_x, target_y, target_z])
+            self.targetvel = np.array([target_vx, target_vy, target_vz])
             
         # Error = desired x,y,z position - actual x,y,z position.
         error = self.target - self.current_position
+        errorvel = self.targetvel - self.velocity
 
         # Thrust control
         pthrust = 1.5
@@ -382,6 +404,7 @@ class Controller:
                 print("ERROR:", error, self.target)
 
                 herror = np.array([error[0], error[1]])
+                herrorvel = np.array([errorvel[0], errorvel[1]])
                 print("HERROR:", math.degrees(self.current_yaw), herror)
 
                 #Rotation matrix to map angles (roll, pitch) from horizontal position (x,y).
@@ -391,8 +414,10 @@ class Controller:
                 # print("R:", R)
 
                 rherror = np.dot(R, herror)
+                rherrorvel = np.dot(R, herrorvel)
 
                 print("ROTATET HERROR:", rherror)
+                print("ROTATET HERRORVEL:", rherrorvel)
 
                 #PID control
                 derr_pitch = (rherror[0] - self.old_err_pitch)/dt
@@ -402,12 +427,13 @@ class Controller:
                 self.old_err_roll = rherror[1]
             
                 P = 3.0
-                D = 4.0
+                D = 0.0
                 if self.sync_flag:
                     P = 2.0
-                    D = 2.0
-                u[0] = math.radians(-(P*rherror[1] + D*derr_roll))       # roll
-                u[1] = math.radians(P*rherror[0] + D*derr_pitch)         # pitch
+                    D = 0.0
+                    Pvel = 2.0
+                u[0] = math.radians(-(P*rherror[1] + D*derr_roll) - Pvel*rherrorvel[1])       # roll
+                u[1] = math.radians(P*rherror[0] + D*derr_pitch + Pvel*rherror[0])         # pitch
 
                 max = math.radians(20.0)
                 if u[0] > max:
