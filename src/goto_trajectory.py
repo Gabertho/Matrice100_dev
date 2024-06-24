@@ -265,7 +265,7 @@ class GotoTrajectory:
         if self.phase == "brake":
             self.speed -= self.acc*dt
             # If our speed becomes negative, than hover (stops moving -> reached target).
-            if self.speed < 0.0:
+            if self.speed < 0.0 or (dist_to_target < 0.05):
                 self.speed = 0.0
                 self.phase = "hover"
                 print("HOVER:")
@@ -277,9 +277,10 @@ class GotoTrajectory:
 
         # If we are hovering, than our position is equal target position (because we reached it)
         if self.phase == "hover":
-            self.x = self.target_x
-            self.y = self.target_y
-            self.z = self.target_z
+            pass
+            #self.x = self.target_x
+            #self.y = self.target_y
+            #self.z = self.target_z
 
         # Calculate new trajectory point (distance = s0+v.t)
         len = self.speed*dt
