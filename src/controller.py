@@ -73,9 +73,9 @@ class Controller:
         vz = []
         dt = path.header.stamp.nsecs/1000000000.0;
         for i in range(len(path.poses)-1):
-            dx = path.poses[i+1].position.x - path.poses[i].position.x
-            dy = path.poses[i+1].position.y - path.poses[i].position.y
-            dz = path.poses[i+1].position.z - path.poses[i].position.z
+            dx = path.poses[i+1].pose.position.x - path.poses[i].pose.position.x
+            dy = path.poses[i+1].pose.position.y - path.poses[i].pose.position.y
+            dz = path.poses[i+1].pose.position.z - path.poses[i].pose.position.z
             vx.append(dx/dt)
             vy.append(dy/dt)
             vz.append(dz/dt)
