@@ -60,6 +60,7 @@ class Controller:
     def set_sync(self, flag):
         self.sync_flag = flag
 
+    # Set full trajectory: get all x, y, z positions and time t from full trajectory and set it.
     def set_full_trajectory(self, path):
         if self.have_full_trajectory:
             return
@@ -80,7 +81,7 @@ class Controller:
         print(self.full_trajectory_x)
         self.have_full_trajectory = True
 
-
+    # Get all x,y,z positions of trajectory.
     def get_full_trajectory_points(self):
         res = []
         for i in range(len(self.full_trajectory_x)):
@@ -91,6 +92,7 @@ class Controller:
             res.append(p)
         return res
 
+    # Get the pose (position + orientation) from target.
     def get_target_pose(self):
         if self.target.any():
             msg = PoseStamped()
@@ -107,6 +109,7 @@ class Controller:
             msg.pose.orientation.w = 1.0
             return msg
 
+#Enable and disable trajectory and full trajectory.
     def enable_trajectory(self):
         self.trajectory_flag = True
 
@@ -119,6 +122,7 @@ class Controller:
     def disable_full_trajectory(self):
         self.full_trajectory_flag = False
 
+    # Reset integral error and full trajectory flag.
     def reset(self):
         self.int_err_z = 0.0
         self.int_err_yaw = 0.0        
@@ -127,30 +131,38 @@ class Controller:
     def auto(self):
         self.target = np.array([self.current_position[0], self.current_position[1], self.current_position[2] ])
 
+    # Enable / disable yaw control.
     def set_yaw_control(self, flag):
         self.yaw_control_flag = flag
 
+    # Set required thrust to hover.
     def set_hover_thrust(self, thrust):
         self.hover_thrust = thrust
 
+    # Notify_position: set current position from pose callback (vicon / imu).
     def notify_position(self, x, y, z):
         self.current_position = np.array([x, y, z])
 
+    # Notify trajectory: set actual target position from trajectory callback.
     def notify_trajectory(self, x, y, z):
         if self.trajectory_flag:
             self.target = np.array([x, y, z])
             self.have_target = True
-        
+
+    #Notify yaw trajectory: set actual yaw position from trajectory callback.
     def notify_yaw_trajectory(self, yaw):
         self.target_yaw = yaw
 
+    #Notify velocity: set actual velocity from velocity callback (vicon / IMU). 
     def notify_velocity(self, x, y, z):
         self.velocity = np.array([x, y, z])
 
+    #Notify angles: Set actual yaw from attitude callback (IMU).
     def notify_angles(self, roll, pitch, yaw):
         self.current_yaw = yaw
         self.have_current_yaw = True
-        
+    
+    #Notify attittude: Set actual yaw transforming given quaterniuns to euler angles.
     def notify_attitude(self, qx, qy, qz, qw):
         self.qx = qx
         self.qy = qy
@@ -190,6 +202,7 @@ class Controller:
     def get_yaw_control(self):
         return self.yaw_control_flag
 
+    # Control_thrust = Thrust to rover + PID control signal.
     def control_thrust(self, period):
         self.err_z = self.target[2] - self.current_position[2] 
         self.int_err_z += self.err_z
@@ -204,7 +217,8 @@ class Controller:
             thrust = limit2
         self.old_err_z = self.err_z
         return thrust
-     
+    
+    # Control yaw (rate): PD
     def control_yaw(self, period):
         yaw_rate = 0.0
         self.err_yaw = self.target_yaw - self.current_yaw
@@ -215,6 +229,7 @@ class Controller:
         self.old_err_yaw = self.err_yaw
         return yaw_rate
 
+    # Horizontal control (Roll, pitch): PD).
     def control_horizontal(self, period):
         err_x = self.target[0] - self.current_position[0]
         err_y = self.target[1] - self.current_position[1]
@@ -241,7 +256,11 @@ class Controller:
         self.old_err_roll = self.err_roll
 
         return(pitch * math.pi / 180.0, roll * math.pi / 180.0)
-        
+    
+    # Control loop: Computes the control signal in different modes (velocity, angles or rate) and approaches (Simple PID, Lara PID, PID with
+    # ANN, PID with DNN, etc). If we are using the full trajectory, we interpolate in the given time to get the target x,y,z. If not,
+    # then we receive from the trajectory callback the desired x,y,z.
+
     def control(self, dt):
         print("DO CONTROL:", dt, self.control_mode, self.full_trajectory_flag)
 
@@ -255,6 +274,8 @@ class Controller:
             print("Do not have full trajectory")
             return (u, 0.0, 0.0, 0.0)
 
+        # Interpolation to get the target x,y,z in the current time, given full trajectory time (x-axis) and full trajectory position (x,y or z)
+        # (y axis).
         if self.full_trajectory_flag:
             self.current_time += dt
 
@@ -264,16 +285,13 @@ class Controller:
             print("FULL TRAJ CONTROL:", dt, self.control_mode, target_x, target_y, target_z)
             self.target = np.array([target_x, target_y, target_z])
             
-        
+        # Error = desired x,y,z position - actual x,y,z position.
         error = self.target - self.current_position
 
-        #
-        # Thrust
-        #
+        # Thrust control
         pthrust = 1.5
         ithrust = 0.0019
         dthrust = 6.0
-
         #pthrust = 1.5
         ithrust = 0.0
         #dthrust = 0.0
@@ -289,11 +307,12 @@ class Controller:
         print("INTERROR:", self.int_err_z)
         print("D_ERR_Z:", d_err_z)
 
-
+        # PID thrust: Kp.e+Ki.int_e+Kd.de/dt
         delta = error[2]*pthrust + ithrust*self.int_err_z + dthrust*d_err_z
 
         print("DELTATHRUST:", delta)
         
+        # Thrust control signal = thrust required to hover + PID output.
         u[2] = self.hover_thrust + delta
 
         if u[2] < 20.0:
@@ -303,14 +322,10 @@ class Controller:
 
         self.old_err_z = error[2]
 
-        #
-        # Yaw
-        #
-
+        # Yaw control = PD.
         pyaw = 1.0
         iyaw = 0.0
         dyaw = 0.0
-
 
         yaw_error = self.target_yaw - self.current_yaw
         print("YAW_ERROR:", yaw_error)
@@ -367,6 +382,7 @@ class Controller:
                 herror = np.array([error[0], error[1]])
                 print("HERROR:", math.degrees(self.current_yaw), herror)
 
+                #Rotation matrix to map angles (roll, pitch) from horizontal position (x,y).
                 theta = -self.current_yaw
                 c, s = np.cos(theta), np.sin(theta)
                 R = np.array(((c, -s), (s, c)))
@@ -376,9 +392,9 @@ class Controller:
 
                 print("ROTATET HERROR:", rherror)
 
+                #PID control
                 derr_pitch = (rherror[0] - self.old_err_pitch)/dt
                 derr_roll = (rherror[1] - self.old_err_roll)/dt
-
 
                 self.old_err_pitch = rherror[0]
                 self.old_err_roll = rherror[1]
