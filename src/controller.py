@@ -130,7 +130,7 @@ class Controller:
         self.current_time = 0.0        
         
     def auto(self):
-        if not self.have_full_trajectory:
+        if not self.have_full_trajectory and not self.target:
             self.target = np.array([self.current_position[0], self.current_position[1], self.current_position[2] ])
 
     # Enable / disable yaw control.
