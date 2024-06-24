@@ -25,6 +25,7 @@ class Controller:
         self.thrust = 0.0
         self.yaw_rate = 0.0
         self.target = None
+        self.targetvel = None
         self.target_speed = 1.0
         self.target_yaw = 0.0
         self.have_target = False
@@ -149,6 +150,7 @@ class Controller:
     def auto(self):
 #        if not self.have_full_trajectory and not self.target:
         self.target = np.array([self.current_position[0], self.current_position[1], self.current_position[2] ])
+        self.targetvel = np.array([0.0, 0.0, 0.0])
 
     # Enable / disable yaw control.
     def set_yaw_control(self, flag):
