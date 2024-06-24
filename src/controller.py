@@ -127,6 +127,7 @@ class Controller:
         self.int_err_z = 0.0
         self.int_err_yaw = 0.0        
         self.have_full_trajectory = False
+        self.current_time = 0.0        
         
     def auto(self):
         self.target = np.array([self.current_position[0], self.current_position[1], self.current_position[2] ])
