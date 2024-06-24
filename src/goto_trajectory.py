@@ -238,6 +238,9 @@ class GotoTrajectory:
     def tick(self, dt):
         if not self.enabled_flag:
             return
+
+        if not self.frac_x:
+            return
         
         print("goto_trajectory tick:", dt, self.phase, self.enabled_flag)
 
