@@ -29,7 +29,7 @@ current_pose.pose.position.y = 0.0
 current_pose.pose.position.z = 2.5
 counter = 0
 set_initial_position_flag = True
-full_trajectory_flag = False
+afull_trajectory_flag = False
 
 parser = OptionParser()
 parser.add_option("", "--dt", action="store", dest="dt", type="float", default=0.02, help='Perions, default 0.02')
@@ -40,8 +40,8 @@ parser.add_option("", "--trajectory_type", action="store", dest="trajectory_type
 def joy_callback(data):
     global set_initial_position_flag, full_trajectory_flag
 
-    if data.buttons[2]:
-        full_trajectory_flag = False
+    #if data.buttons[2]:
+    #    full_trajectory_flag = False
    
     if data.buttons[3]:
         print("Full trejectory")
