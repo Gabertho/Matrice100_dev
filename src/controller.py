@@ -329,6 +329,7 @@ class Controller:
         #pthrust = 1.5
         ithrust = 0.0
         #dthrust = 0.0
+        velthrust = 6.0
 
         print("TARGET:", self.target)
         print("CUPOS:", self.current_position)
@@ -342,7 +343,7 @@ class Controller:
         print("D_ERR_Z:", d_err_z)
 
         # PID thrust: Kp.e+Ki.int_e+Kd.de/dt
-        delta = error[2]*pthrust + ithrust*self.int_err_z + dthrust*d_err_z
+        delta = error[2]*pthrust + ithrust*self.int_err_z + dthrust*d_err_z + velthrust*errorvel[2]
 
         print("DELTATHRUST:", delta)
         
