@@ -69,9 +69,9 @@ parser.add_option("", "--name", action="store", dest="name", type="str", default
 def joy_callback(data):
     global controlled_flag
     global control_counter
-
-    #if data.buttons[2]:
-    #    controller.disable_full_trajectory()
+    
+    if data.buttons[2]:
+        controller.disable_full_trajectory()
     
     if data.buttons[3]:
         controller.enable_full_trajectory()
@@ -86,7 +86,7 @@ def joy_callback(data):
     else:
         controller.disable_trajectory()
 
-    if data.buttons[2]:        
+    if data.buttons[7]:        
         controller.reset()
         
     if data.buttons[0]:

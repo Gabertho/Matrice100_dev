@@ -40,8 +40,8 @@ parser.add_option("", "--trajectory_type", action="store", dest="trajectory_type
 def joy_callback(data):
     global set_initial_position_flag, full_trajectory_flag
 
-    #if data.buttons[2]:
-    #    full_trajectory_flag = False
+    if data.buttons[2]:
+        full_trajectory_flag = False
    
     if data.buttons[3]:
         print("Full trejectory")

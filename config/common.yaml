@@ -7,6 +7,6 @@ control_mode: "angles"
 
 # Start with in asynch trajectory or in full trajectory mode
 
-full_trajectory: true
+full_trajectory: false
 
 
