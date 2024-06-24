@@ -70,8 +70,8 @@ def joy_callback(data):
     global controlled_flag
     global control_counter
 
-    if data.buttons[2]:
-        controller.disable_full_trajectory()
+    #if data.buttons[2]:
+    #    controller.disable_full_trajectory()
     
     if data.buttons[3]:
         controller.enable_full_trajectory()
