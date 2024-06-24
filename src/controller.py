@@ -433,7 +433,7 @@ class Controller:
                 if self.sync_flag:
                     P = 4.0
                     D = 0.0
-                    Pvel = 6.0
+                    Pvel = 10.0
                 u[0] = math.radians(-(P*rherror[1] + D*derr_roll) - Pvel*rherrorvel[1])       # roll
                 u[1] = math.radians(P*rherror[0] + D*derr_pitch + Pvel*rherrorvel[0])         # pitch
 
