@@ -214,7 +214,10 @@ class GotoTrajectory:
             msg.pose.orientation.z = 0.0
             msg.pose.orientation.w = 1.0
 
-            pathmsg.poses.append(msg)
+            if phase == "hover":
+                pathmsg.poses[-1] = msg
+            else:
+                pathmsg.poses.append(msg)
 
         print("RETURN pathmsg")
         return pathmsg
