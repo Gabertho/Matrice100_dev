@@ -383,6 +383,8 @@ def do_work():
 
     publish_target(target_pub)
 
+    print("============================================0")
+
     print("U:", u, err_x, err_y, err_z)
 
     msg = Joy()
