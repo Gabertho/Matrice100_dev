@@ -177,14 +177,15 @@ class GotoTrajectory:
             if phase == "brake":
                 speed -= self.acc*dt
                 # If our speed becomes negative, than hover (stops moving -> reached target).
-                if speed < 0.0 or (dist_to_target < 0.05):
+#                if speed < 0.0 or (dist_to_target < 0.05):
+                if speed < 0.0:
                     speed = 0.0
                     phase = "hover"
                     print("HOVER:")
     
             if phase == "cruise":
                 # If we are cruisng and the distance to target becomes smaller than distance traveled in acceleration, then go brake.
-                if dist_to_target < acc_len:
+                if dist_to_target <= acc_len:
                     phase = "brake"
 
             # If we are hovering, than our position is equal target position (because we reached it)
