@@ -85,6 +85,9 @@ def joy_callback(data):
         controller.enable_trajectory()
     else:
         controller.disable_trajectory()
+
+    if data.buttons[2]:        
+        controller.reset()
         
     if data.buttons[0]:
         # get authority
