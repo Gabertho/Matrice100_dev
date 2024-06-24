@@ -70,7 +70,7 @@ class Controller:
         z = [data.pose.position.z for data in path.poses]
         vx = []
         vy = []
-        vz = dz
+        vz = []
         dt = path.header.stamp.nsecs/1000000000.0;
         for i in range(len(path.poses)-1):
             dx = path.poses[i+1].position.x - path.poses[i].position.x
