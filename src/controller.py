@@ -435,7 +435,7 @@ class Controller:
                     D = 0.0
                     Pvel = 6.0
                 u[0] = math.radians(-(P*rherror[1] + D*derr_roll) - Pvel*rherrorvel[1])       # roll
-                u[1] = math.radians(P*rherror[0] + D*derr_pitch + Pvel*rherror[0])         # pitch
+                u[1] = math.radians(P*rherror[0] + D*derr_pitch + Pvel*rherrorvel[0])         # pitch
 
                 max = math.radians(20.0)
                 if u[0] > max:
