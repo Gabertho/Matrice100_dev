@@ -62,12 +62,18 @@ class Controller:
         #Discretized PID - Gabriel
         self.int_err_roll = 0
         self.int_err_pitch = 0
+        self.int_error_yaw = 0
+        self.int_err_thrust = 0
         self.prev_u_roll = 0
         self.prev_u_pitch = 0
+        self.prev_u_yaw = 0
         self.old_error_roll = 0
         self.old_error_pitch = 0
+        self.old_error_yaw = 0
         self.old2_err_roll = 0
         self.old2_err_roll = 0
+        self.old2_err_yaw = 0
+
 
     def set_sync(self, flag):
         self.sync_flag = flag
@@ -395,6 +401,7 @@ class Controller:
 
                 print("ERROR:", error, self.target)
 
+                # Roll and Pitch Control
                 herror = np.array([error[0], error[1]])
                 print("HERROR:", math.degrees(self.current_yaw), herror)
 
@@ -441,6 +448,45 @@ class Controller:
                 max_angle = math.radians(20.0)
                 u[0] = np.clip(u[0], -max_angle, max_angle)
                 u[1] = np.clip(u[1], -max_angle, max_angle)
+                
+                #Thrust control
+                # PID gains for thrust
+                Kp_thrust = 1.5
+                Ki_thrust = 0.01
+                Kd_thrust = 0.0
+
+                # Calculate the integral and derivative errors for thrust
+                self.int_err_thrust += error[2] * dt
+
+                # Discretized PID control for thrust
+                self.prev_u_thrust = self.prev_u_thrust + Kp_thrust * (error[2] - self.old_err_z) + Ki_thrust * self.int_err_z + Kd_thrust * (error[2] - 2 * self.old_err_z + self.old2_err_z)
+
+                self.old2_err_z = self.old_err_z
+                self.old_err_z = error[2]
+
+                u[2] = self.hover_thrust + self.prev_u_thrust
+                u[2] = np.clip(u[2], 20.0, 80.0)
+
+                #Yaw Control
+                # PID gains for yaw
+                Kp_yaw = 1.0
+                Ki_yaw = 0.0
+                Kd_yaw = 0.0
+
+                # Calculate the integral and derivative errors for yaw
+                yaw_error = self.target_yaw - self.current_yaw
+                self.int_error_yaw += yaw_error * dt
+                d_err_yaw = (yaw_error - self.old_err_yaw) / dt
+
+                # Discretized PID control for yaw
+                if self.yaw_control_flag:
+                    self.prev_u_yaw = self.prev_u_yaw + Kp_yaw * (yaw_error - self.old_err_yaw) + Ki_yaw * self.int_error_yaw + Kd_yaw * (yaw_error - 2 * self.old_err_yaw + self.old2_err_yaw)
+                    self.old2_err_yaw = self.old_err_yaw
+                    self.old_err_yaw = yaw_error
+                    u[3] = self.prev_u_yaw
+                else:
+                    u[3] = 0.0
+
 
     
 
