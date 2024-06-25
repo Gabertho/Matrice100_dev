@@ -59,6 +59,15 @@ class Controller:
         self.current_time = 0.0
         self.sync_flag = False
         self.dt = 0.02
+        #Discretized PID - Gabriel
+        self.int_err_roll = 0
+        self.int_err_pitch = 0
+        self.prev_u_roll = 0
+        self.prev_u_pitch = 0
+        self.old_error_roll = 0
+        self.old_error_pitch = 0
+        self.old2_err_roll = 0
+        self.old2_err_roll = 0
 
     def set_sync(self, flag):
         self.sync_flag = flag
@@ -381,34 +390,59 @@ class Controller:
             u[1] = P*error[1]            # north
 
         if self.control_mode == "angles":
-            if self.mode == "gabriel":
-                #thrust = self.control_thrust(dt)
-                #yaw = self.control_yaw(dt)
-                pitch, roll = self.control_horizontal(dt)
-                u[0] = roll 
-                u[1] = pitch
-                u[2] = thrust 
-                u[3] = yaw
+            if self.mode == "discretized_pid":
+                print("========================================================================")
 
-                #Saturation
-                ##Thrust
-                if u[2] < 20.0:
-                    u[2] = 20.0
-                if u[2] > 80.0:
-                    u[2] = 80.0
+                print("ERROR:", error, self.target)
 
-                ##Roll, pitch
-                max = math.radians(20.0)
-                if u[0] > max:
-                    u[0] = max
-                if u[0] < -max:
-                    u[0] = -max
-                if u[1] > max:
-                    u[1] = max
-                if u[1] < -max:
-                    u[1] = -max
+                herror = np.array([error[0], error[1]])
+                print("HERROR:", math.degrees(self.current_yaw), herror)
 
-                #Yaw
+                theta = -self.current_yaw
+                c, s = np.cos(theta), np.sin(theta)
+                R = np.array(((c, -s), (s, c)))
+
+                rherror = np.dot(R, herror)
+        
+
+                print("ROTATED HERROR:", rherror)
+    
+
+                # PID gains
+                Kp_roll = 3.0
+                Ki_roll = 0.1
+                Kd_roll = 0.01
+                Kp_pitch = 3.0
+                Ki_pitch = 0.1
+                Kd_pitch = 0.01
+
+                #Calculate roll control
+                self.int_err_roll += rherror[1]
+
+                u[0] = self.prev_u_roll +  Kp_roll * (rherror[1] - self.old_error_roll) + Ki_roll * rherror[1] + Kd_roll * (rherror[1] - 2*self.old_error_roll + self.old2_err_roll)
+
+                self.prev_u_roll = u[0]
+                self.old2_err_roll = self.old_error_roll
+                self.old_error_roll = rherror[1]
+
+                u[0] = math.radians(-u[0])
+
+                # Calculate pitch control
+                self.int_err_pitch += rherror[0]
+
+                u[1] = self.prev_u_pitch + Kp_pitch * (rherror[0] - self.old_error_pitch) + Ki_pitch * rherror[0] + Kd_pitch * (rherror[0] - 2*self.old_error_pitch + self.old2_err_pitch)
+
+                self.prev_u_pitch = u[1]
+                self.old2_err_pitch = self.old_error_pitch
+                self.old_error_pitch = rherror[0]
+
+                u[1] = math.radians(u[1])
+
+                max_angle = math.radians(20.0)
+                u[0] = np.clip(u[0], -max_angle, max_angle)
+                u[1] = np.clip(u[1], -max_angle, max_angle)
+
+    
 
             if self.mode == "simple_pid":
                 print("========================================================================")
