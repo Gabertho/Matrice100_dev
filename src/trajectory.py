@@ -55,7 +55,8 @@ def joy_callback(data):
         trajectory.have_initial_position = False
         set_initial_position_flag = True
 
-    trajectory.move_target(-data.axes[3]/2.0, data.axes[4]/2.0, data.axes[1]*data.buttons[4])
+    factor = 4.0
+    trajectory.move_target(-data.axes[3]/factor, data.axes[4]/factor, data.axes[1]*data.buttons[4]/factor)
         
 # Pose callback: gets x,y,z position and set trajectory initial position (if flag enabled) to it.
 def pose_callback(data):
