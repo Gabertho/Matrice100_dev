@@ -325,7 +325,7 @@ class Controller:
         # Thrust control
         pthrust = 1.5
         ithrust = 0.0019
-        dthrust = 6.0
+        dthrust = 0.0
         #pthrust = 1.5
         ithrust = 0.0
         #dthrust = 0.0
