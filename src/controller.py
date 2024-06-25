@@ -67,12 +67,15 @@ class Controller:
         self.prev_u_roll = 0
         self.prev_u_pitch = 0
         self.prev_u_yaw = 0
+        self.prev_u_thrust = 0
         self.old_error_roll = 0
         self.old_error_pitch = 0
         self.old_error_yaw = 0
+        self.old_error_thrust = 0
         self.old2_err_roll = 0
         self.old2_err_roll = 0
         self.old2_err_yaw = 0
+        self.old2_err_thrust = 0
 
 
     def set_sync(self, flag):
@@ -401,19 +404,16 @@ class Controller:
 
                 print("ERROR:", error, self.target)
 
-                # Roll and Pitch Control
+                # Roll and Pitch Errors
                 herror = np.array([error[0], error[1]])
                 print("HERROR:", math.degrees(self.current_yaw), herror)
-
+                
+                # Rotating to get roll and pitch from x and y.
                 theta = -self.current_yaw
                 c, s = np.cos(theta), np.sin(theta)
                 R = np.array(((c, -s), (s, c)))
-
                 rherror = np.dot(R, herror)
-        
-
                 print("ROTATED HERROR:", rherror)
-    
 
                 # PID gains
                 Kp_roll = 3.0
@@ -425,27 +425,25 @@ class Controller:
 
                 #Calculate roll control
                 self.int_err_roll += rherror[1]
-
                 u[0] = self.prev_u_roll +  Kp_roll * (rherror[1] - self.old_error_roll) + Ki_roll * rherror[1] + Kd_roll * (rherror[1] - 2*self.old_error_roll + self.old2_err_roll)
-
                 self.prev_u_roll = u[0]
                 self.old2_err_roll = self.old_error_roll
                 self.old_error_roll = rherror[1]
-
+                #Control law = negative on platform.
                 u[0] = math.radians(-u[0])
 
                 # Calculate pitch control
                 self.int_err_pitch += rherror[0]
-
                 u[1] = self.prev_u_pitch + Kp_pitch * (rherror[0] - self.old_error_pitch) + Ki_pitch * rherror[0] + Kd_pitch * (rherror[0] - 2*self.old_error_pitch + self.old2_err_pitch)
-
                 self.prev_u_pitch = u[1]
                 self.old2_err_pitch = self.old_error_pitch
                 self.old_error_pitch = rherror[0]
-
+                #Control law = positive on platform.
                 u[1] = math.radians(u[1])
-
+                
+                # Saturation
                 max_angle = math.radians(20.0)
+
                 u[0] = np.clip(u[0], -max_angle, max_angle)
                 u[1] = np.clip(u[1], -max_angle, max_angle)
                 
@@ -455,14 +453,14 @@ class Controller:
                 Ki_thrust = 0.01
                 Kd_thrust = 0.0
 
-                # Calculate the integral and derivative errors for thrust
-                self.int_err_thrust += error[2] * dt
+                
+                self.int_err_thrust += error[2] 
 
                 # Discretized PID control for thrust
-                self.prev_u_thrust = self.prev_u_thrust + Kp_thrust * (error[2] - self.old_err_z) + Ki_thrust * self.int_err_z + Kd_thrust * (error[2] - 2 * self.old_err_z + self.old2_err_z)
+                self.prev_u_thrust = self.prev_u_thrust + Kp_thrust * (error[2] - self.old_error_thrust) + Ki_thrust * self.int_err_thrust + Kd_thrust * (error[2] - 2 * self.old_error_thrust + self.old2_err_thrust)
 
-                self.old2_err_z = self.old_err_z
-                self.old_err_z = error[2]
+                self.old2_err_thrust = self.old_error_thrust
+                self.old_error_thrust = error[2]
 
                 u[2] = self.hover_thrust + self.prev_u_thrust
                 u[2] = np.clip(u[2], 20.0, 80.0)
@@ -475,8 +473,7 @@ class Controller:
 
                 # Calculate the integral and derivative errors for yaw
                 yaw_error = self.target_yaw - self.current_yaw
-                self.int_error_yaw += yaw_error * dt
-                d_err_yaw = (yaw_error - self.old_err_yaw) / dt
+                self.int_error_yaw += yaw_error 
 
                 # Discretized PID control for yaw
                 if self.yaw_control_flag:
@@ -485,10 +482,7 @@ class Controller:
                     self.old_err_yaw = yaw_error
                     u[3] = self.prev_u_yaw
                 else:
-                    u[3] = 0.0
-
-
-    
+                    u[3] = 0.0    
 
             if self.mode == "simple_pid":
                 print("========================================================================")
