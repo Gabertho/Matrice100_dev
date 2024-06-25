@@ -328,6 +328,7 @@ class Controller:
         dthrust = 0.0
         #pthrust = 1.5
         #ithrust = 0.0
+        ithrust = 0.02        
         #dthrust = 0.0
         velthrust = 6.0
 
