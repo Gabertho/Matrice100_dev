@@ -68,6 +68,9 @@ def pose_callback(data):
         trajectory.set_initial_position(current_pose.pose.position.x, current_pose.pose.position.y, current_pose.pose.position.z)
         set_initial_position_flag = False
 
+def set_target_callback(data):
+    trajectory.set_target(data.x, data.y, data.z)
+
 # Timer callback: Calls trajectory updates or full path, and publish them.
 def timer_callback(event): 
     global inside_timer_callback, counter
@@ -131,6 +134,7 @@ if __name__ == "__main__":
 
     joy_sub = rospy.Subscriber("/drone/joy", Joy, joy_callback)       #/dji_sdk/local_position
     target_sub = rospy.Subscriber("target/pose", PoseStamped, pose_callback)       #/dji_sdk/local_position
+    set_target_sub = rospy.Subscriber("set_target", Vector3, set_target_callback)       #/dji_sdk/local_position
 #    pose_sub = rospy.Subscriber("pose", PoseStamped, pose_callback)       #/dji_sdk/local_position
 #    pose2_sub = rospy.Subscriber("/mat2/pose", PoseStamped, pose_callback)       #/dji_sdk/local_position
 
