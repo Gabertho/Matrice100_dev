@@ -3,6 +3,7 @@
   <arg name="vicon" default="false" />
   <arg name="djisim" default="false" />
   <arg name="dt" default="0.01" />
+  <arg name="adjust_thrust" default="2.5" />
   <arg name="sync" default="false" />  
   
   <rosparam command="load" file="$(find drone_dev)/config/common.yaml" ns="/dji2" />
@@ -14,7 +15,7 @@
     </group>
   
     <group unless="$(arg djisim)">
-      <node name="controller" pkg="drone_dev" type="pycontroller.py" args="--sync --vicon --dt $(arg dt) __ns:=/dji2" output="screen" if="$(arg vicon)" />
+      <node name="controller" pkg="drone_dev" type="pycontroller.py" args="--sync --vicon --dt $(arg dt) --adjust-thrust $(arg adjust_thrust) __ns:=/dji2" output="screen" if="$(arg vicon)" />
       <node name="controller" pkg="drone_dev" type="pycontroller.py" args="--sync --dt $(arg dt) __ns:=/dji2" output="screen" unless="$(arg vicon)" />
     </group>
     
