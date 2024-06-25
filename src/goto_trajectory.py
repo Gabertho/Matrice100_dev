@@ -152,6 +152,36 @@ class GotoTrajectory:
         pathmsg.header.stamp.secs = 0
         pathmsg.header.stamp.nsecs = int(1000000000.0*dt)
 
+        dx = self.target_x - x
+        dy = self.target_y - y
+        dz = self.target_z - z
+        dist_to_target = math.sqrt(dx*dx+dy*dy+dz*dz)
+
+        if dist_to_target < 0.05:
+            msg = PoseStamped()
+            msg.header.frame_id = "world"
+            msg.pose.position.x = x
+            msg.pose.position.y = y
+            msg.pose.position.z = z
+            msg.pose.orientation.x = 0.0
+            msg.pose.orientation.y = 0.0
+            msg.pose.orientation.z = 0.0
+            msg.pose.orientation.w = 1.0
+            msg2 = PoseStamped()
+            msg2.header.frame_id = "world"
+            msg2.pose.position.x = x
+            msg2.pose.position.y = y
+            msg2.pose.position.z = z
+            msg2.pose.orientation.x = 0.0
+            msg2.pose.orientation.y = 0.0
+            msg2.pose.orientation.z = 0.0
+            msg2.pose.orientation.w = 1.0
+            pathmsg.poses.append(msg)
+            pathmsg.poses.append(msg2)
+            print("RETURN hover pathmsg")
+            return pathmsg
+
+
         # While we are not hovering, i.e, we didn't reach the target position:
         while phase != "hover":
             #Calculate distance from actual trajectory position to target.
