@@ -268,7 +268,7 @@ def rc_callback(data):
 
 # Tf callback: gets pose and velocity estimated by Vicon.
 def tf_callback(data):
-    ## print(data)
+    print(data)
     global old_x, old_y, old_z, n_samples, avel_index
     if options.vicon:
         for trans in data.transforms:
@@ -280,8 +280,8 @@ def tf_callback(data):
                 current_x = x
                 current_y = y
                 current_z = z
-
-                # print("*********************************************************************************")
+                
+                print("*********************************************************************************")
                 controller.notify_position(x, y, z)
 
                 if not old_x:
