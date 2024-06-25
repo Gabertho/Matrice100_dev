@@ -144,8 +144,8 @@ class Controller:
 
     # Reset integral error and full trajectory flag.
     def reset(self):
-        self.int_err_z = 0.0
-        self.int_err_yaw = 0.0        
+        #self.int_err_z = 0.0
+        #self.int_err_yaw = 0.0        
         self.have_full_trajectory = False
         self.current_time = 0.0        
         
