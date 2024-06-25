@@ -1,6 +1,13 @@
 # Matrice100_dev
 Control repository for the DJI Matrice 100 UAV.
 
+## Test flight
+
+- Press green button, make sure it stabilize on altitude.  Change adjust_thrust argument to controller launch iof needed
+- Press D-pad up to enable yaw control
+- Press yellow button to start full trajectory flying
+- Move goal positon and press start button to fly to a new goal
+
 ## Joystick
 
 - A: Auto
