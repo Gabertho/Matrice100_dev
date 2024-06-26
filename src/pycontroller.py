@@ -351,7 +351,8 @@ def publish_controls(u):
 
 def publish_target(pub):
     msg = controller.get_target_pose()
-    pub.publish(msg)
+    if msg:
+        pub.publish(msg)
 
 def publish_error(x, y, z):
     xmsg = Float64()

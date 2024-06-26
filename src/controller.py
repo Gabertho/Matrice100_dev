@@ -143,6 +143,8 @@ class Controller:
             msg.pose.orientation.z = 0.0
             msg.pose.orientation.w = 1.0
             return msg
+        else:
+            return None
 
 #Enable and disable trajectory and full trajectory.
     def enable_trajectory(self):

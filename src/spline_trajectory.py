@@ -47,7 +47,7 @@ class SplineTrajectory:
 
     def get_target_path_length(self):
         x0 = self.x
-        y0= self.y
+        y0 = self.y
         z0 = self.z
         length = 0.0
         lengths = []
@@ -67,26 +67,32 @@ class SplineTrajectory:
         return (length, lengths)
     
     def update_spline(self):
-        if not self.have_initial_position_from_pose or self.have_initial_position:
-            return
-        (length, lengths) = self.get_target_path_length()
-        tot_length = length
-        self.tot_time = length/self.target_speed
-        #print("TOT TIME:", self.tot_time)
-
-        tlen = 0.0
-        time = [0.0]
-        for l in lengths:
-            tlen += l
-            time.append(self.tot_time*tlen/tot_length)
-        #print("TIME:", time)
-        #print("TARGETS:", self.targets)
         try:
-            self.spline_x = CubicSpline(time, [self.x] + [t[0] for t in self.targets])
-            self.spline_y = CubicSpline(time, [self.y] + [t[1] for t in self.targets])
-            self.spline_z = CubicSpline(time, [self.z] + [t[2] for t in self.targets])
-        except:
-            print("DUPLICATE TIMES")
+            if not self.have_initial_position_from_pose and not self.have_initial_position:
+                return
+            (length, lengths) = self.get_target_path_length()
+            tot_length = length
+            if tot_length < 0.001:
+                return
+            self.tot_time = length/self.target_speed
+            # print("TOT TIME:", self.tot_time)
+
+            tlen = 0.0
+            time = [0.0]
+            for l in lengths:
+                tlen += l
+                time.append(self.tot_time*tlen/tot_length)
+            #print("TIME:", time)
+            #print("TARGETS:", self.targets)
+            try:
+                self.spline_x = CubicSpline(time, [self.x] + [t[0] for t in self.targets])
+                self.spline_y = CubicSpline(time, [self.y] + [t[1] for t in self.targets])
+                self.spline_z = CubicSpline(time, [self.z] + [t[2] for t in self.targets])
+            except:
+                print("DUPLICATE TIMES")
+        except Exception as e:
+            print("EXCEPTION update_spline:", e)
+                
 
     def next_target(self):
         if self.have_changed_index:
@@ -111,7 +117,7 @@ class SplineTrajectory:
         
     def get_path_points(self):
         res = []
-        if not self.have_initial_position_from_pose or self.have_initial_position:
+        if not self.have_initial_position_from_pose and not self.have_initial_position:
             return res
 
         times = np.arange(0.0, self.tot_time, 0.1)
@@ -129,11 +135,19 @@ class SplineTrajectory:
             p.z = z_interpolate[i]
             res.append(p)
         return res
+
+    def new_spline(self):
+        self.x = self.targets[-1][0]
+        self.y = self.targets[-1][1]
+        self.z = self.targets[-1][2]
+        self.targets = [np.array([self.x, self.y, self.z])]
+        self.target_index = 0
     
     def enabled(self):
         return self.enabled_flag
 
     def enable(self):
+        self.new_spline()
         self.enabled_flag = True
 
     def disable(self):
@@ -141,6 +155,7 @@ class SplineTrajectory:
 
     def notify_position(self, x, y, z):
         if not self.have_initial_position_from_pose:
+            print("notify_position", self.have_initial_position_from_pose)
             self.have_initial_position_from_pose = True
             self.x = x
             self.y = y
@@ -220,13 +235,15 @@ class SplineTrajectory:
         return msg
 
     def set_initial_position(self, x, y, z):
+        return
         if self.enabled_flag:
             return
         print("set_initial_position:", x, y, z)
         self.x = x
         self.y = y
         self.z = z
-        self.targets = [np.array([x+5.0, y+2.0, z])]
+        self.targets = [np.array([x, y, z])]
+        self.target_index = 0
         if not self.have_initial_position:
             self.reset()
             self.have_initial_position = True
@@ -252,7 +269,7 @@ class SplineTrajectory:
             times.append(current_time)
 
         speed = self.target_speed
-        print("END ACC PHASE:", current_time, times)
+        #print("END ACC PHASE:", current_time, times)
 
         brake_time = self.tot_time - current_time-dt
 
@@ -260,14 +277,14 @@ class SplineTrajectory:
             current_time+=dt
             times.append(current_time)
 
-        print("END CRUISE PHASE:", current_time, times)
+        #print("END CRUISE PHASE:", current_time, times)
         
         while current_time <= self.tot_time:
             speed += self.acc*dt
             current_time += dt*speed/self.target_speed
             times.append(current_time)
             
-        print("END BRAKE PHASE:", current_time, self.tot_time)
+        #print("END BRAKE PHASE:", current_time, self.tot_time)
         
 
         x_interpolate = self.spline_x(times)
@@ -286,7 +303,7 @@ class SplineTrajectory:
             msg.pose.orientation.w = 1.0
             pathmsg.poses.append(msg)
 
-        print("RETURN pathmsg")
+        # print("RETURN pathmsg")
         return pathmsg
         
         x = self.x
@@ -405,16 +422,15 @@ class SplineTrajectory:
 
     def move_tick(self):
         # Moving target position with joystick.
-        self.targets[self.target_index] += np.array([self.joy_x, self.joy_y, self.joy_z])
-        self.update_spline()
+        try:
+            self.targets[self.target_index] += np.array([self.joy_x, self.joy_y, self.joy_z])
+            self.update_spline()
+        except Exception as e:
+            print("EXCEPTION move_tick:", self.target_index, e, self.targets)
         
-        # If control is not enabled, than reset in every iteration (to update trajectory initial position in case we start control)
-        if not self.enabled_flag:
-            self.reset()
-            return
-
     # Tick: Updates trajectory position in each iteration.
     def tick(self, dt):
+        return
         if not self.enabled_flag:
             return
 

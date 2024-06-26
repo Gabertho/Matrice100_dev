@@ -28,6 +28,7 @@ current_pose = PoseStamped()
 current_pose.pose.position.x = 0.0
 current_pose.pose.position.y = 0.0
 current_pose.pose.position.z = 2.5
+have_current_pose = False
 counter = 0
 set_initial_position_flag = True
 afull_trajectory_flag = False
@@ -69,7 +70,7 @@ def joy_callback(data):
     trajectory.move_target(-data.axes[3]/factor, data.axes[4]/factor, data.axes[1]*data.buttons[4]/factor)
 
 def notify_pose_callback(data):
-    trajectory.notify_position(current_pose.pose.position.x, current_pose.pose.position.y, current_pose.pose.position.z)
+    trajectory.notify_position(data.pose.position.x, data.pose.position.y, data.pose.position.z)
     
 # Pose callback: gets x,y,z position and set trajectory initial position (if flag enabled) to it.
 def pose_callback(data):
@@ -175,9 +176,9 @@ def timer_callback(event):
     # If we want the full path:
     if full_trajectory_flag:
         if counter >= 2.0/options.dt:
-            print("SEND BIG PATH/TRAJECTORY")
+            #print("SEND BIG PATH/TRAJECTORY")
             msg = trajectory.get_path(options.dt)
-            print("GOT BIG PATH/TRAJECTORY MSG from tracetoryclass")
+            #print("GOT BIG PATH/TRAJECTORY MSG from tracetoryclass")
             counter = 0
             full_trajectory_pub.publish(msg)
     # If we want to use the trajectory position in each iteration:
