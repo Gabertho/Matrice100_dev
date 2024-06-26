@@ -18,6 +18,7 @@ from visualization_msgs.msg import Marker, MarkerArray
 from sensor_msgs.msg import Joy, LaserScan, BatteryState
 
 from goto_trajectory import GotoTrajectory
+from spline_trajectory import SplineTrajectory
 
 from optparse import OptionParser
 from threading import Lock, Event
@@ -74,6 +75,70 @@ def pose_callback(data):
 def set_target_callback(data):
     trajectory.set_target(data.x, data.y, data.z)
 
+def get_sphere_marker(id, x, y, z):
+    m = Marker()
+    m.header.frame_id = "world"
+    m.header.stamp = rospy.Time.now()
+    m.ns = "targets"
+    m.id = id
+    m.type = m.SPHERE
+    m.action = 0
+    m.lifetime = rospy.Duration(0)
+    m.pose.position.x = x
+    m.pose.position.y = y
+    m.pose.position.z = z
+    m.pose.orientation.x = 0.0
+    m.pose.orientation.y = 0.0
+    m.pose.orientation.z = 0.0
+    m.pose.orientation.w = 1.0
+    m.color.r = 1.0
+    m.color.g = 1.0
+    m.color.b = 0.0
+    m.color.a = 1.0
+    m.scale.x = 0.3
+    m.scale.y = 0.3
+    m.scale.z = 0.3
+    return m
+
+def display_targets():
+    try:
+        targets = trajectory.targets
+        id = 1
+        ma = MarkerArray()
+        for target in targets:
+            m = get_sphere_marker(id, target[0], target[1], target[2])
+            ma.markers.append(m)
+        marker_array_pub.publish(ma)
+    except Exception as e:
+        msg2 = trajectory.get_target_point_stamped()
+        target_pub.publish(msg2)
+
+def publish_full_trajectory(points):
+    m = Marker()
+    m.header.frame_id = "world"
+    m.header.stamp = rospy.Time.now()
+    m.ns = "full_trajetory"
+    m.id = 1
+    m.type = m.LINE_STRIP
+    m.action = 0
+    m.lifetime = rospy.Duration(0)
+    m.points = points
+    m.color.r = 1.0
+    m.color.g = 1.0
+    m.color.b = 0.0
+    m.color.a = 1.0
+    m.scale.x = 0.1
+    marker_pub.publish(m)
+        
+def display_path():
+    try:
+        points = trajectory.get_path_points()
+        print("POINTS:", points)
+        publish_full_trajectory(points)
+    except Exception as e:
+        print("EXCEPTION:", e)
+        pass
+    
 # Timer callback: Calls trajectory updates or full path, and publish them.
 def timer_callback(event): 
     global inside_timer_callback, counter
@@ -87,8 +152,9 @@ def timer_callback(event):
 
     # Move target with joystick.
     trajectory.move_tick()
-    msg2 = trajectory.get_target_point_stamped()
-    target_pub.publish(msg2)
+
+    display_targets()
+    display_path()
 
     # If we want the full path:
     if full_trajectory_flag:
@@ -128,13 +194,16 @@ if __name__ == "__main__":
 
     print("MODE X Y Z SPEED - trajectory:", control_mode, x, y, z, speed, full_trajectory_flag)
 
-    trajectory = GotoTrajectory(x, y, z, speed)
-
+    #trajectory = GotoTrajectory(x, y, z, speed)
+    trajectory = SplineTrajectory(x, y, z, speed)
+    
     full_trajectory_pub = rospy.Publisher("full_trajectory", Path, latch=False, queue_size=10)
     trajectory_pub = rospy.Publisher("trajectory", PointStamped, latch=False, queue_size=10)
     yaw_pub = rospy.Publisher("yaw_trajectory", Float64, latch=False, queue_size=10)
     target_pub = rospy.Publisher("target", PointStamped, latch=False, queue_size=10)
-
+    marker_array_pub = rospy.Publisher("/visualization_marker_array", MarkerArray, latch=False, queue_size=1000)
+    marker_pub = rospy.Publisher("/visualization_marker", Marker, latch=False, queue_size=1000)   # queue_size ....
+    
     joy_sub = rospy.Subscriber("/drone/joy", Joy, joy_callback)       #/dji_sdk/local_position
     target_sub = rospy.Subscriber("target/pose", PoseStamped, pose_callback)       # from controller
     set_target_sub = rospy.Subscriber("set_target", Vector3, set_target_callback)       # new to set the target

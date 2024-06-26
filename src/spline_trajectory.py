@@ -4,7 +4,7 @@ import math
 import numpy as np
 
 from nav_msgs.msg import Path
-from geometry_msgs.msg import PointStamped, PoseStamped
+from geometry_msgs.msg import PointStamped, PoseStamped, Point
 from std_msgs.msg import Float64
 
 # General idea: The drone movement is divided in four phases: acceleration, cruise, brake and hover. 
@@ -39,6 +39,23 @@ class SplineTrajectory:
         self.z = 0.0
 
 
+    def get_path_points(self):
+        res = []
+        if not self.have_initial_position_from_pose or self.have_initial_position:
+            return res
+        p = Point()
+        p.x = self.x
+        p.y = self.y
+        p.z = self.z
+        res.append(p)
+        for t in self.targets:
+            p = Point()
+            p.x = t[0]
+            p.y = t[1]
+            p.z = t[2]
+            res.append(p)
+        return res
+    
     def enabled(self):
         return self.enabled_flag
 
@@ -114,14 +131,14 @@ class SplineTrajectory:
         msg.pose.orientation.w = 1.0
         return msg
 
-    def get_target_point_stamped(self):
-        msg = PointStamped()
-        msg.header.frame_id = "world"
-        msg.header.stamp = rospy.Time.now()
-        msg.point.x = self.target_x
-        msg.point.y = self.target_y
-        msg.point.z = self.target_z
-        return msg
+    #def get_target_point_stamped(self):
+    #    msg = PointStamped()
+    #    msg.header.frame_id = "world"
+    #    msg.header.stamp = rospy.Time.now()
+    #    msg.point.x = self.target_x
+    #    msg.point.y = self.target_y
+    #    msg.point.z = self.target_z
+    #    return msg
 
     def get_target_yaw(self):
         msg = Float64()
@@ -263,9 +280,7 @@ class SplineTrajectory:
 
     def move_tick(self):
         # Moving target position with joystick.
-        self.target[self.target_index] += self.joy_x
-        self.target[self.target_index] += self.joy_y
-        self.target[self.target_index] += self.joy_z
+        self.targets[self.target_index] += np.array([self.joy_x, self.joy_y, self.joy_z])
         
         # If control is not enabled, than reset in every iteration (to update trajectory initial position in case we start control)
         if not self.enabled_flag:
@@ -332,3 +347,5 @@ class SplineTrajectory:
         if self.phase == "acc":
             self.acc_len += len
         
+
+            
