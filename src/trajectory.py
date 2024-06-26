@@ -57,7 +57,10 @@ def joy_callback(data):
 
     factor = 8.0
     trajectory.move_target(-data.axes[3]/factor, data.axes[4]/factor, data.axes[1]*data.buttons[4]/factor)
-        
+
+def notify_pose_callback(data):
+    trajectory.notify_position(current_pose.pose.position.x, current_pose.pose.position.y, current_pose.pose.position.z)
+    
 # Pose callback: gets x,y,z position and set trajectory initial position (if flag enabled) to it.
 def pose_callback(data):
     global current_pose
@@ -133,10 +136,10 @@ if __name__ == "__main__":
     target_pub = rospy.Publisher("target", PointStamped, latch=False, queue_size=10)
 
     joy_sub = rospy.Subscriber("/drone/joy", Joy, joy_callback)       #/dji_sdk/local_position
-    target_sub = rospy.Subscriber("target/pose", PoseStamped, pose_callback)       #/dji_sdk/local_position
-    set_target_sub = rospy.Subscriber("set_target", Vector3, set_target_callback)       #/dji_sdk/local_position
-#    pose_sub = rospy.Subscriber("pose", PoseStamped, pose_callback)       #/dji_sdk/local_position
-#    pose2_sub = rospy.Subscriber("/mat2/pose", PoseStamped, pose_callback)       #/dji_sdk/local_position
+    target_sub = rospy.Subscriber("target/pose", PoseStamped, pose_callback)       # from controller
+    set_target_sub = rospy.Subscriber("set_target", Vector3, set_target_callback)       # new to set the target
+    pose_sub = rospy.Subscriber("pose", PoseStamped, notify_pose_callback)       #/dji_sdk/local_position
+    pose2_sub = rospy.Subscriber("/mat2/pose", PoseStamped, notify_pose_callback)       #/dji_sdk/local_position
 
     rospy.Timer(rospy.Duration(options.dt), timer_callback)
     

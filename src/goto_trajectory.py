@@ -26,6 +26,7 @@ class GotoTrajectory:
         self.acc = 1.0
         self.phase = "acc"
         self.have_initial_position = False
+        self.have_initial_position_from_pose = False        
         self.speed = 0.0
         self.travel_length = 0.0
         self.joy_x = 0.0
@@ -47,6 +48,12 @@ class GotoTrajectory:
     def disable(self):
         self.enabled_flag = False
 
+    def notify_position(self, x, y, z):
+        if not self.have_initial_position_from_pose:
+            self.have_initial_position_from_pose = True
+            self.x = x
+            self.y = y
+            self.z = z
         
     def set_target(self, x, y, z):
         print("set_target:", x, y, z)
