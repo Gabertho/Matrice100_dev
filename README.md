@@ -1,6 +1,14 @@
 # Matrice100_dev
 Control repository for the DJI Matrice 100 UAV.
 
+## Start order
+
+IMPORTANT: Start controller before trajectory
+
+## Spline
+
+Not yet working properly: Start with flag to trajectory launch: spline:=true
+
 ## Test flight
 
 - Press green button, make sure it stabilize on altitude.  Change adjust_thrust argument to controller launch iof needed
