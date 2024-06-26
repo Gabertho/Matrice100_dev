@@ -7,7 +7,16 @@ IMPORTANT: Start controller before trajectory
 
 ## Spline
 
-Not yet working properly: Start with flag to trajectory launch: spline:=true
+For spline the controller does not need to be started before trajectory.
+
+Start with flag to trajectory launch: spline:=true
+
+- Press Yellow button
+- Move points for spline (new point right joystich button, prev point left joystick button)
+- Press green button (A)
+- Press "start" (left button)
+- Move points in spline
+- Press ... (right button)
 
 ## Test flight
 
