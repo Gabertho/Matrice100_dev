@@ -37,7 +37,7 @@ class GotoTrajectory:
         self.x = 0.0
         self.y = 0.0
         self.z = 0.0
-
+        self.acc_len = 0.0
 
     def enabled(self):
         return self.enabled_flag

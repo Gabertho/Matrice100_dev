@@ -133,7 +133,7 @@ def publish_full_trajectory(points):
     m = Marker()
     m.header.frame_id = "world"
     m.header.stamp = rospy.Time.now()
-    m.ns = "full_trajetory"
+    m.ns = "spline_trajetory"
     m.id = 1
     m.type = m.LINE_STRIP
     m.action = 0
@@ -143,7 +143,7 @@ def publish_full_trajectory(points):
     m.color.g = 1.0
     m.color.b = 0.0
     m.color.a = 1.0
-    m.scale.x = 0.1
+    m.scale.x = 0.05
     marker_pub.publish(m)
         
 def display_path():
@@ -152,7 +152,7 @@ def display_path():
         # print("POINTS:", points)
         publish_full_trajectory(points)
     except Exception as e:
-        print("EXCEPTION:", e)
+        # print("EXCEPTION:", e)
         pass
     
 # Timer callback: Calls trajectory updates or full path, and publish them.
@@ -205,13 +205,16 @@ if __name__ == "__main__":
     z = rospy.get_param("~z", 2.5)
     speed = rospy.get_param("~speed", 3.0)
     control_mode = rospy.get_param("control_mode", "velocity")
+    spline_flag =  rospy.get_param("~spline", False)
 
     full_trajectory_flag = rospy.get_param("full_trajectory", False)
 
     print("MODE X Y Z SPEED - trajectory:", control_mode, x, y, z, speed, full_trajectory_flag)
 
-    #trajectory = GotoTrajectory(x, y, z, speed)
-    trajectory = SplineTrajectory(x, y, z, speed)
+    if spline_flag:
+        trajectory = SplineTrajectory(x, y, z, speed)
+    else:
+        trajectory = GotoTrajectory(x, y, z, speed)
     
     full_trajectory_pub = rospy.Publisher("full_trajectory", Path, latch=False, queue_size=10)
     trajectory_pub = rospy.Publisher("trajectory", PointStamped, latch=False, queue_size=10)

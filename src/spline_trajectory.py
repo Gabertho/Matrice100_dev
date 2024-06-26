@@ -1,5 +1,8 @@
 import rospy
 
+from scipy.interpolate import CubicSpline
+from scipy.interpolate import make_interp_spline
+
 import math
 import numpy as np
 
@@ -38,7 +41,52 @@ class SplineTrajectory:
         self.y = 0.0
         self.z = 0.0
         self.have_changed_index = False
+        self.spline_x = None
+        self.spline_y = None
+        self.spline_z = None
 
+    def get_target_path_length(self):
+        x0 = self.x
+        y0= self.y
+        z0 = self.z
+        length = 0.0
+        lengths = []
+        for i in range(0, len(self.targets)):
+            t = self.targets[i]
+            dx = t[0] - x0
+            dy = t[1] - y0
+            dz = t[2] - z0
+            x0 = t[0]
+            y0 = t[1]
+            z0 = t[2]
+            l = math.sqrt(dx*dx+dy*dy+dx*dz)
+            length += l
+            lengths.append(l)
+        #print("LENGTH:", length)
+        #print("LENGTHS:", lengths)
+        return (length, lengths)
+    
+    def update_spline(self):
+        if not self.have_initial_position_from_pose or self.have_initial_position:
+            return
+        (length, lengths) = self.get_target_path_length()
+        tot_length = length
+        self.tot_time = length/self.target_speed
+        #print("TOT TIME:", self.tot_time)
+
+        tlen = 0.0
+        time = [0.0]
+        for l in lengths:
+            tlen += l
+            time.append(self.tot_time*tlen/tot_length)
+        #print("TIME:", time)
+        #print("TARGETS:", self.targets)
+        try:
+            self.spline_x = CubicSpline(time, [self.x] + [t[0] for t in self.targets])
+            self.spline_y = CubicSpline(time, [self.y] + [t[1] for t in self.targets])
+            self.spline_z = CubicSpline(time, [self.z] + [t[2] for t in self.targets])
+        except:
+            print("DUPLICATE TIMES")
 
     def next_target(self):
         if self.have_changed_index:
@@ -49,6 +97,7 @@ class SplineTrajectory:
         self.target_index += 1
         print("TARGET INDEX:", self.target_index)
         self.have_changed_index = True
+        self.update_spline()
         
     def previous_target(self):
         if self.have_changed_index:
@@ -58,21 +107,26 @@ class SplineTrajectory:
             self.target_index = 0
         print("TARGET INDEX:", self.target_index)
         self.have_changed_index = True
+        self.update_spline()
         
     def get_path_points(self):
         res = []
         if not self.have_initial_position_from_pose or self.have_initial_position:
             return res
-        p = Point()
-        p.x = self.x
-        p.y = self.y
-        p.z = self.z
-        res.append(p)
-        for t in self.targets:
+
+        times = np.arange(0.0, self.tot_time, 0.1)
+        #print("TIMES:", times)
+        x_interpolate = self.spline_x(times)
+        y_interpolate = self.spline_y(times)
+        z_interpolate = self.spline_z(times)
+        #print("X_INTERPOLATE:", x_interpolate)
+        #print("Y_INTERPOLATE:", y_interpolate)
+        #print("Z_INTERPOLATE:", z_interpolate)
+        for i in range(len(x_interpolate)):
             p = Point()
-            p.x = t[0]
-            p.y = t[1]
-            p.z = t[2]
+            p.x = x_interpolate[i]
+            p.y = y_interpolate[i]
+            p.z = z_interpolate[i]
             res.append(p)
         return res
     
@@ -172,12 +226,69 @@ class SplineTrajectory:
         self.x = x
         self.y = y
         self.z = z
+        self.targets = [np.array([x+5.0, y+2.0, z])]
         if not self.have_initial_position:
             self.reset()
             self.have_initial_position = True
 
     # Get the full path, i.e, sequence of points in time that lead the initial position to the target position.
     def get_path(self, dt):
+        # contruct from spline, add acceleration and brake
+        # need to compute lenght of spline...
+
+        pathmsg = Path()
+
+        pathmsg.header.frame_id = "world"
+        pathmsg.header.stamp.secs = 0
+        pathmsg.header.stamp.nsecs = int(1000000000.0*dt)
+
+        current_time = 0.0
+        speed = 0.0
+        times = [0.0]
+        
+        while speed <= self.target_speed:
+            speed += self.acc*dt
+            current_time += dt*speed/self.target_speed
+            times.append(current_time)
+
+        speed = self.target_speed
+        print("END ACC PHASE:", current_time, times)
+
+        brake_time = self.tot_time - current_time-dt
+
+        while current_time < brake_time:
+            current_time+=dt
+            times.append(current_time)
+
+        print("END CRUISE PHASE:", current_time, times)
+        
+        while current_time <= self.tot_time:
+            speed += self.acc*dt
+            current_time += dt*speed/self.target_speed
+            times.append(current_time)
+            
+        print("END BRAKE PHASE:", current_time, self.tot_time)
+        
+
+        x_interpolate = self.spline_x(times)
+        y_interpolate = self.spline_y(times)
+        z_interpolate = self.spline_z(times)
+
+        for i in range(len(x_interpolate)):
+            msg = PoseStamped()
+            msg.header.frame_id = "world"
+            msg.pose.position.x = x_interpolate[i]
+            msg.pose.position.y = y_interpolate[i]
+            msg.pose.position.z = z_interpolate[i]
+            msg.pose.orientation.x = 0.0
+            msg.pose.orientation.y = 0.0
+            msg.pose.orientation.z = 0.0
+            msg.pose.orientation.w = 1.0
+            pathmsg.poses.append(msg)
+
+        print("RETURN pathmsg")
+        return pathmsg
+        
         x = self.x
         y = self.y
         z = self.z
@@ -189,12 +300,6 @@ class SplineTrajectory:
         print("TARGET X Y Z", self.target_x, self.target_y, self.target_z)
 
         self.reset()
-
-        pathmsg = Path()
-
-        pathmsg.header.frame_id = "world"
-        pathmsg.header.stamp.secs = 0
-        pathmsg.header.stamp.nsecs = int(1000000000.0*dt)
 
         dx = self.target_x - x
         dy = self.target_y - y
@@ -270,15 +375,15 @@ class SplineTrajectory:
                 #z = self.target_z
 
             # Calculate new trajectory point (distance = s0+v.t)
-            len = speed*dt
-            ## print("FULL TRAJECTORY SPEED:", speed, self.frac_x, self.frac_y, self.frac_z, len, acc_len, dist_to_target)
+            mylen = speed*dt
+            ## print("FULL TRAJECTORY SPEED:", speed, self.frac_x, self.frac_y, self.frac_z, mylen, acc_len, dist_to_target)
             # Updates trajectory position.
-            x += self.frac_x*len
-            y += self.frac_y*len
-            z += self.frac_z*len
+            x += self.frac_x*mylen
+            y += self.frac_y*mylen
+            z += self.frac_z*mylen
             ## print("POSITION:", phase, x, y, z)
             if phase == "acc":
-                acc_len += len
+                acc_len += mylen
 
             msg = PoseStamped()
             msg.header.frame_id = "world"
@@ -301,6 +406,7 @@ class SplineTrajectory:
     def move_tick(self):
         # Moving target position with joystick.
         self.targets[self.target_index] += np.array([self.joy_x, self.joy_y, self.joy_z])
+        self.update_spline()
         
         # If control is not enabled, than reset in every iteration (to update trajectory initial position in case we start control)
         if not self.enabled_flag:
