@@ -69,28 +69,7 @@ class Controller:
         self.old2_err_roll = 0
         self.old2_err_yaw = 0
         self.old2_err_thrust = 0
-        #MRAC - Gabriel
-        self.A = np.array([
-            [0, 1, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 1, 0, 0],
-            [0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 1],
-            [0, 0, 0, 0, 0, 0]
-        ])
-
-        self.B = np.array([
-            [0, 0, 0],
-            [1, 0, 0],
-            [0, 0, 0],
-            [0, 1, 0],
-            [0, 0, 0],
-            [0, 0, 1]
-        ])
-
-        self.K = np.eye(6)  # Placeholder for control gain
-        self.theta_hat = np.zeros((3, 6))  # Adaptive parameters
-        self.gamma = np.eye(3)  # Adaptive gain
+        
 
 
     def set_sync(self, flag):
@@ -438,7 +417,7 @@ class Controller:
                 else:
                     u[3] = 0.0    
 
-            if self.mode == "mrac":
+            if self.mode == "adaptive_PID":
                 print("========================================================================")
                 #Parameters
             
