@@ -37,8 +37,28 @@ class SplineTrajectory:
         self.x = 0.0
         self.y = 0.0
         self.z = 0.0
+        self.have_changed_index = False
 
 
+    def next_target(self):
+        if self.have_changed_index:
+            return
+        if len(self.targets) == (self.target_index + 1):
+            t = self.targets[-1]
+            self.targets.append(np.array([t[0], t[1], t[2]]))
+        self.target_index += 1
+        print("TARGET INDEX:", self.target_index)
+        self.have_changed_index = True
+        
+    def previous_target(self):
+        if self.have_changed_index:
+            return
+        self.target_index -= 1
+        if self.target_index < 0:
+            self.target_index = 0
+        print("TARGET INDEX:", self.target_index)
+        self.have_changed_index = True
+        
     def get_path_points(self):
         res = []
         if not self.have_initial_position_from_pose or self.have_initial_position:

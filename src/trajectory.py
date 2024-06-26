@@ -41,6 +41,15 @@ parser.add_option("", "--trajectory_type", action="store", dest="trajectory_type
 def joy_callback(data):
     global set_initial_position_flag, full_trajectory_flag
 
+    if not data.buttons[9] and not data.buttons[10]:
+        trajectory.have_changed_index = False
+
+    if data.buttons[9]:
+        trajectory.previous_target()
+
+    if data.buttons[10]:
+        trajectory.next_target()
+
     if data.buttons[2]:
         full_trajectory_flag = False
    
@@ -75,7 +84,7 @@ def pose_callback(data):
 def set_target_callback(data):
     trajectory.set_target(data.x, data.y, data.z)
 
-def get_sphere_marker(id, x, y, z):
+def get_sphere_marker(id, x, y, z, current_target=False):
     m = Marker()
     m.header.frame_id = "world"
     m.header.stamp = rospy.Time.now()
@@ -91,9 +100,14 @@ def get_sphere_marker(id, x, y, z):
     m.pose.orientation.y = 0.0
     m.pose.orientation.z = 0.0
     m.pose.orientation.w = 1.0
-    m.color.r = 1.0
-    m.color.g = 1.0
-    m.color.b = 0.0
+    if current_target:
+        m.color.r = 0.0
+        m.color.g = 1.0
+        m.color.b = 0.0
+    else:
+        m.color.r = 1.0
+        m.color.g = 1.0
+        m.color.b = 0.0
     m.color.a = 1.0
     m.scale.x = 0.3
     m.scale.y = 0.3
@@ -104,10 +118,12 @@ def display_targets():
     try:
         targets = trajectory.targets
         id = 1
+        target_index = trajectory.target_index
         ma = MarkerArray()
-        for target in targets:
-            m = get_sphere_marker(id, target[0], target[1], target[2])
+        for index, target in enumerate(targets):
+            m = get_sphere_marker(id, target[0], target[1], target[2], target_index == index)
             ma.markers.append(m)
+            id += 1
         marker_array_pub.publish(ma)
     except Exception as e:
         msg2 = trajectory.get_target_point_stamped()
@@ -133,7 +149,7 @@ def publish_full_trajectory(points):
 def display_path():
     try:
         points = trajectory.get_path_points()
-        print("POINTS:", points)
+        # print("POINTS:", points)
         publish_full_trajectory(points)
     except Exception as e:
         print("EXCEPTION:", e)
