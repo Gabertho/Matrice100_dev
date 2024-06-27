@@ -246,7 +246,7 @@ class SplineTrajectory:
 
         #print("END CRUISE PHASE:", current_time, times)
         
-        while current_time <= self.tot_time:
+        while (current_time <= self.tot_time) and (speed >= 0):
             speed -= self.acc*dt
             current_time += dt*speed/self.target_speed
             times.append(current_time)
