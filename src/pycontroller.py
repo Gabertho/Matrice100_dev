@@ -354,7 +354,7 @@ def publish_target(pub):
     if msg:
         pub.publish(msg)
 
-def publish_target(pub):
+def publish_target_speed(pub):
     msg = Float64()
     x = controller.targetvel[0]
     y = controller.targetvel[1]
@@ -363,7 +363,7 @@ def publish_target(pub):
     msg.data = speed
     pub.publish(msg)
 
-def publish_error_speed(x, y, z):
+def publish_error(x, y, z):
     xmsg = Float64()
     ymsg = Float64()
     zmsg = Float64()
