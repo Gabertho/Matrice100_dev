@@ -70,7 +70,8 @@ class Controller:
         self.old2_err_yaw = 0
         self.old2_err_thrust = 0
         # Adaptive PID - Gabriel
-        self.weights = np.zeros((5, 2))
+        self.weights_roll = np.zeros(5)
+        self.weights_pitch = np.zeros(5)
 
         
 
@@ -240,14 +241,18 @@ class Controller:
     
     #Gabriel - Adaptive
 
-    def weight_update(self, error, basis):
-        # MIT rule?
-        gamma = 0.1 #Learning_rate
-        self.weights -= gamma * np.outer(error,basis)
-        return
+    def weight_update(self, error, basis, axis):
+        gamma = 0.1  # Taxa de aprendizado
+        if axis == "roll":
+            self.weights_roll -= gamma * error * basis
+        elif axis == "pitch":
+            self.weights_pitch -= gamma * error * basis
 
-    def adaptive_term(self, basis):
-        vad = np.dot(self.weights.T,basis)
+    def adaptive_term(self, basis, axis):
+        if axis == "roll":
+            vad = np.dot(self.weights_roll, basis)
+        elif axis == "pitch":
+            vad = np.dot(self.weights_pitch, basis)
         return vad
 
 
@@ -466,22 +471,31 @@ class Controller:
                 basis_roll = np.array([err_roll, self.int_err_roll, (err_roll - self.old_error_roll)/dt, self.velocity[0], self.velocity[1]])
                 basis_pitch = np.array([err_pitch, self.int_err_pitch, (err_pitch - self.old_error_pitch)/dt, self.velocity[0], self.velocity[1]])
 
-                u_roll_adaptive = self.adaptive_term(basis_roll)
-                u_pitch_adaptive = self.adaptive_term(basis_pitch)
+                u_roll_adaptive = self.adaptive_term(basis_roll, "roll")
+                u_pitch_adaptive = self.adaptive_term(basis_pitch, "pitch")
                 
                 # Update weights based on MIT Rule
-                self.weight_update(np.array([err_roll, err_pitch]), np.array([basis_roll, basis_pitch]))
+                self.weight_update(err_roll, basis_roll, "roll")
+                self.weight_update(err_pitch, basis_pitch, "pitch")
 
-                u[0] = self.prev_u_roll + Kp_roll * (rherror[1] - self.old_error_roll) + Ki_roll * self.int_err_roll + Kd_roll * (rherror[1] - 2*self.old_error_roll + self.old2_err_roll) + u_roll_adaptive
+                u[0] = (self.prev_u_roll 
+                    + Kp_roll * (err_roll - self.old_error_roll) 
+                    + Ki_roll * self.int_err_roll 
+                    + Kd_roll * (err_roll - 2*self.old_error_roll + self.old2_err_roll) 
+                    + u_roll_adaptive)
                 self.prev_u_roll = u[0]
                 self.old2_err_roll = self.old_error_roll
-                self.old_error_roll = rherror[1]
+                self.old_error_roll = err_roll
                 u[0] = math.radians(-u[0])
 
-                u[1] = self.prev_u_pitch + Kp_pitch * (rherror[0] - self.old_error_pitch) + Ki_pitch * self.int_err_pitch + Kd_pitch * (rherror[0] - 2*self.old_error_pitch + self.old2_err_pitch) + u_pitch_adaptive
+                u[1] = (self.prev_u_pitch 
+                    + Kp_pitch * (err_pitch - self.old_error_pitch) 
+                    + Ki_pitch * self.int_err_pitch 
+                    + Kd_pitch * (err_pitch - 2*self.old_error_pitch + self.old2_err_pitch) 
+                    + u_pitch_adaptive)
                 self.prev_u_pitch = u[1]
                 self.old2_err_pitch = self.old_error_pitch
-                self.old_error_pitch = rherror[0]
+                self.old_error_pitch = err_pitch
                 u[1] = math.radians(u[1])
 
 
