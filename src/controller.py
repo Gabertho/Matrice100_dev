@@ -236,18 +236,19 @@ class Controller:
     def get_yaw_control(self):
         return self.yaw_control_flag
     
+  
+    
+    #Gabriel - Adaptive
+
     def weight_update(self, error, basis):
         # MIT rule?
         gamma = 0.1 #Learning_rate
-        self.weights -= gamma * error * basis
+        self.weights -= gamma * np.outer(error,basis)
         return
-    
-    #Gabriel - Adaptive
-    def adaptive_term(self, basis):
-        vad = np.dot(self.weights.transpose(),basis)
-        return vad
 
-    
+    def adaptive_term(self, basis):
+        vad = np.dot(self.weights.T,basis)
+        return vad
 
 
     # Control loop: Computes the control signal in different modes (velocity, angles or rate) and approaches (Simple PID, Lara PID, PID with
@@ -439,86 +440,49 @@ class Controller:
             if self.mode == "adaptive_PID":
                 print("========================================================================")
                 #Parameters
-            
-                # Fist part - Linear Control (PID)
                 herror = np.array([error[0], error[1]])
-                herrorvel = np.array([errorvel[0], errorvel[1]])
                 print("HERROR:", math.degrees(self.current_yaw), herror)
+                
                 theta = -self.current_yaw
                 c, s = np.cos(theta), np.sin(theta)
                 R = np.array(((c, -s), (s, c)))
-                # print("R:", R)
-
                 rherror = np.dot(R, herror)
-                rherrorvel = np.dot(R, herrorvel)
-
-                print("ROTATET HERROR:", rherror)
-                print("ROTATET HERRORVEL:", rherrorvel)
-
-                #PID control
-                derr_pitch = (rherror[0] - self.old_err_pitch)/dt
-                derr_roll = (rherror[1] - self.old_err_roll)/dt
-
-                self.old_err_pitch = rherror[0]
-                self.old_err_roll = rherror[1]
-            
-                P = 3.0
-                D = 0.0
-                Pvel = 10.0                
-                if self.sync_flag:
-                    P = 4.0
-                    D = 0.0
-                    Pvel = 10.0
-
-                u[0] = math.radians(-(P*rherror[1] + D*derr_roll) - Pvel*rherrorvel[1])       # roll
-                u[1] = math.radians(P*rherror[0] + D*derr_pitch + Pvel*rherrorvel[0])         # pitch
-
-                max = math.radians(20.0)
-                if u[0] > max:
-                    u[0] = max
-                if u[0] < -max:
-                    u[0] = -max
-                if u[1] > max:
-                    u[1] = max
-                if u[1] < -max:
-                    u[1] = -max
-
-
-                # Second part - Adaptive Term
-                x = self.current_position[0]
-                y = self.current_position[1]
-                dx = self.velocity[0]
-                dy = self.velocity[1]
-
-                position_vector = np.array(x,y)
-                velocity_vector = np.array(dx,dy)
-
-                #Rotation -> Check if it makes sense.
-                theta = -self.current_yaw
-                c, s = np.cos(theta), np.sin(theta)
-                R = np.array(((c, -s), (s, c)))
+                print("ROTATED HERROR:", rherror)
                 
-                position_rotated = np.dot(R, position_vector)
-                velocity_rotated = np.dot(R, velocity_vector)
+                err_roll = rherror[1]
+                err_pitch = rherror[0]
 
-                roll = position_rotated[0]
-                pitch = position_rotated[1]
-                droll = velocity_rotated[0]
-                dpitch = velocity_rotated[1]
+                Kp_roll = 3.0
+                Ki_roll = 0.1
+                Kd_roll = 0.01
+                Kp_pitch = 3.0
+                Ki_pitch = 0.1
+                Kd_pitch = 0.01
+
+                self.int_err_roll += rherror[1]
+                self.int_err_pitch += rherror[0]
                 
-                state = np.array(roll, droll, pitch, dpitch)
-                basis = np.array(1, roll, droll, pitch, dpitch)
+                # Basis functions for adaptive control
+                basis_roll = np.array([err_roll, self.int_err_roll, (err_roll - self.old_error_roll)/dt, self.velocity[0], self.velocity[1]])
+                basis_pitch = np.array([err_pitch, self.int_err_pitch, (err_pitch - self.old_error_pitch)/dt, self.velocity[0], self.velocity[1]])
 
-  
-                # Second part - Adaptive term
-                vad = self.adaptive_term(basis)
-                #self.weight_update(error,basis)
-
-                #Total control law
-                # u[0] = u[0] + vad[0]
-                # u[1] = u[1] + vad[1]
+                u_roll_adaptive = self.adaptive_term(basis_roll)
+                u_pitch_adaptive = self.adaptive_term(basis_pitch)
                 
-               
+                # Update weights based on MIT Rule
+                self.weight_update(np.array([err_roll, err_pitch]), np.array([basis_roll, basis_pitch]))
+
+                u[0] = self.prev_u_roll + Kp_roll * (rherror[1] - self.old_error_roll) + Ki_roll * self.int_err_roll + Kd_roll * (rherror[1] - 2*self.old_error_roll + self.old2_err_roll) + u_roll_adaptive
+                self.prev_u_roll = u[0]
+                self.old2_err_roll = self.old_error_roll
+                self.old_error_roll = rherror[1]
+                u[0] = math.radians(-u[0])
+
+                u[1] = self.prev_u_pitch + Kp_pitch * (rherror[0] - self.old_error_pitch) + Ki_pitch * self.int_err_pitch + Kd_pitch * (rherror[0] - 2*self.old_error_pitch + self.old2_err_pitch) + u_pitch_adaptive
+                self.prev_u_pitch = u[1]
+                self.old2_err_pitch = self.old_error_pitch
+                self.old_error_pitch = rherror[0]
+                u[1] = math.radians(u[1])
 
 
 
