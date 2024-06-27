@@ -232,7 +232,7 @@ if __name__ == "__main__":
 
     rospy.Timer(rospy.Duration(options.dt), timer_callback)
     
-    print("Spinning pycontroller node")
+    print("Spinning trajectory node")
     
     rospy.spin()
     

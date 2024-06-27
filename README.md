@@ -14,9 +14,9 @@ Start with flag to trajectory launch: spline:=true
 - Press Yellow button
 - Move points for spline (new point right joystich button, prev point left joystick button)
 - Press green button (A)
-- Press "start" (left button)
+- Press "back" (left button)
 - Move points in spline
-- Press ... (right button)
+- Press "start" (right button)
 
 ## Test flight
 
@@ -59,12 +59,12 @@ roslaunch drone_dev sim.launch ns:=/dji2 use_joy:=true
 
 Trajectory:
 ```bash
-roslaunch drone_dev trajectory.launch x:=30.0 y:=5.0
+roslaunch drone_dev trajectory.launch x:=30.0 y:=5.0 z:=2.0 dt:=0.02 trajectory:=true speed:=1.0 spline:=true
 ```
 
 Controller:
 ```bash
-roslaunch drone_dev controller.launch
+roslaunch drone_dev controller.launch vicon:=false djisim:=true dt:=0.02 sync:=true
 ```
 or
 ```bash
