@@ -363,7 +363,7 @@ def publish_target(pub):
     msg.data = speed
     pub.publish(msg)
 
-def publish_error(x, y, z):
+def publish_error_speed(x, y, z):
     xmsg = Float64()
     ymsg = Float64()
     zmsg = Float64()
