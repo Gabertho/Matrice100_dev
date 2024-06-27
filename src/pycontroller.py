@@ -354,6 +354,15 @@ def publish_target(pub):
     if msg:
         pub.publish(msg)
 
+def publish_target(pub):
+    msg = Float64()
+    x = controller.targetvel[0]
+    y = controller.targetvel[1]
+    z = controller.targetvel[2]
+    speed = math.sqrt(x*x+y*y+z*z)
+    msg.data = speed
+    pub.publish(msg)
+
 def publish_error(x, y, z):
     xmsg = Float64()
     ymsg = Float64()
@@ -386,6 +395,7 @@ def do_work():
     #### u[3] = math.radians(20.0)  # rotate 3 degreesper second
 
     publish_target(target_pub)
+    publish_target_speed(target_speed_pub)
 
     print("============================================0")
 
@@ -464,6 +474,7 @@ if __name__ == "__main__":
     ctrl3_pub = rospy.Publisher("ctrl/u3", Float64, latch=False, queue_size=10)
     velocity_pub = rospy.Publisher("velocity", Vector3, latch=False, queue_size=10)
     target_pub = rospy.Publisher("target/pose", PoseStamped, latch=False, queue_size=10)
+    target_speed_pub = rospy.Publisher("target/speed", Float64, latch=False, queue_size=10)
     #hokuyo_lidar_pub = rospy.Publisher("hokuyo_scan", LaserScan, latch=False, queue_size=10)
 
     joy_sub = rospy.Subscriber("/drone/joy", Joy, joy_callback)       #/dji_sdk/local_position
