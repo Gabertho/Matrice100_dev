@@ -474,7 +474,7 @@ if __name__ == "__main__":
     ctrl3_pub = rospy.Publisher("ctrl/u3", Float64, latch=False, queue_size=10)
     velocity_pub = rospy.Publisher("velocity", Vector3, latch=False, queue_size=10)
     target_pub = rospy.Publisher("target/pose", PoseStamped, latch=False, queue_size=10)
-    target_speed_pub = rospy.Publisher("target/speed", Float64, latch=False, queue_size=10)
+    target_speed_pub = rospy.Publisher("target_speed", Float64, latch=False, queue_size=10)
     #hokuyo_lidar_pub = rospy.Publisher("hokuyo_scan", LaserScan, latch=False, queue_size=10)
 
     joy_sub = rospy.Subscriber("/drone/joy", Joy, joy_callback)       #/dji_sdk/local_position
