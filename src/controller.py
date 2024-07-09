@@ -436,11 +436,7 @@ class Controller:
 
                 u_roll_adaptive = self.adaptive_term(basis_roll, "roll")
                 u_pitch_adaptive = self.adaptive_term(basis_pitch, "pitch")
-                
-                # Update weights based on MIT Rule
-                self.weight_update(err_roll, basis_roll, "roll")
-                self.weight_update(err_pitch, basis_pitch, "pitch")
-
+        
                 u[0] = (self.prev_u_roll 
                     + Kp_roll * (err_roll - self.old_error_roll) 
                     + Ki_roll * self.int_err_roll 
@@ -460,6 +456,11 @@ class Controller:
                 self.old2_err_pitch = self.old_error_pitch
                 self.old_error_pitch = err_pitch
                 u[1] = math.radians(u[1])
+
+                        
+                # Update weights based on MIT Rule
+                self.weight_update(err_roll, basis_roll, "roll")
+                self.weight_update(err_pitch, basis_pitch, "pitch")
 
 
 
