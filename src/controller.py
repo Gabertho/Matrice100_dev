@@ -70,8 +70,8 @@ class Controller:
         self.old2_err_yaw = 0
         self.old2_err_thrust = 0
         # Adaptive PID - Gabriel
-        self.weights_roll = np.zeros(5)
-        self.weights_pitch = np.zeros(5)
+        self.weights_roll = np.zeros((5,1))
+        self.weights_pitch = np.zeros((5,1))
 
         
 
@@ -250,9 +250,9 @@ class Controller:
 
     def adaptive_term(self, basis, axis):
         if axis == "roll":
-            vad = np.dot(self.weights_roll, basis)
+            vad = np.dot(self.weights_roll.T, basis)
         elif axis == "pitch":
-            vad = np.dot(self.weights_pitch, basis)
+            vad = np.dot(self.weights_pitch.T, basis)
         return vad
 
 
@@ -431,8 +431,20 @@ class Controller:
                 self.int_err_pitch += rherror[0]
                 
                 # Basis functions for adaptive control
-                basis_roll = np.array([err_roll, self.int_err_roll, (err_roll - self.old_error_roll)/dt, self.velocity[0], self.velocity[1]])
-                basis_pitch = np.array([err_pitch, self.int_err_pitch, (err_pitch - self.old_error_pitch)/dt, self.velocity[0], self.velocity[1]])
+                basis_roll = np.array([
+                    [err_roll], 
+                    [self.int_err_roll], 
+                    [(err_roll - self.old_error_roll)/dt], 
+                    [self.velocity[0]], 
+                    [self.velocity[1]]
+                    ])
+                basis_pitch = np.array([
+                    [err_pitch], 
+                    [self.int_err_pitch], 
+                    [(err_pitch - self.old_error_pitch)/dt], 
+                    [self.velocity[0]], 
+                    [self.velocity[1]]
+                    ])
 
                 u_roll_adaptive = self.adaptive_term(basis_roll, "roll")
                 u_pitch_adaptive = self.adaptive_term(basis_pitch, "pitch")
