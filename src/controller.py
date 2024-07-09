@@ -250,9 +250,9 @@ class Controller:
 
     def adaptive_term(self, basis, axis):
         if axis == "roll":
-            vad = np.dot(self.weights_roll.T, basis)
+            vad = np.dot(self.weights_roll, basis)
         elif axis == "pitch":
-            vad = np.dot(self.weights_pitch.T, basis)
+            vad = np.dot(self.weights_pitch, basis)
         return vad
 
 
