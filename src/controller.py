@@ -441,7 +441,7 @@ class Controller:
                     + Kp_roll * (err_roll - self.old_error_roll) 
                     + Ki_roll * self.int_err_roll 
                     + Kd_roll * (err_roll - 2*self.old_error_roll + self.old2_err_roll) 
-                    + u_roll_adaptive)
+                    - u_roll_adaptive)
                 self.prev_u_roll = u[0]
                 self.old2_err_roll = self.old_error_roll
                 self.old_error_roll = err_roll
@@ -451,7 +451,7 @@ class Controller:
                     + Kp_pitch * (err_pitch - self.old_error_pitch) 
                     + Ki_pitch * self.int_err_pitch 
                     + Kd_pitch * (err_pitch - 2*self.old_error_pitch + self.old2_err_pitch) 
-                    + u_pitch_adaptive)
+                    - u_pitch_adaptive)
                 self.prev_u_pitch = u[1]
                 self.old2_err_pitch = self.old_error_pitch
                 self.old_error_pitch = err_pitch
