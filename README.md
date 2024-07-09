@@ -5,7 +5,7 @@ Control repository for the DJI Matrice 100 UAV.
 
 IMPORTANT: Start controller before trajectory
 
-## Spline
+## Spline *******************************
 
 For spline the controller does not need to be started before trajectory.
 
@@ -37,12 +37,12 @@ Start with flag to trajectory launch: spline:=true
 
 ## pycontroller.py
 
-Roscore (backpack):
+Roscore (backpack)**************************:
 ```bash
 roscore
 ```
 
-Joystick (backpack):
+Joystick (backpack)**********************:
 ```bash
 rosrun joy joy_node __ns:=/drone
 ```
@@ -57,12 +57,12 @@ Simulator:
 roslaunch drone_dev sim.launch ns:=/dji2 use_joy:=true
 ```
 
-Trajectory:
+Trajectory**************************:
 ```bash
 roslaunch drone_dev trajectory.launch x:=30.0 y:=5.0 z:=2.0 dt:=0.02 trajectory:=true speed:=1.0 spline:=true
 ```
 
-Controller:
+Controller**************************:
 ```bash
 roslaunch drone_dev controller.launch vicon:=false djisim:=true dt:=0.02 sync:=true
 ```
@@ -76,12 +76,12 @@ roslaunch drone_dev controller.launch vicon:=true
 ```
 
 
-Rviz:
+Rviz (on backpack)**********************************:
 ```bash
 rviz -d lrs_ws/src/Matrice100_dev/test.rviz
 ```
 
-If using hardware simulator on mat2 or flying with GPS:
+If using hardware simulator on mat2 or flying with GPS*******************:
 
 ```bash
 roslaunch lrs_launch sdk_nuc.launch m600:=false ns:=/dji2 use_joy:=false
