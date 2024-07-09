@@ -66,7 +66,7 @@ class Controller:
         self.old_error_yaw = 0
         self.old_error_thrust = 0
         self.old2_err_roll = 0
-        self.old2_err_roll = 0
+        self.old2_err_pitch = 0
         self.old2_err_yaw = 0
         self.old2_err_thrust = 0
         # Adaptive PID - Gabriel
