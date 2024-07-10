@@ -58,6 +58,25 @@ class SplineTrajectory:
         except Exception as e:
             print("EXCEPTION get_spline_length:", e)
         return 0.0
+
+    def plot_speed(self):
+        times = np.arange(0.0, self.tot_time, 0.1)
+        x = self.spline_x(times)
+        y = self.spline_y(times)
+        z = self.spline_z(times)
+        print("X:", x)
+        print("Y:", y)
+        print("Z:", z)
+        res = []
+        for i in range(1, len(x)):
+            dx = x[i] - x[i-1]
+            dy = y[i] - y[i-1]
+            dz = z[i] - z[i-1]
+            res.append(math.sqrt(dx*dx+dy*dy+dz*dz))
+        #print("X:", [t[0] for t in self.targets])
+        #print("Y:", [t[1] for t in self.targets])
+        #print("Z:", [t[2] for t in self.targets])
+        print("SPEED DISTANCE:", res)
     
     def update_spline(self):
         try:
@@ -101,6 +120,7 @@ class SplineTrajectory:
                 print("DUPLICATE TIMES")
                 return
                 
+            self.plot_speed()
             
         except Exception as e:
             print("EXCEPTION update_spline:", e)
@@ -268,7 +288,8 @@ class SplineTrajectory:
             times.append(current_time)
             
         #print("END BRAKE PHASE:", current_time, self.tot_time)
-        
+
+        times = np.arange(0.0, self.tot_time, dt)        
 
         x_interpolate = self.spline_x(times)
         y_interpolate = self.spline_y(times)
