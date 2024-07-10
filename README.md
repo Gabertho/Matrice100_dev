@@ -13,7 +13,10 @@ Start with flag to trajectory launch: spline:=true
 
 - Press Yellow button
 - Move points for spline (new point right joystich button, prev point left joystick button)
-- Press green button (A)
+- Press green button (A) and it should fly!
+
+After the above to fly a new spline:
+
 - Press "back" (left button)
 - Move points in spline
 - Press "start" (right button)
