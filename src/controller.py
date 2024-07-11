@@ -354,7 +354,7 @@ class Controller:
 
         if self.control_mode == "angles":
             if self.mode == "discretized_pid":
-                print("========================================================================")
+                print("====================DISCRETIZED PID====================================================")
 
                 #Discretized PID Control Law:
                 #u(t) = u(t-1)+Kp(e(t)-e(t-1))+Kie(t)+Kd(e(t)-2e(t-1)+e(t-2))
