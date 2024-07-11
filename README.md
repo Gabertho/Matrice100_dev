@@ -91,6 +91,7 @@ roslaunch lrs_launch sdk_nuc.launch m600:=false ns:=/dji2 use_joy:=false
 ```
 
 ```bash
+roslaunch lrs_launch location_granso.launch
 rosrun lrs_dji djiconnect _rate:=50 _vicon:=false _publish_pose:=true _publish_world_position:=true __ns:=/dji2
 ```
 
