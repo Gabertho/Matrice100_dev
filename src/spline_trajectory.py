@@ -109,7 +109,7 @@ class SplineTrajectory:
             for seglen in seglengths:
                 acctime += seglen/self.target_speed
                 time.append(acctime)
-            print("TIME REAL:", time)
+            # print("TIME REAL:", time)
             self.tot_time = time[-1]
             
             try:
@@ -120,7 +120,7 @@ class SplineTrajectory:
                 print("DUPLICATE TIMES")
                 return
                 
-            self.plot_speed()
+            ### self.plot_speed()
             
         except Exception as e:
             print("EXCEPTION update_spline:", e)
@@ -251,6 +251,49 @@ class SplineTrajectory:
         # This is target/pose in got.Not neededhere since pressing button sets the start point to last target in spline
         return
 
+    def find_time_from_speed(self, t0, speed, dt, deltat=0.001):
+        x0 = self.spline_x(t0)
+        y0 = self.spline_y(t0)
+        z0 = self.spline_z(t0)
+        distance = speed*dt
+        # print("find_time_from_speed:", t0, speed, dt, deltat)
+        tot_time = self.tot_time
+        if deltat < 0.0:
+            tot_time = 0.0
+        for t in np.arange(t0, tot_time, deltat):
+            x = self.spline_x(t)
+            y = self.spline_y(t)
+            z = self.spline_z(t)
+            dx = x - x0
+            dy = y - y0
+            dz = z - z0
+            if dx*dx+dy*dy+dz*dz > distance*distance:
+                # print("FOUND:", t)
+                return t
+        print("find_time_from_speed:", t0, speed, dt, deltat)            
+        print("ERROR: FAILED TO FIND TIME")
+        return self.tot_time
+
+    def dist_to_time(self, t0, t1, dt):
+        x0 = self.spline_x(t0)
+        y0 = self.spline_y(t0)
+        z0 = self.spline_z(t0)
+        t = t0+dt
+        distance = 0.0
+        while t <= t1:
+            x = self.spline_x(t)
+            y = self.spline_y(t)
+            z = self.spline_z(t)
+            dx = x - x0
+            dy = y - y0
+            dz = z - z0
+            distance += math.sqrt(dx*dx+dy*dy+dz*dz)
+            x0 = x
+            y0 = y
+            z0 = z
+            t += dt
+        return distance
+
     # Get the full path, i.e, sequence of points in time that lead the initial position to the target position.
     def get_path(self, dt):
         # contruct from spline, add acceleration and brake
@@ -263,33 +306,42 @@ class SplineTrajectory:
         pathmsg.header.stamp.nsecs = int(1000000000.0*dt)
 
         current_time = 0.0
+        brake_current_time = self.tot_time
         speed = 0.0
         times = [0.0]
-        
+        brake_times = [self.tot_time]
+
+        # print("SPEED - TARGET SPEED", speed, self.target_speed)
         while speed <= self.target_speed:
             speed += self.acc*dt
-            current_time += dt*speed/self.target_speed
+            # current_time += dt*speed/self.target_speed
+            current_time = self.find_time_from_speed(current_time, speed, dt)
+            brake_current_time = self.find_time_from_speed(brake_current_time, speed, dt, deltat=-0.001)
             times.append(current_time)
+            brake_times.append(brake_current_time)
+            # print("SPEED - TARGET SPEED", speed, self.target_speed)
 
+        brake_times.reverse()
+        
         speed = self.target_speed
-        #print("END ACC PHASE:", current_time, times)
+        print("END ACC PHASE:", current_time)
 
-        brake_time = self.tot_time - current_time-dt
+        brake_time = brake_times[0]
 
         while current_time < brake_time:
-            current_time+=dt
-            times.append(current_time)
+            current_time = self.find_time_from_speed(current_time, speed, dt)
+            ## current_time+=dt
+            if current_time < brake_time:
+                times.append(current_time)
 
-        #print("END CRUISE PHASE:", current_time, times)
-        
-        while (current_time <= self.tot_time) and (speed >= 0):
-            speed -= self.acc*dt
-            current_time += dt*speed/self.target_speed
-            times.append(current_time)
+        print("END CRUISE PHASE:", current_time)
+
+        times = times + brake_times
+
             
         #print("END BRAKE PHASE:", current_time, self.tot_time)
 
-        times = np.arange(0.0, self.tot_time, dt)        
+        ### times = np.arange(0.0, self.tot_time, dt)        
 
         x_interpolate = self.spline_x(times)
         y_interpolate = self.spline_y(times)

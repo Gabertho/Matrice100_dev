@@ -180,6 +180,7 @@ def timer_callback(event):
             msg = trajectory.get_path(options.dt)
             #print("GOT BIG PATH/TRAJECTORY MSG from tracetoryclass")
             counter = 0
+            print_speed(msg, options.dt)
             full_trajectory_pub.publish(msg)
     # If we want to use the trajectory position in each iteration:
     else:
@@ -195,7 +196,17 @@ def timer_callback(event):
     inside_timer_callback = False
     counter += 1
 
-
+def print_speed(pathmsg, dt):
+    speeds = []
+    for i in range(1, len(pathmsg.poses)):
+        p0 = pathmsg.poses[i-1].pose.position
+        p1 = pathmsg.poses[i].pose.position
+        dx = p1.x-p0.x
+        dy = p1.y-p0.y
+        dz = p1.z-p0.z
+        speeds.append(round(math.sqrt(dx*dx+dy*dy+dz*dz)/dt, 2))
+    print("SPEED FROM PATHMSG:", speeds)
+    
 if __name__ == "__main__":
     rospy.init_node ("trajectory")
     ns = rospy.get_namespace ().rstrip("/")
