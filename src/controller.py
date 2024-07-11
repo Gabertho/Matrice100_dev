@@ -52,23 +52,6 @@ class Controller:
         self.current_time = 0.0
         self.sync_flag = False
         self.dt = 0.02
-        #Discretized PID - Gabriel
-        self.int_err_roll = 0
-        self.int_err_pitch = 0
-        self.int_error_yaw = 0
-        self.int_err_thrust = 0
-        self.prev_u_roll = 0
-        self.prev_u_pitch = 0
-        self.prev_u_yaw = 0
-        self.prev_u_thrust = 0
-        self.old_error_roll = 0
-        self.old_error_pitch = 0
-        self.old_error_yaw = 0
-        self.old_error_thrust = 0
-        self.old2_err_roll = 0
-        self.old2_err_pitch = 0
-        self.old2_err_yaw = 0
-        self.old2_err_thrust = 0
         # Adaptive PID - Gabriel
         self.weights_roll = np.zeros((5,1))
         self.weights_pitch = np.zeros((5,1))
@@ -353,58 +336,6 @@ class Controller:
             u[1] = P*error[1]            # north
 
         if self.control_mode == "angles":
-            if self.mode == "discretized_pid":
-                print("====================DISCRETIZED PID====================================================")
-
-                #Discretized PID Control Law:
-                #u(t) = u(t-1)+Kp(e(t)-e(t-1))+Kie(t)+Kd(e(t)-2e(t-1)+e(t-2))
-                #Source: Self-Tuning PID Control of a Flexible Micro-Actuator using Neural Networks
-
-                print("ERROR:", error, self.target)
-
-                # Roll and Pitch Errors
-                herror = np.array([error[0], error[1]])
-                print("HERROR:", math.degrees(self.current_yaw), herror)
-                
-                # Rotating to get roll and pitch from x and y.
-                theta = -self.current_yaw
-                c, s = np.cos(theta), np.sin(theta)
-                R = np.array(((c, -s), (s, c)))
-                rherror = np.dot(R, herror)
-                print("ROTATED HERROR:", rherror)
-
-                # PID gains
-                Kp_roll = 3.0
-                Ki_roll = 0.1
-                Kd_roll = 0.01
-                Kp_pitch = 3.0
-                Ki_pitch = 0.1
-                Kd_pitch = 0.01
-
-                #Calculate roll control
-                self.int_err_roll += rherror[1]
-                u[0] = self.prev_u_roll +  Kp_roll * (rherror[1] - self.old_error_roll) + Ki_roll * rherror[1] + Kd_roll * (rherror[1] - 2*self.old_error_roll + self.old2_err_roll)
-                self.prev_u_roll = u[0]
-                self.old2_err_roll = self.old_error_roll
-                self.old_error_roll = rherror[1]
-                #Control law = negative on platform.
-                u[0] = math.radians(-u[0])
-
-                # Calculate pitch control
-                self.int_err_pitch += rherror[0]
-                u[1] = self.prev_u_pitch + Kp_pitch * (rherror[0] - self.old_error_pitch) + Ki_pitch * rherror[0] + Kd_pitch * (rherror[0] - 2*self.old_error_pitch + self.old2_err_pitch)
-                self.prev_u_pitch = u[1]
-                self.old2_err_pitch = self.old_error_pitch
-                self.old_error_pitch = rherror[0]
-                #Control law = positive on platform.
-                u[1] = math.radians(u[1])
-                
-                # Saturation
-                max_angle = math.radians(20.0)
-
-                u[0] = np.clip(u[0], -max_angle, max_angle)
-                u[1] = np.clip(u[1], -max_angle, max_angle)
-
             if self.mode == "adaptive_PID":
                 print("========================================================================")
                 #Parameters
