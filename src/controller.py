@@ -52,10 +52,7 @@ class Controller:
         self.current_time = 0.0
         self.sync_flag = False
         self.dt = 0.02
-        # Adaptive PID - Gabriel
-        self.weights_roll = np.zeros((5,1))
-        self.weights_pitch = np.zeros((5,1))
-
+   
         
 
 
@@ -221,23 +218,6 @@ class Controller:
         return self.yaw_control_flag
     
   
-    
-    #Gabriel - Adaptive
-
-    def weight_update(self, error, basis, axis):
-        gamma = 0.1  # Taxa de aprendizado
-        if axis == "roll":
-            self.weights_roll -= gamma * error * basis
-        elif axis == "pitch":
-            self.weights_pitch -= gamma * error * basis
-
-    def adaptive_term(self, basis, axis):
-        if axis == "roll":
-            vad = np.dot(self.weights_roll.T, basis)
-        elif axis == "pitch":
-            vad = np.dot(self.weights_pitch.T, basis)
-        return vad
-
 
     # Control loop: Computes the control signal in different modes (velocity, angles or rate) and approaches (Simple PID, Lara PID, PID with
     # ANN, PID with DNN, etc). If we are using the full trajectory, we interpolate in the given time to get the target x,y,z. If not,
@@ -336,82 +316,6 @@ class Controller:
             u[1] = P*error[1]            # north
 
         if self.control_mode == "angles":
-            if self.mode == "adaptive_PID":
-                print("========================================================================")
-                #Parameters
-                herror = np.array([error[0], error[1]])
-                print("HERROR:", math.degrees(self.current_yaw), herror)
-                
-                theta = -self.current_yaw
-                c, s = np.cos(theta), np.sin(theta)
-                R = np.array(((c, -s), (s, c)))
-                rherror = np.dot(R, herror)
-                print("ROTATED HERROR:", rherror)
-                
-                err_roll = rherror[1]
-                err_pitch = rherror[0]
-
-                derr_pitch = (rherror[0] - self.old_err_pitch)/dt
-                derr_roll = (rherror[1] - self.old_err_roll)/dt
-
-                self.old_err_pitch = rherror[0]
-                self.old_err_roll = rherror[1]
-            
-                P = 3.0
-                D = 0.0
-                Pvel = 10.0                
-                if self.sync_flag:
-                    P = 4.0
-                    D = 0.0
-                    Pvel = 10.0
-                u[0] = math.radians(-(P*rherror[1] + D*derr_roll) - Pvel*rherrorvel[1])       # roll
-                u[1] = math.radians(P*rherror[0] + D*derr_pitch + Pvel*rherrorvel[0])         # pitch
-
-
-                self.int_err_roll += rherror[1]
-                self.int_err_pitch += rherror[0]
-
-             
-                # Basis functions for adaptive control
-                basis_roll = np.array([
-                    [err_roll], 
-                    [self.int_err_roll], 
-                    [(err_roll - self.old_error_roll)/dt], 
-                    [self.velocity[0]], 
-                    [self.velocity[1]]
-                    ])
-                basis_pitch = np.array([
-                    [err_pitch], 
-                    [self.int_err_pitch], 
-                    [(err_pitch - self.old_error_pitch)/dt], 
-                    [self.velocity[0]], 
-                    [self.velocity[1]]
-                    ])
-
-                u_roll_adaptive = self.adaptive_term(basis_roll, "roll")
-                u_pitch_adaptive = self.adaptive_term(basis_pitch, "pitch")
-
-                u[0] = math.radians(-(P*rherror[1] + D*derr_roll) - Pvel*rherrorvel[1] + u_roll_adaptive)       # roll
-                u[1] = math.radians(P*rherror[0] + D*derr_pitch + Pvel*rherrorvel[0] - u_pitch_adaptive)         # pitch
-                        
-                # Update weights based on MIT Rule
-                self.weight_update(err_roll, basis_roll, "roll")
-                self.weight_update(err_pitch, basis_pitch, "pitch")
-
-
-                max = math.radians(20.0)
-                if u[0] > max:
-                    u[0] = max
-                if u[0] < -max:
-                    u[0] = -max
-                if u[1] > max:
-                    u[1] = max
-                if u[1] < -max:
-                    u[1] = -max
-
-
-
-
             if self.mode == "simple_pid":
                 print("========================================================================")
                 
