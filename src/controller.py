@@ -11,6 +11,7 @@ import scipy
 import scipy.ndimage
 import math
 import scipy.linalg as sp
+from scipy import linalg
 
 
 class Controller:
@@ -221,6 +222,13 @@ class Controller:
     def get_yaw_control(self):
         return self.yaw_control_flag
     
+    #LQR
+    def lqr(A, B, Q, R):
+        #Solve Riccati Equation
+        P = linalg.solve_continuous_are(A, B, Q, R) 
+        K = linalg.inv(R) @ B.T @ P 
+
+        return K
   
 
     # Control loop: Computes the control signal in different modes (velocity, angles or rate) and approaches (Simple PID, Lara PID, PID with
