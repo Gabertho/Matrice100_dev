@@ -52,8 +52,12 @@ class Controller:
         self.current_time = 0.0
         self.sync_flag = False
         self.dt = 0.02
-   
-        
+
+        #DJI Matrice 100 Parameters.
+        self.L = 0.225 #Distance from the center to rotor (m)
+        self.I_x = 0.0142 #Inertia in x axis
+        self.I_y = 0.0142 #Inertia in y axis
+
 
 
     def set_sync(self, flag):
@@ -316,6 +320,9 @@ class Controller:
             u[1] = P*error[1]            # north
 
         if self.control_mode == "angles":
+            if self.mode == "LQR":
+                print("======================LQR===============================================")
+
             if self.mode == "simple_pid":
                 print("========================================================================")
                 
