@@ -59,6 +59,21 @@ class Controller:
         self.I_x = 0.0142 #Inertia in x axis
         self.I_y = 0.0142 #Inertia in y axis
 
+        #LQR Parameters
+        self.A = np.array([
+            [0, 1, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 1],
+            [0, 0, 0, 0]
+        ])
+
+        self.B = np.array([
+            [0, 0],
+            [self.L/self.I_x, 0],
+            [0, 0],
+            [0, self.L / self.I_y]
+        ])
+
 
 
     def set_sync(self, flag):
