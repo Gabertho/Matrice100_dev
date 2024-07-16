@@ -42,7 +42,7 @@ class Controller:
         self.old_err_yaw = 0.0
         self.old_err_z = 0.0
         self.yaw_control_flag = False
-        self.mode = "simple_pid"
+        self.mode = "LQR"
         self.trajectory_flag = False
         self.full_trajectory_x = None
         self.full_trajectory_y = None
@@ -71,9 +71,10 @@ class Controller:
                            [0, -9.81]])
         
         self.Q = np.diag([1, 1, 1, 1])
-        self.R = np.diag([1, 1])
+        self.R = np.diag([10, 10])
         
         self.K = self.lqr(self.A, self.B, self.Q, self.R)
+        print("Matriz K:", self.K)  # Adicionar um print para verificar a matriz K
 
 
     def set_sync(self, flag):
