@@ -60,19 +60,6 @@ class Controller:
         self.I_y = 0.0427 #Inertia in y axis
 
         #LQR Parameters
-        self.A = np.array([
-            [0, 1, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 1],
-            [0, 0, 0, 0]
-        ])
-
-        self.B = np.array([
-            [0, 0],
-            [self.L/self.I_x, 0],
-            [0, 0],
-            [0, self.L / self.I_y]
-        ])
 
         # Bryson's Rule for weighting matrices
         max_angle = 0.611  # radianos (35 graus)
@@ -248,19 +235,19 @@ class Controller:
     
     #LQR
     def lqr(self, Q, R):
-        """Solve the continuous time lqr controller.
-        dx/dt = A x + B u
-        cost = integral (x.T*Q*x + u.T*R*u) dt
-        """
-        # Ref: https://en.wikipedia.org/wiki/Linear%E2%80%93quadratic_regulator
-        # Solves the continuous time LQR controller for a system defined by A, B, Q, R.
-        
-        # First, try to solve the riccati equation
-        X = np.matrix(scipy.linalg.solve_continuous_are(self.A, self.B, Q, R))
-        
-        # Compute the LQR gain
-        K = np.matrix(scipy.linalg.inv(R)*(self.B.T*X))
-        
+        A = np.array([[0, 1, 0, 0],
+                      [0, 0, 0, 0],
+                      [0, 0, 0, 1],
+                      [0, 0, 0, 0]])
+
+        B = np.array([[0, 0],
+                      [self.L/self.I_x, 0],
+                      [0, 0],
+                      [0, self.L/self.I_y]])
+
+        X = np.matrix(sp.solve_continuous_are(A, B, Q, R))
+        K = np.matrix(sp.inv(R) * (B.T * X))
+
         return np.asarray(K)
     
 
