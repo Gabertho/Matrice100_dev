@@ -351,26 +351,23 @@ class Controller:
             if self.mode == "LQR":
                 print("======================LQR===============================================")
                 print("ERROR:", error, self.target)
+            
+                e_pos = error[0:2]
+                e_vel = errorvel[0:2]
+                state_error = np.hstack((e_pos, e_vel))
+                control_input = -np.dot(self.K, state_error)
+                u[0] = control_input[0]  # roll
+                u[1] = control_input[1]  # pitch
 
-                herror = np.array([error[0], error[1]]) #2x1
-                herrorvel = np.array([errorvel[0], errorvel[1]])
-                print("HERROR:", math.degrees(self.current_yaw), herror)
-                theta = -self.current_yaw
-                c, s = np.cos(theta), np.sin(theta)
-                R = np.array(((c, -s), (s, c))) #2x2
-                # print("R:", R)
-
-                rherror = np.dot(R, herror)
-                rherrorvel = np.dot(R, herrorvel)
-                
-                state = np.array([rherror[1], rherrorvel[1], rherror[0], rherrorvel[0]]) #roll, droll, pitch, dpitch
-                u_lqr = -self.K @ state
-                u[0] = u_lqr[0] 
-                u[1] = u_lqr[1]
-
-                max_angle = math.radians(20.0)
-                u[0] = np.clip(u[0], -max_angle, max_angle)
-                u[1] = np.clip(u[1], -max_angle, max_angle)
+                max = math.radians(20.0)
+                if u[0] > max:
+                    u[0] = max
+                if u[0] < -max:
+                    u[0] = -max
+                if u[1] > max:
+                    u[1] = max
+                if u[1] < -max:
+                    u[1] = -max
 
             if self.mode == "simple_pid":
                 print("========================================================================")
