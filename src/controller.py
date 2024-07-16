@@ -359,17 +359,10 @@ class Controller:
             if self.mode == "LQR":
                 print("======================LQR===============================================")
                 print("ERROR:", error, self.target)
-                herror = np.array([error[0], error[1]])  # 2x1
-                herrorvel = np.array([errorvel[0], errorvel[1]])
-                theta = -self.current_yaw
-                c, s = np.cos(theta), np.sin(theta)
-                R = np.array(((c, -s), (s, c)))  # 2x2
+               
 
-                rherror = np.dot(R, herror)
-                rherrorvel = np.dot(R, herrorvel)
-
-                state_x = np.array([rherror[0], 0, 0, 0])
-                state_y = np.array([rherror[1], 0, 0, 0])
+                state_x = np.array([error[0], 0, 0, 0])
+                state_y = np.array([error[1], 0, 0, 0])
                 ux = self.Ks[0].dot(state_x)[0]
                 uy = self.Ks[1].dot(state_y)[0]
 
