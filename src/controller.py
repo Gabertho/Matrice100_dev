@@ -70,11 +70,11 @@ class Controller:
                            [0, 0],
                            [0, -9.81]])
         
-        self.Q = np.diag([1, 1, 1, 1])
-        self.R = np.diag([10, 10])
+        self.Q = np.diag([10, 1, 10, 1])
+        self.R = np.diag([100, 100])
         
         self.K = self.lqr(self.A, self.B, self.Q, self.R)
-        print("Matriz K:", self.K)  # Adicionar um print para verificar a matriz K
+        
 
 
     def set_sync(self, flag):
@@ -362,6 +362,8 @@ class Controller:
                 state = np.array([rherror[0], rherrorvel[0], rherror[1], rherrorvel[1]])                
                 control_input = -np.dot(self.K, state)
                 control_input = np.array(control_input).flatten()
+                print("control input:", control_input)  # Adicionar um print para verificar a matriz K
+                print("Matriz K:", self.K)  # Adicionar um print para verificar a matriz K
                 u[0] = -control_input[1]  # roll
                 u[1] = control_input[0]  # pitch
                 print("LQR CONTROL INPUT:", control_input)
