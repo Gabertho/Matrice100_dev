@@ -351,7 +351,7 @@ class Controller:
                 control_input = np.array(control_input).flatten()
                 print("control input:", control_input)  # Adicionar um print para verificar a matriz K
                 print("Matriz K:", self.K)  # Adicionar um print para verificar a matriz K
-                u[0] = -control_input[1]  # roll
+                u[0] = control_input[1]  # roll
                 u[1] = control_input[0]  # pitch
                 print("LQR CONTROL INPUT:", control_input)
 
