@@ -74,6 +74,15 @@ class Controller:
             [0, self.L / self.I_y]
         ])
 
+        # Bryson's Rule for weighting matrices
+        max_angle = 0.611  # radianos (35 graus)
+        max_rate = 2.618   # rad/s
+        max_input = 1.0    # Nm
+
+        self.Q = np.diag([1/max_angle**2, 1/max_rate**2, 1/max_angle**2, 1/max_rate**2])
+        self.R = np.diag([1/max_input**2, 1/max_input**2])
+
+        self.K = self.lqr(self.Q, self.R)
 
 
     def set_sync(self, flag):
@@ -238,13 +247,22 @@ class Controller:
         return self.yaw_control_flag
     
     #LQR
-    def lqr(A, B, Q, R):
-        #Solve Riccati Equation
-        P = linalg.solve_continuous_are(A, B, Q, R) 
-        K = linalg.inv(R) @ B.T @ P 
-
-        return K
-  
+    def lqr(self, Q, R):
+        """Solve the continuous time lqr controller.
+        dx/dt = A x + B u
+        cost = integral (x.T*Q*x + u.T*R*u) dt
+        """
+        # Ref: https://en.wikipedia.org/wiki/Linear%E2%80%93quadratic_regulator
+        # Solves the continuous time LQR controller for a system defined by A, B, Q, R.
+        
+        # First, try to solve the riccati equation
+        X = np.matrix(scipy.linalg.solve_continuous_are(self.A, self.B, Q, R))
+        
+        # Compute the LQR gain
+        K = np.matrix(scipy.linalg.inv(R)*(self.B.T*X))
+        
+        return np.asarray(K)
+    
 
     # Control loop: Computes the control signal in different modes (velocity, angles or rate) and approaches (Simple PID, Lara PID, PID with
     # ANN, PID with DNN, etc). If we are using the full trajectory, we interpolate in the given time to get the target x,y,z. If not,
@@ -345,6 +363,14 @@ class Controller:
         if self.control_mode == "angles":
             if self.mode == "LQR":
                 print("======================LQR===============================================")
+                state = np.array([self.current_position[0], self.velocity[0], self.current_position[1], self.velocity[1]])
+                u_lqr = -self.K @ state
+                u[0] = u_lqr[0]
+                u[1] = u_lqr[1]
+
+                max_angle = math.radians(20.0)
+                u[0] = np.clip(u[0], -max_angle, max_angle)
+                u[1] = np.clip(u[1], -max_angle, max_angle)
 
             if self.mode == "simple_pid":
                 print("========================================================================")
