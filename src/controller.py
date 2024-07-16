@@ -70,8 +70,28 @@ class Controller:
                            [0, 0],
                            [0, -9.81]])
         
-        self.Q = np.diag([100, 1, 100, 1])
-        self.R = np.diag([1000, 1000])
+        max_error_x = 1.0  # meters
+        max_error_vx = 1.0  # meters/second
+        max_error_y = 1.0  # meters
+        max_error_vy = 1.0  # meters/second
+        max_roll_angle = np.radians(20.0)  # radians
+        max_pitch_angle = np.radians(20.0)  # radians
+
+        # Apply Bryson's rule to define Q and R
+        self.Q = np.diag([
+            1.0 / max_error_x**2,
+            1.0 / max_error_vx**2,
+            1.0 / max_error_y**2,
+            1.0 / max_error_vy**2
+        ])
+
+        self.R = np.diag([
+            1.0 / max_roll_angle**2,
+            1.0 / max_pitch_angle**2
+        ])
+
+        # Calculate the LQR gain matrix K
+        self.K = self.calculate_lqr_gain(self.A, self.B, self.Q, self.R)
         
         self.K = self.lqr(self.A, self.B, self.Q, self.R)
         
@@ -239,10 +259,11 @@ class Controller:
         return self.yaw_control_flag
     
     #LQR
-    def lqr(self, A, B, Q, R):
-        """Solve the continuous time lqr controller."""
-        X = np.matrix(scipy.linalg.solve_continuous_are(A, B, Q, R))
-        K = np.matrix(scipy.linalg.inv(R) * (B.T * X))
+    def calculate_lqr_gain(self, A, B, Q, R):
+        # Solve the continuous time algebraic Riccati equation (CARE)
+        P = sp.solve_continuous_are(A, B, Q, R)
+        # Calculate the LQR gain
+        K = np.linalg.inv(R).dot(B.T.dot(P))
         return K
 
     # Control loop: Computes the control signal in different modes (velocity, angles or rate) and approaches (Simple PID, Lara PID, PID with
@@ -346,24 +367,18 @@ class Controller:
                 print("======================LQR===============================================")
                 print("ERROR:", error, self.target)
                 
-                state = np.array([error[0], errorvel[0], error[1], errorvel[1]])                
+                 # State vector for LQR
+                state = np.array([error[0], errorvel[0], error[1], errorvel[1]])
+
+                # Calculate control input using LQR
                 control_input = -np.dot(self.K, state)
-                control_input = np.array(control_input).flatten()
-                print("control input:", control_input)  # Adicionar um print para verificar a matriz K
-                print("Matriz K:", self.K)  # Adicionar um print para verificar a matriz K
-                u[0] = control_input[1]  # roll
-                u[1] = control_input[0]  # pitch
-                print("LQR CONTROL INPUT:", control_input)
+
+                u[0] = control_input[0]  # Roll angle
+                u[1] = control_input[1]  # Pitch angle
 
                 max_angle = math.radians(20.0)
-                if u[0] > max_angle:
-                    u[0] = max_angle
-                if u[0] < -max_angle:
-                    u[0] = -max_angle
-                if u[1] > max_angle:
-                    u[1] = max_angle
-                if u[1] < -max_angle:
-                    u[1] = -max_angle
+                u[0] = np.clip(u[0], -max_angle, max_angle)
+                u[1] = np.clip(u[1], -max_angle, max_angle)
 
             if self.mode == "simple_pid":
                 print("========================================================================")
