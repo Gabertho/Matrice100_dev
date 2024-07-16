@@ -70,8 +70,8 @@ class Controller:
                            [0, 0],
                            [0, -9.81]])
         
-        self.Q = np.diag([10, 1, 10, 1])
-        self.R = np.diag([100, 100])
+        self.Q = np.diag([100, 1, 100, 1])
+        self.R = np.diag([1000, 1000])
         
         self.K = self.lqr(self.A, self.B, self.Q, self.R)
         
@@ -345,21 +345,8 @@ class Controller:
             if self.mode == "LQR":
                 print("======================LQR===============================================")
                 print("ERROR:", error, self.target)
-                # Rotating errors
-                herror = np.array([error[0], error[1]])
-                herrorvel = np.array([errorvel[0], errorvel[1]])
-                print("HERROR:", math.degrees(self.current_yaw), herror)
-                theta = -self.current_yaw
-                c, s = np.cos(theta), np.sin(theta)
-                R = np.array(((c, -s), (s, c)))
-
-                rherror = np.dot(R, herror)
-                rherrorvel = np.dot(R, herrorvel)
-
-                print("ROTATET HERROR:", rherror)
-                print("ROTATET HERRORVEL:", rherrorvel)
-            
-                state = np.array([rherror[0], rherrorvel[0], rherror[1], rherrorvel[1]])                
+                
+                state = np.array([error[0], errorvel[0], error[1], errorvel[1]])                
                 control_input = -np.dot(self.K, state)
                 control_input = np.array(control_input).flatten()
                 print("control input:", control_input)  # Adicionar um print para verificar a matriz K
