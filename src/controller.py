@@ -370,7 +370,7 @@ class Controller:
                 # Calculate control input using LQR
                 control_input = -np.dot(self.K, state)
 
-                u[0] = control_input[1]  # Roll angle
+                u[0] = -control_input[1]  # Roll angle
                 u[1] = control_input[0]  # Pitch angle
 
                 max_angle = math.radians(20.0)
