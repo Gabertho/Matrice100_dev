@@ -363,7 +363,19 @@ class Controller:
         if self.control_mode == "angles":
             if self.mode == "LQR":
                 print("======================LQR===============================================")
-                state = np.array([self.current_position[0], self.velocity[0], self.current_position[1], self.velocity[1]])
+                # Transform current position and velocity into roll, pitch and derivatives.
+                theta = -self.current_yaw
+                c, s = np.cos(theta), np.sin(theta)
+                R = np.array(((c, -s), (s, c))) #2x2
+
+                position = np.array([self.current_position[0], self.current_position[1]])
+                velocity = np.array([self.velocity[0], self.velocity[1]])
+
+                angles = np.dot(R, position)
+                dangles = np.dot(R, velocity)
+
+                
+                state = np.array([angles[0], dangles[0], angles[1], dangles[1]])
                 u_lqr = -self.K @ state
                 u[0] = u_lqr[0]
                 u[1] = u_lqr[1]
@@ -377,14 +389,12 @@ class Controller:
                 
                 print("ERROR:", error, self.target)
 
-                herror = np.array([error[0], error[1]])
+                herror = np.array([error[0], error[1]]) #2x1
                 herrorvel = np.array([errorvel[0], errorvel[1]])
                 print("HERROR:", math.degrees(self.current_yaw), herror)
-
-                #Rotation matrix to map angles (roll, pitch) from horizontal position (x,y).
                 theta = -self.current_yaw
                 c, s = np.cos(theta), np.sin(theta)
-                R = np.array(((c, -s), (s, c)))
+                R = np.array(((c, -s), (s, c))) #2x2
                 # print("R:", R)
 
                 rherror = np.dot(R, herror)
