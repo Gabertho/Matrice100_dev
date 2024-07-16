@@ -92,10 +92,7 @@ class Controller:
 
         # Calculate the LQR gain matrix K
         self.K = self.calculate_lqr_gain(self.A, self.B, self.Q, self.R)
-        
-        self.K = self.lqr(self.A, self.B, self.Q, self.R)
-        
-
+                
 
     def set_sync(self, flag):
         self.sync_flag = flag
