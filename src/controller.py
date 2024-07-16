@@ -360,6 +360,7 @@ class Controller:
             
                 state = np.array([rherror[0], rherrorvel[0], rherror[1], rherrorvel[1]])                
                 control_input = -np.dot(self.K, state)
+                control_input = np.array(control_input).flatten()
                 u[0] = -control_input[1]  # roll
                 u[1] = control_input[0]  # pitch
                 print("LQR CONTROL INPUT:", control_input)
