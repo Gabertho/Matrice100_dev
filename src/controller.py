@@ -60,16 +60,20 @@ class Controller:
         self.I_y = 0.0427 #Inertia in y axis
 
         #LQR Parameters
-
-        # Bryson's Rule for weighting matrices
-        max_angle = 0.611  # radianos (35 graus)
-        max_rate = 2.618   # rad/s
-        max_input = 1.0    # Nm
-
-        self.Q = np.diag([1/max_angle**2, 1/max_rate**2, 1/max_angle**2, 1/max_rate**2])
-        self.R = np.diag([1/max_input**2, 1/max_input**2])
-
-        self.K = self.lqr(self.Q, self.R)
+        self.A = np.array([[0, 1, 0, 0],
+                           [0, 0, 0, 0],
+                           [0, 0, 0, 1],
+                           [0, 0, 0, 0]])
+        
+        self.B = np.array([[0, 0],
+                           [9.81, 0],
+                           [0, 0],
+                           [0, -9.81]])
+        
+        self.Q = np.diag([1, 1, 1, 1])
+        self.R = np.diag([1, 1])
+        
+        self.K = self.lqr(self.A, self.B, self.Q, self.R)
 
 
     def set_sync(self, flag):
@@ -234,22 +238,11 @@ class Controller:
         return self.yaw_control_flag
     
     #LQR
-    def lqr(self, Q, R):
-        A = np.array([[0, 1, 0, 0],
-                      [0, 0, 0, 0],
-                      [0, 0, 0, 1],
-                      [0, 0, 0, 0]])
-
-        B = np.array([[0, 0],
-                      [self.L/self.I_x, 0],
-                      [0, 0],
-                      [0, self.L/self.I_y]])
-
-        X = np.matrix(sp.solve_continuous_are(A, B, Q, R))
-        K = np.matrix(sp.inv(R) * (B.T * X))
-
-        return np.asarray(K)
-    
+    def lqr(self, A, B, Q, R):
+        """Solve the continuous time lqr controller."""
+        X = np.matrix(scipy.linalg.solve_continuous_are(A, B, Q, R))
+        K = np.matrix(scipy.linalg.inv(R) * (B.T * X))
+        return K
 
     # Control loop: Computes the control signal in different modes (velocity, angles or rate) and approaches (Simple PID, Lara PID, PID with
     # ANN, PID with DNN, etc). If we are using the full trajectory, we interpolate in the given time to get the target x,y,z. If not,
@@ -351,23 +344,35 @@ class Controller:
             if self.mode == "LQR":
                 print("======================LQR===============================================")
                 print("ERROR:", error, self.target)
-            
-                e_pos = error[0:2]
-                e_vel = errorvel[0:2]
-                state_error = np.hstack((e_pos, e_vel))
-                control_input = -np.dot(self.K, state_error)
-                u[0] = control_input[0]  # roll
-                u[1] = control_input[1]  # pitch
+                # Rotating errors
+                herror = np.array([error[0], error[1]])
+                herrorvel = np.array([errorvel[0], errorvel[1]])
+                print("HERROR:", math.degrees(self.current_yaw), herror)
+                theta = -self.current_yaw
+                c, s = np.cos(theta), np.sin(theta)
+                R = np.array(((c, -s), (s, c)))
 
-                max = math.radians(20.0)
-                if u[0] > max:
-                    u[0] = max
-                if u[0] < -max:
-                    u[0] = -max
-                if u[1] > max:
-                    u[1] = max
-                if u[1] < -max:
-                    u[1] = -max
+                rherror = np.dot(R, herror)
+                rherrorvel = np.dot(R, herrorvel)
+
+                print("ROTATET HERROR:", rherror)
+                print("ROTATET HERRORVEL:", rherrorvel)
+            
+                state = np.array([rherror[0], rherrorvel[0], rherror[1], rherrorvel[1]])                
+                control_input = -np.dot(self.K, state)
+                u[0] = -control_input[1]  # roll
+                u[1] = control_input[0]  # pitch
+                print("LQR CONTROL INPUT:", control_input)
+
+                max_angle = math.radians(20.0)
+                if u[0] > max_angle:
+                    u[0] = max_angle
+                if u[0] < -max_angle:
+                    u[0] = -max_angle
+                if u[1] > max_angle:
+                    u[1] = max_angle
+                if u[1] < -max_angle:
+                    u[1] = -max_angle
 
             if self.mode == "simple_pid":
                 print("========================================================================")
