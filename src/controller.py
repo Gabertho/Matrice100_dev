@@ -55,9 +55,9 @@ class Controller:
         self.dt = 0.02
 
         #DJI Matrice 100 Parameters.
-        self.L = 0.225 #Distance from the center to rotor (m)
-        self.I_x = 0.0142 #Inertia in x axis
-        self.I_y = 0.0142 #Inertia in y axis
+        self.L = 0.35 #Distance from the center to rotor (m)
+        self.I_x = 0.0427 #Inertia in x axis
+        self.I_y = 0.0427 #Inertia in y axis
 
         #LQR Parameters
         self.A = np.array([
@@ -363,21 +363,22 @@ class Controller:
         if self.control_mode == "angles":
             if self.mode == "LQR":
                 print("======================LQR===============================================")
-                # Transform current position and velocity into roll, pitch and derivatives.
+                print("ERROR:", error, self.target)
+
+                herror = np.array([error[0], error[1]]) #2x1
+                herrorvel = np.array([errorvel[0], errorvel[1]])
+                print("HERROR:", math.degrees(self.current_yaw), herror)
                 theta = -self.current_yaw
                 c, s = np.cos(theta), np.sin(theta)
                 R = np.array(((c, -s), (s, c))) #2x2
+                # print("R:", R)
 
-                position = np.array([self.current_position[0], self.current_position[1]])
-                velocity = np.array([self.velocity[0], self.velocity[1]])
-
-                angles = np.dot(R, position)
-                dangles = np.dot(R, velocity)
-
+                rherror = np.dot(R, herror)
+                rherrorvel = np.dot(R, herrorvel)
                 
-                state = np.array([angles[0], dangles[0], angles[1], dangles[1]])
+                state = np.array([rherror[1], rherrorvel[1], rherror[0], rherrorvel[0]]) #roll, droll, pitch, dpitch
                 u_lqr = -self.K @ state
-                u[0] = u_lqr[0]
+                u[0] = u_lqr[0] 
                 u[1] = u_lqr[1]
 
                 max_angle = math.radians(20.0)
