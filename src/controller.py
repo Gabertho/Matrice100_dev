@@ -358,8 +358,8 @@ class Controller:
                 target_state_y = np.array([self.target[1], self.targetvel[1]])
                 u_roll = -K_y @ (state_y - target_state_y)
 
-                u[0] = u_roll  # Roll
-                u[1] = u_pitch  # Pitch
+                u[0] = math.radians(u_roll)  # Roll
+                u[1] = math.radians(u_pitch)  # Pitch
 
                 print("u[0] (Roll) =", u[0])
                 print("u[1] (Pitch) =", u[1])
