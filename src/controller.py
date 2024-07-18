@@ -343,8 +343,8 @@ class Controller:
                 print("Q_y =", Q_y)
                 print("R_y =", R_y)
 
-                K_x, _, _ = self.lqr(self.A_x, self.B_x, Q_x, R_x)
-                K_y, _, _ = self.lqr(self.A_y, self.B_y, Q_y, R_y)
+                K_x = self.lqr(self.A_x, self.B_x, Q_x, R_x)
+                K_y,= self.lqr(self.A_y, self.B_y, Q_y, R_y)
 
                 print("K_x =", K_x)
                 print("K_y =", K_y)
