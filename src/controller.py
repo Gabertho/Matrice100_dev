@@ -249,7 +249,7 @@ class Controller:
         K = np.dot(np.linalg.inv(R), np.dot(B.T, P))   
         return K
     
-    def lqr_control(state, K):
+    def lqr_control(self, state, K):
         u = -np.dot(K, state)
         return u
 
