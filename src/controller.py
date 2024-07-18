@@ -336,8 +336,8 @@ class Controller:
                 error_y = np.array([error[1], errorvel[1]])
 
     
-                u_x = -np.dot(self.K_x, error_x)  # pitch
-                u_y = -np.dot(self.K_y, error_y)  # roll
+                u_x = math.radians(-np.dot(self.K_x, error_x))  # pitch
+                u_y = math.radians(-np.dot(self.K_y, error_y))  # roll
 
                 max_angle = math.radians(20.0)
                 u[0] = np.clip(u_y, -max_angle, max_angle)  # roll
