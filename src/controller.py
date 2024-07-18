@@ -330,7 +330,7 @@ class Controller:
                 print("ERROR:", error, self.target)
 
                 #Brysons Rule to determine Q and R matrices
-                max_position = 10.0 # metros
+                max_position = 1.0 # metros
                 max_velocity = 3.0 # m/s
                 max_angle = 0.349066 # radianos
                 Q_x = np.diag([1/max_position**2, 1/max_velocity**2])
@@ -372,8 +372,8 @@ class Controller:
                 
                
 
-                u[0] = math.radians(-u_roll)  # Roll
-                u[1] = math.radians(u_pitch)  # Pitch
+                u[0] = math.radians(-float(u_roll))  
+                u[1] = math.radians(float(u_pitch))
 
                 print("u[0] (Roll) =", u[0])
                 print("u[1] (Pitch) =", u[1])
