@@ -332,25 +332,27 @@ class Controller:
             if self.mode == "LQR":
                 print("======================LQR===============================================")
                 print("ERROR:", error, self.target)
-                error_x = np.array([error[0], errorvel[0]])  
-                error_y = np.array([error[1], errorvel[1]])
+                theta = -self.current_yaw
+                c, s = np.cos(theta), np.sin(theta)
+                R = np.array(((c, -s), (s, c)))
+
+                rherror = np.dot(R, error[:2])
+                rherrorvel = np.dot(R, errorvel[:2]) 
+
+                state_x = np.array([rherror[0], rherrorvel[0]])
+                state_y = np.array([rherror[1], rherrorvel[1]])
 
     
-                u_x = math.radians(-np.dot(self.K_x, error_x))  # pitch
-                u_y = math.radians(-np.dot(self.K_y, error_y))  # roll
+                u_x = math.radians(-np.dot(self.K_x, state_x))  # pitch
+                u_y = math.radians(-np.dot(self.K_y, state_y))  # roll
+                
 
                 max_angle = math.radians(20.0)
-                u[0] = -u_x 
-                u[1] = u_y
-                max = math.radians(20.0)
-                if u[0] > max:
-                    u[0] = max
-                if u[0] < -max:
-                    u[0] = -max
-                if u[1] > max:
-                    u[1] = max
-                if u[1] < -max:
-                    u[1] = -max
+                u[0] = u_y 
+                u[1] = -u_x
+                
+                u[0] = np.clip(u[0], -max_angle, max_angle)
+                u[1] = np.clip(u[1], -max_angle, max_angle)
 
 
             if self.mode == "simple_pid":
