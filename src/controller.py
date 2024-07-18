@@ -54,12 +54,16 @@ class Controller:
         self.sync_flag = False
         self.dt = 0.02
 
-        #LQR Parameters
+        # LQR Parameters
         self.g = 9.81
-        self.A_x = np.array([[0, 1], [0, 0]])
-        self.B_x = np.array([[0], [self.g]])
-        self.A_y = np.array([[0, 1], [0, 0]])
+        self.A = np.array([[0, 1], [0, 0]])
+        self.B_x = np.array([[0], [self.g]])  # g = 9.81 m/s^2
         self.B_y = np.array([[0], [-self.g]])
+        self.Q = np.array([[1, 0], [0, 1]])
+        self.R = np.array([[1]])
+        self.K_x = self.lqr(self.A, self.B_x, self.Q, self.R)
+        self.K_y = self.lqr(self.A, self.B_y, self.Q, self.R)
+        
                 
 
     def set_sync(self, flag):
@@ -225,9 +229,9 @@ class Controller:
     
 
     def lqr(self, A, B, Q, R):
-        X = np.matrix(scipy.linalg.solve_continuous_are(A, B, Q, R))
-        K = scipy.linalg.inv(R) @ (B.T @ X)        
-        return np.asarray(K)
+        P = scipy.linalg.solve_continuous_are(A, B, Q, R)
+        K = np.dot(np.linalg.inv(R), np.dot(B.T, P))   
+        return K
     
 
     # Control loop: Computes the control signal in different modes.
@@ -328,65 +332,17 @@ class Controller:
             if self.mode == "LQR":
                 print("======================LQR===============================================")
                 print("ERROR:", error, self.target)
+                error_x = np.array([error[0], errorvel[0]])  
+                error_y = np.array([error[1], errorvel[1]])
 
-                #Brysons Rule to determine Q and R matrices
-                max_position = 0.05 # metros
-                max_velocity = 1.5 # m/s
-                max_angle = 0.174533 # radianos
-                Q_x = np.diag([1/max_position**2, 1/max_velocity**2])
-                Q_y = np.diag([1/max_position**2, 1/max_velocity**2])
-                R_x = np.array([[1/max_angle**2]])
-                R_y = np.array([[1/max_angle**2]])
-
-                print("Q_x =", Q_x)
-                print("R_x =", R_x)
-                print("Q_y =", Q_y)
-                print("R_y =", R_y)
-
-                K_x = self.lqr(self.A_x, self.B_x, Q_x, R_x)
-                K_y,= self.lqr(self.A_y, self.B_y, Q_y, R_y)
-
-                print("K_x =", K_x)
-                print("K_y =", K_y)
-
-                
-                herror = np.array([error[0], error[1]])
-                herrorvel = np.array([errorvel[0], errorvel[1]])
-                theta = -self.current_yaw
-                c, s = np.cos(theta), np.sin(theta)
-                R = np.array(((c, -s), (s, c)))
-                rherror = np.dot(R, herror)
-                rherrorvel = np.dot(R, herrorvel)
-
-                print("herror =", herror)
-                print("herrorvel =", herrorvel)
-                print("rherror =", rherror)
-                print("rherrorvel =", rherrorvel)
-                
-                
-                state_x = np.array([rherror[0], rherrorvel[0]])
-                u_pitch = -K_x @ state_x 
-
-                state_y = np.array([rherror[1], rherrorvel[1]])
-                u_roll = -K_y @ state_y 
-                
-               
-
-                u[0] = math.radians(float(u_roll))  
-                u[1] = math.radians(-float(u_pitch))
-
-                print("u[0] (Roll) =", u[0])
-                print("u[1] (Pitch) =", u[1])
+    
+                u_x = -np.dot(self.K_x, error_x)  # pitch
+                u_y = -np.dot(self.K_y, error_y)  # roll
 
                 max_angle = math.radians(20.0)
-                if u[0] > max_angle:
-                    u[0] = max_angle
-                if u[0] < -max_angle:
-                    u[0] = -max_angle
-                if u[1] > max_angle:
-                    u[1] = max_angle
-                if u[1] < -max_angle:
-                    u[1] = -max_angle
+                u[0] = np.clip(u_y, -max_angle, max_angle)  # roll
+                u[1] = np.clip(u_x, -max_angle, max_angle)  # pitch
+
 
             if self.mode == "simple_pid":
                 print("========================================================================")
