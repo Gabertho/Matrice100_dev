@@ -348,15 +348,29 @@ class Controller:
 
                 print("K_x =", K_x)
                 print("K_y =", K_y)
-                
-                
-                state_x = np.array([self.current_position[0], self.velocity[0]])
-                target_state_x = np.array([self.target[0], self.targetvel[0]])
-                u_pitch = -K_x @ (state_x - target_state_x)
 
-                state_y = np.array([self.current_position[1], self.velocity[1]])
-                target_state_y = np.array([self.target[1], self.targetvel[1]])
-                u_roll = -K_y @ (state_y - target_state_y)
+                
+                herror = np.array([error[0], error[1]])
+                herrorvel = np.array([errorvel[0], errorvel[1]])
+                theta = -self.current_yaw
+                c, s = np.cos(theta), np.sin(theta)
+                R = np.array(((c, -s), (s, c)))
+                rherror = np.dot(R, herror)
+                rherrorvel = np.dot(R, herrorvel)
+
+                print("herror =", herror)
+                print("herrorvel =", herrorvel)
+                print("rherror =", rherror)
+                print("rherrorvel =", rherrorvel)
+
+                
+                state_x = np.array([rherror[0], rherrorvel[0]])
+                u_pitch = -K_x @ state_x 
+
+                state_y = np.array([rherror[1], rherrorvel[1]])
+                u_roll = -K_y @ state_y 
+                
+               
 
                 u[0] = math.radians(-u_roll)  # Roll
                 u[1] = math.radians(u_pitch)  # Pitch
