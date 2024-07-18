@@ -372,8 +372,8 @@ class Controller:
                 
                
 
-                u[0] = math.radians(-float(u_roll))  
-                u[1] = math.radians(float(u_pitch))
+                u[0] = math.radians(float(u_roll))  
+                u[1] = math.radians(-float(u_pitch))
 
                 print("u[0] (Roll) =", u[0])
                 print("u[1] (Pitch) =", u[1])
