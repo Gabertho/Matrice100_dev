@@ -370,8 +370,8 @@ class Controller:
                 state = np.array([rherror[0], rherrorvel[0], rherror[1], rherrorvel[1]])
                 control_input = self.lqr_control(state, self.K)
     
-                u[0] = -math.radians(control_input[0]) # roll
-                u[1] = -math.radians(control_input[1]) # pitch
+                u[0] = -math.radians(control_input[1]) # roll
+                u[1] = -math.radians(control_input[0]) # pitch
 
                 max = math.radians(20.0)
                 if u[0] > max:
