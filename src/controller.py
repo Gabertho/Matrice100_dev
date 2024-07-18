@@ -54,41 +54,12 @@ class Controller:
         self.sync_flag = False
         self.dt = 0.02
 
-        # LQR Parameters
-        g = 9.81
-        Ix = 8.1 * 1e-3
-        Iy = 8.1 * 1e-3
-
-        self.Ax = np.array(
-            [[0.0, 1.0, 0.0, 0.0],
-            [0.0, 0.0, g, 0.0],
-            [0.0, 0.0, 0.0, 1.0],
-            [0.0, 0.0, 0.0, 0.0]])
-        self.Bx = np.array(
-            [[0.0],
-            [0.0],
-            [0.0],
-            [1 / Ix]])
-
-        self.Ay = np.array(
-            [[0.0, 1.0, 0.0, 0.0],
-            [0.0, 0.0, -g, 0.0],
-            [0.0, 0.0, 0.0, 1.0],
-            [0.0, 0.0, 0.0, 0.0]])
-        self.By = np.array(
-            [[0.0],
-            [0.0],
-            [0.0],
-            [1 / Iy]])
-        
-         # Solução do LQR para cada subsistema
-        self.Ks = []  # matrizes de ganho de feedback K para cada subsistema
-        for A, B in ((self.Ax, self.Bx), (self.Ay, self.By)):
-            Q = np.eye(A.shape[0])
-            Q[0, 0] = 10.0  # A primeira variável de estado é a mais importante
-            R = np.diag([1.0])
-            K, _, _ = self.lqr(A, B, Q, R)
-            self.Ks.append(K)
+        #LQR Parameters
+        self.g = 9.81
+        self.A_x = np.array([[0, 1], [0, 0]])
+        self.B_x = np.array([[0], [self.g]])
+        self.A_y = np.array([[0, 1], [0, 0]])
+        self.B_y = np.array([[0], [-self.g]])
                 
 
     def set_sync(self, flag):
@@ -252,16 +223,14 @@ class Controller:
     def get_yaw_control(self):
         return self.yaw_control_flag
     
-    #LQR
+
     def lqr(self, A, B, Q, R):
         X = np.matrix(scipy.linalg.solve_continuous_are(A, B, Q, R))
-        K = np.matrix(scipy.linalg.inv(R) * (B.T * X))
-        eigVals, eigVecs = scipy.linalg.eig(A - B * K)
-        return np.asarray(K), np.asarray(X), np.asarray(eigVals)
+        K = scipy.linalg.inv(R) @ (B.T @ X)        
+        return np.asarray(K)
+    
 
-    # Control loop: Computes the control signal in different modes (velocity, angles or rate) and approaches (Simple PID, Lara PID, PID with
-    # ANN, PID with DNN, etc). If we are using the full trajectory, we interpolate in the given time to get the target x,y,z. If not,
-    # then we receive from the trajectory callback the desired x,y,z.
+    # Control loop: Computes the control signal in different modes.
 
     def control(self, dt):
         print("DO CONTROL:", dt, self.control_mode, self.full_trajectory_flag)
@@ -359,15 +328,30 @@ class Controller:
             if self.mode == "LQR":
                 print("======================LQR===============================================")
                 print("ERROR:", error, self.target)
-               
 
-                state_x = np.array([error[0], 0, 0, 0])
-                state_y = np.array([error[1], 0, 0, 0])
-                ux = self.Ks[0].dot(state_x)[0]
-                uy = self.Ks[1].dot(state_y)[0]
+                #Brysons Rule to determine Q and R matrices
+                max_position = 10.0 # metros
+                max_velocity = 3.0 # m/s
+                max_angle = 0.349066 # radianos
+                Q_x = np.diag([1/max_position**2, 1/max_velocity**2])
+                Q_y = np.diag([1/max_position**2, 1/max_velocity**2])
+                R_x = np.array([[1/max_angle**2]])
+                R_y = np.array([[1/max_angle**2]])
 
-                u[0] = math.radians(-uy)  # roll
-                u[1] = math.radians(ux)  # pitch
+                K_x, _, _ = self.lqr(self.A_x, self.B_x, Q_x, R_x)
+                K_y, _, _ = self.lqr(self.A_y, self.B_y, Q_y, R_y)
+                
+                
+                state_x = np.array([self.current_position[0], self.velocity[0]])
+                target_state_x = np.array([self.target[0], self.targetvel[0]])
+                u_pitch = -K_x @ (state_x - target_state_x)
+
+                state_y = np.array([self.current_position[1], self.velocity[1]])
+                target_state_y = np.array([self.target[1], self.targetvel[1]])
+                u_roll = -K_y @ (state_y - target_state_y)
+
+                u[0] = u_roll[0]  # Roll
+                u[1] = u_pitch[0]  # Pitch
 
                 max_angle = math.radians(20.0)
                 if u[0] > max_angle:
