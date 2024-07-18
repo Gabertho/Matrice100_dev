@@ -57,12 +57,22 @@ class Controller:
         # LQR Parameters
         self.g = 9.81
         self.A = np.array([[0, 1], [0, 0]])
-        self.B_x = np.array([[0], [self.g]])  # g = 9.81 m/s^2
-        self.B_y = np.array([[0], [-self.g]])
-        self.Q = np.array([[1, 0], [0, 1]])
-        self.R = np.array([[1]])
-        self.K_x = self.lqr(self.A, self.B_x, self.Q, self.R)
-        self.K_y = self.lqr(self.A, self.B_y, self.Q, self.R)
+        self.B = np.array([
+            [0, 0],
+            [self.g, 0],
+            [0, 0],
+            [0, -self.g]
+        ])
+        # Weights for LQR
+        self.Q = np.diag([1, 1, 1, 1])
+        self.R = np.diag([0.1, 0.1])
+
+        # Solve Riccati equation
+        self.P = scipy.linalg.solve_continuous_are(A, B, Q, R)
+
+        # Compute LQR gain
+        self.K = np.dot(np.linalg.inv(self.R), np.dot(self.B.T, self.P))
+
         
                 
 
@@ -233,6 +243,11 @@ class Controller:
         K = np.dot(np.linalg.inv(R), np.dot(B.T, P))   
         return K
     
+    def lqr_control(state, K):
+        u = -np.dot(K, state)
+        return u
+
+    
 
     # Control loop: Computes the control signal in different modes.
 
@@ -332,31 +347,25 @@ class Controller:
             if self.mode == "LQR":
                 print("======================LQR===============================================")
                 print("ERROR:", error, self.target)
-                 # Rotacionar a posição e velocidade atuais e os alvos para o frame inercial
-                theta = self.current_yaw
+    
+                herror = np.array([error[0], error[1]]) # 2x1
+                herrorvel = np.array([errorvel[0], errorvel[1]])
+                print("HERROR:", math.degrees(self.current_yaw), herror)
+                theta = -self.current_yaw
                 c, s = np.cos(theta), np.sin(theta)
-                R = np.array(((c, -s), (s, c)))
-
-                rotated_position = np.dot(R, self.current_position[:2])
-                rotated_velocity = np.dot(R, self.velocity[:2])
-                rotated_target = np.dot(R, self.target[:2])
-                rotated_targetvel = np.dot(R, self.targetvel[:2])
-
-                error = rotated_target - rotated_position
-                errorvel = rotated_targetvel - rotated_velocity
+                R = np.array(((c, -s), (s, c))) # 2x2
+                rherror = np.dot(R, herror)
+                rherrorvel = np.dot(R, herrorvel)
     
-                state_x = np.array([error[0], errorvel[0]])
-                state_y = np.array([error[1], errorvel[1]])
-
-                u_x = math.radians(-np.dot(self.K_x, state_x))  # pitch
-                u_y = math.radians(-np.dot(self.K_y, state_y))  # roll
-
-                max_angle = math.radians(20.0)
-                u[0] = u_y 
-                u[1] = -u_x
+                print("ROTATED HERROR:", rherror)
+                print("ROTATED HERRORVEL:", rherrorvel)
     
-                u[0] = np.clip(u[0], -max_angle, max_angle)
-                u[1] = np.clip(u[1], -max_angle, max_angle)
+                # LQR control
+                state = np.array([rherror[0], rherrorvel[0], rherror[1], rherrorvel[1]])
+                control_input = self.lqr_control(state, self.K)
+    
+                u[0] = control_input[0] # roll
+                u[1] = control_input[1] # pitch
 
 
             if self.mode == "simple_pid":
