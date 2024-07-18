@@ -372,7 +372,7 @@ class Controller:
                 
                
 
-                u[0] = math.radians(-u_roll)  # Roll
+                u[0] = math.radians(u_roll)  # Roll
                 u[1] = math.radians(u_pitch)  # Pitch
 
                 print("u[0] (Roll) =", u[0])
