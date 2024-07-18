@@ -68,7 +68,7 @@ class Controller:
         self.R = np.diag([0.1, 0.1])
 
         # Solve Riccati equation
-        self.P = scipy.linalg.solve_continuous_are(A, B, Q, R)
+        self.P = scipy.linalg.solve_continuous_are(self.A, self.B, self.Q, self.R)
 
         # Compute LQR gain
         self.K = np.dot(np.linalg.inv(self.R), np.dot(self.B.T, self.P))
