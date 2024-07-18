@@ -56,8 +56,14 @@ class Controller:
 
         # LQR Parameters
         self.g = 9.81
-        self.A = np.array([[0, 1], [0, 0]])
-        self.B = np.array([
+        self.A = np.array([
+            [0, 1, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 1],
+            [0, 0, 0, 0]
+        ])
+
+        B = np.array([
             [0, 0],
             [self.g, 0],
             [0, 0],
