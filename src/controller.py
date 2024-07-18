@@ -353,12 +353,12 @@ class Controller:
                 
                 state_x = np.array([self.current_position[0], self.velocity[0]])
                 target_x = np.array([self.target[0], self.targetvel[0]])
-                u_pitch = -K_x @ state_x 
+                u_pitch = -K_x @ (state_x - target_x) 
 
                 state_y = np.array([self.current_position[1], self.velocity[1]])
                 target_y = np.array([self.target[1], self.targetvel[1]])
 
-                u_roll = -K_y @ state_y 
+                u_roll = -K_y @ (state_y -  target_y)
                 
                
 
