@@ -338,8 +338,16 @@ class Controller:
                 R_x = np.array([[1/max_angle**2]])
                 R_y = np.array([[1/max_angle**2]])
 
+                print("Q_x =", Q_x)
+                print("R_x =", R_x)
+                print("Q_y =", Q_y)
+                print("R_y =", R_y)
+
                 K_x, _, _ = self.lqr(self.A_x, self.B_x, Q_x, R_x)
                 K_y, _, _ = self.lqr(self.A_y, self.B_y, Q_y, R_y)
+
+                print("K_x =", K_x)
+                print("K_y =", K_y)
                 
                 
                 state_x = np.array([self.current_position[0], self.velocity[0]])
@@ -352,6 +360,9 @@ class Controller:
 
                 u[0] = u_roll[0]  # Roll
                 u[1] = u_pitch[0]  # Pitch
+
+                print("u[0] (Roll) =", u[0])
+                print("u[1] (Pitch) =", u[1])
 
                 max_angle = math.radians(20.0)
                 if u[0] > max_angle:
