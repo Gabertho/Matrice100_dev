@@ -340,8 +340,17 @@ class Controller:
                 u_y = math.radians(-np.dot(self.K_y, error_y))  # roll
 
                 max_angle = math.radians(20.0)
-                u[0] = np.clip(u_y, -max_angle, max_angle)  # roll
-                u[1] = np.clip(u_x, -max_angle, max_angle)  # pitch
+                u[0] = -u_x 
+                u[1] = u_y
+                max = math.radians(20.0)
+                if u[0] > max:
+                    u[0] = max
+                if u[0] < -max:
+                    u[0] = -max
+                if u[1] > max:
+                    u[1] = max
+                if u[1] < -max:
+                    u[1] = -max
 
 
             if self.mode == "simple_pid":
