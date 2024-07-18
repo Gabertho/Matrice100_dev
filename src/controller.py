@@ -63,7 +63,7 @@ class Controller:
             [0, 0, 0, 0]
         ])
 
-        B = np.array([
+        self.B = np.array([
             [0, 0],
             [self.g, 0],
             [0, 0],
