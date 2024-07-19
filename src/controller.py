@@ -444,20 +444,15 @@ class Controller:
                 rherror = np.dot(R, herror)
                 rherrorvel = np.dot(R, herrorvel)
 
-                self.int_x += rherror[0] * dt
-                self.int_dx += rherrorvel[0] * dt
-                self.int_y += rherror[1] * dt
-                self.int_dy += rherrorvel[1] * dt
-
                 state = np.array([
                     self.current_position[0],
                     self.velocity[0],
                     self.current_position[1],
                     self.velocity[1],
-                    self.int_x,
-                    self.int_dx,
-                    self.int_y,
-                    self.int_dy
+                    rherror[0],
+                    rherrorvel[0],
+                    rherror[1],
+                    rherrorvel[1]
                 ])
 
                 # Calcular ação de controle
