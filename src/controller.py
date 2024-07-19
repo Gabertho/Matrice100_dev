@@ -105,7 +105,7 @@ class Controller:
         self.Q_lyap = np.eye(4)
         self.P_lyap = sp.solve_continuous_lyapunov(self.Am, self.Q_lyap)
         # Adaptive Parameters
-        self.W = np.zeros((5, 1))  # Adjust dimensions based on Phi(x)
+        self.W = np.zeros((5, 2))  # Adjust dimensions based on Phi(x)
         self.Gamma = np.eye(5)  # Learning rate matrix
 
 
@@ -289,7 +289,7 @@ class Controller:
         print("phi.shape:", phi.shape)
 
         # Compute adaptive control law
-        v_ad = np.dot(self.W.T, phi)  # `v_ad` is (1, 1)
+        v_ad = np.dot(self.W.T, phi)  # `v_ad` is (2, 1)
         print("v_ad.shape:", v_ad.shape)
 
         # Update adaptive parameters
@@ -309,7 +309,9 @@ class Controller:
         adaptation_term = self.Gamma @ phi_e_T_P_Bp * self.dt  # (5, 5) @ (5, 2) -> (5, 2)
         print("adaptation_term.shape:", adaptation_term.shape)
 
+        # Update self.W to match dimensions
         self.W += -adaptation_term
+        print("self.W.shape:", self.W.shape)
 
         return v_ad
 
@@ -478,7 +480,7 @@ class Controller:
                 u[0] = -math.radians(control_total[1])  # Roll
                 u[1] = -math.radians(control_total[0])  # Pitch
 
-                max_angle = math.radians(20.0)
+                max = math.radians(20.0)
                 
                 if u[0] > max:
                     u[0] = max
