@@ -116,7 +116,7 @@ class Controller:
         ])
 
         self.Qbar = np.diag([1, 1, 1, 1, 1, 1, 1, 1])
-        self.Rbar = np.diag([1, 1])  
+        self.Rbar = np.diag([0.1, 0.1])  
         self.Pbar = scipy.linalg.solve_continuous_are(self.Abar, self.Bbar, self.Qbar, self.Rbar)
         self.Kbar = np.dot(np.linalg.inv(self.Rbar), np.dot(self.Bbar.T, self.Pbar))
 
@@ -464,8 +464,8 @@ class Controller:
                 control_action = -self.Kbar @ state
 
                 # Definir roll e pitch a partir da ação de controle
-                u[0] = math.radians(control_action[1])  # Roll
-                u[1] = math.radians(control_action[0])  # Pitch
+                u[0] = math.radians(control_action[0])  # Roll
+                u[1] = math.radians(control_action[1])  # Pitch
 
                 max = math.radians(20.0)
                 if u[0] > max:
