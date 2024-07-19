@@ -432,10 +432,10 @@ class Controller:
                     u[1] = -max
 
             if self.mode == "MRAC":
-                self.int_err_x += error[0] * dt
-                self.int_err_dx += errorvel[0] * dt
-                self.int_err_y += error[1] * dt
-                self.int_err_dy += errorvel[1] * dt
+                self.int_x += error[0] * dt
+                self.int_dx += errorvel[0] * dt
+                self.int_y += error[1] * dt
+                self.int_dy += errorvel[1] * dt
 
                 state = np.array([
                     self.current_position[0],
