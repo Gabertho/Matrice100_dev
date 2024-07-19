@@ -285,14 +285,15 @@ class Controller:
     
     def adaptive_control(self, state, e):
         # Phi(x) includes the state and a bias term 1
-        phi = np.append(state, 1).reshape(-1, 1)
-        # # Compute adaptive control law
-        v_ad = np.dot(self.W.T, phi)
+        phi = np.append(state, 1).reshape(-1, 1)  # `phi` is (5, 1)
+
+        # Compute adaptive control law
+        v_ad = np.dot(self.W.T, phi)  # `v_ad` is (1, 1)
 
         # Update adaptive parameters
-        # Ensure e is reshaped to a column vector for proper matrix multiplication
-        e = e.reshape(-1, 1)
-        self.W += -self.Gamma @ (phi @ e.T @ self.P_lyap @ self.B_p.T) * self.dt
+        e = e.reshape(-1, 1)  # `e` is (4, 1)
+        adaptation_term = self.Gamma @ (phi @ (e.T @ self.P_lyap @ self.B_p.T)) * self.dt  # Ensure correct matrix dimensions
+        self.W += -adaptation_term
 
         return v_ad
 
@@ -439,12 +440,15 @@ class Controller:
                 # Define state for MRAC similar to LQR
                 state = np.array([rherror[0], rherrorvel[0], rherror[1], rherrorvel[1]])
 
-                # Calculate control action using MRAC
-                control_action = self.lqr_control(state, self.K)
+                # Calculate LQR control action
+                control_input = self.lqr_control(state, self.K)
 
-                mrac_error = state
+                # Compute adaptive control law
+                mrac_error = state  # Ensure `mrac_error` is the same dimension as `state`
                 v_ad = self.adaptive_control(state, mrac_error)
-                control_total = control_action + v_ad.flatten()
+
+                # Combine LQR and adaptive control laws
+                control_total = control_input + v_ad.flatten()
 
                 # Define roll and pitch based on control action
                 u[0] = -math.radians(control_total[1])  # Roll
