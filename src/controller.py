@@ -96,16 +96,19 @@ class Controller:
 
         self.C_p = np.array([
             [1, 0, 0, 0],
-            [0, 0, 1, 0]
+            [0, 1, 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1]
         ])
 
+
         self.Abar = np.block([
-            [self.A_p, np.zeros((4, 2))],
-            [self.C_p, np.zeros((2, 2))]
+            [self.A_p, np.zeros((4, 4))],
+            [self.C_p, np.zeros((4, 4))]
         ])
         self.Bbar = np.block([
             [self.B_p],
-            [np.zeros((2, 2))]
+            [np.zeros((4, 2))]
         ])
         self.B_c = np.block([
             [np.zeros((4, 2))],
