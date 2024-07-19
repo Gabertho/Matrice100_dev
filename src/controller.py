@@ -425,8 +425,18 @@ class Controller:
                 control_action = -self.K_mrac @ state
 
                 # Define roll and pitch based on control action
-                u[0] = math.radians(control_action[1])  # Roll
-                u[1] = math.radians(control_action[0])  # Pitch
+                u[0] = -math.radians(control_action[0])  # Roll
+                u[1] = math.radians(control_action[1])  # Pitch
+
+                max = math.radians(20.0)
+                if u[0] > max:
+                    u[0] = max
+                if u[0] < -max:
+                    u[0] = -max
+                if u[1] > max:
+                    u[1] = max
+                if u[1] < -max:
+                    u[1] = -max
 
             if self.mode == "simple_pid":
                 print("========================================================================")
