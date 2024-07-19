@@ -94,36 +94,10 @@ class Controller:
             [0, -self.g]
         ])
 
-        self.C_p = np.array([
-            [1, 0, 0, 0],
-            [0, 1, 0, 0],
-            [0, 0, 1, 0],
-            [0, 0, 0, 1]
-        ])
-
-
-        self.Abar = np.block([
-            [self.A_p, np.zeros((4, 4))],
-            [self.C_p, np.zeros((4, 4))]
-        ])
-        self.Bbar = np.block([
-            [self.B_p],
-            [np.zeros((4, 2))]
-        ])
-        self.B_c = np.block([
-            [np.zeros((4, 2))],
-            [-np.eye(2)]
-        ])
-
-        self.Qbar = np.diag([1, 1, 1, 1, 1, 1, 1, 1])
-        self.Rbar = np.diag([0.1, 0.1])  
-        self.Pbar = scipy.linalg.solve_continuous_are(self.Abar, self.Bbar, self.Qbar, self.Rbar)
-        self.Kbar = np.dot(np.linalg.inv(self.Rbar), np.dot(self.Bbar.T, self.Pbar))
-
-        self.int_x = 0.0
-        self.int_dx = 0.0
-        self.int_y = 0.0
-        self.int_dy = 0.0
+        self.Q_mrac = np.diag([1, 1, 1, 1])
+        self.R_mrac = np.diag([1, 1])
+        self.P_mrac = scipy.linalg.solve_continuous_are(self.A_p, self.B_p, self.Q_mrac, self.R_mrac)
+        self.K_mrac = np.dot(np.linalg.inv(self.R_mrac), np.dot(self.B_p.T, self.P_mrac))
 
 
         
@@ -435,43 +409,24 @@ class Controller:
                     u[1] = -max
 
             if self.mode == "MRAC":
-                herror = np.array([error[0], error[1]]) # 2x1
+                herror = np.array([error[0], error[1]])  # 2x1
                 herrorvel = np.array([errorvel[0], errorvel[1]])
                 print("HERROR:", math.degrees(self.current_yaw), herror)
                 theta = -self.current_yaw
                 c, s = np.cos(theta), np.sin(theta)
-                R = np.array(((c, -s), (s, c))) # 2x2
+                R = np.array(((c, -s), (s, c)))  # 2x2
                 rherror = np.dot(R, herror)
                 rherrorvel = np.dot(R, herrorvel)
 
-                state = np.array([
-                    self.current_position[0],
-                    self.velocity[0],
-                    self.current_position[1],
-                    self.velocity[1],
-                    rherror[0],
-                    rherrorvel[0],
-                    rherror[1],
-                    rherrorvel[1]
-                ])
+                # Define state for MRAC similar to LQR
+                state = np.array([rherror[0], rherrorvel[0], rherror[1], rherrorvel[1]])
 
-                # Calcular ação de controle
-                control_action = -self.Kbar @ state
+                # Calculate control action using MRAC
+                control_action = -self.K_mrac @ state
 
-                # Definir roll e pitch a partir da ação de controle
-                u[0] = -math.radians(control_action[1])  # Roll
-                u[1] = -math.radians(control_action[0])  # Pitch
-
-                max = math.radians(20.0)
-                if u[0] > max:
-                    u[0] = max
-                if u[0] < -max:
-                    u[0] = -max
-                if u[1] > max:
-                    u[1] = max
-                if u[1] < -max:
-                    u[1] = -max
-
+                # Define roll and pitch based on control action
+                u[0] = math.radians(control_action[0])  # Roll
+                u[1] = math.radians(control_action[1])  # Pitch
 
             if self.mode == "simple_pid":
                 print("========================================================================")
