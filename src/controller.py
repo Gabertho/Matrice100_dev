@@ -439,7 +439,7 @@ class Controller:
                 state = np.array([rherror[0], rherrorvel[0], rherror[1], rherrorvel[1]])
 
                 # Calculate control action using MRAC
-                control_action = -self.K_mrac @ state
+                control_action = self.lqr_control(state, self.K)
 
                 max = math.radians(20.0)
                 if u[0] > max:
@@ -453,11 +453,11 @@ class Controller:
 
                 mrac_error = state
                 v_ad = self.adaptive_control(state, mrac_error)
-                control_total = control_input + v_ad.flatten()
+                control_total = control_action + v_ad.flatten()
 
                 # Define roll and pitch based on control action
-                u[0] = -math.radians(control_action[1])  # Roll
-                u[1] = -math.radians(control_action[0])  # Pitch
+                u[0] = -math.radians(control_total[1])  # Roll
+                u[1] = -math.radians(control_total[0])  # Pitch
 
                 max = math.radians(20.0)
                 if u[0] > max:
