@@ -435,10 +435,19 @@ class Controller:
                     u[1] = -max
 
             if self.mode == "MRAC":
-                self.int_x += error[0] * dt
-                self.int_dx += errorvel[0] * dt
-                self.int_y += error[1] * dt
-                self.int_dy += errorvel[1] * dt
+                herror = np.array([error[0], error[1]]) # 2x1
+                herrorvel = np.array([errorvel[0], errorvel[1]])
+                print("HERROR:", math.degrees(self.current_yaw), herror)
+                theta = -self.current_yaw
+                c, s = np.cos(theta), np.sin(theta)
+                R = np.array(((c, -s), (s, c))) # 2x2
+                rherror = np.dot(R, herror)
+                rherrorvel = np.dot(R, herrorvel)
+
+                self.int_x += rherror[0] * dt
+                self.int_dx += rherrorvel[0] * dt
+                self.int_y += rherror[1] * dt
+                self.int_dy += rherrorvel[1] * dt
 
                 state = np.array([
                     self.current_position[0],
