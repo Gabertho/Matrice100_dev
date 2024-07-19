@@ -286,12 +286,13 @@ class Controller:
     def adaptive_control(self, state, e):
         # Phi(x) includes the state and a bias term 1
         phi = np.append(state, 1).reshape(-1, 1)
-
-        # Compute adaptive control law
+        # # Compute adaptive control law
         v_ad = np.dot(self.W.T, phi)
 
         # Update adaptive parameters
-        self.W += -self.Gamma @ (phi @ e.T @ self.P_mrac @ self.B_p) * self.dt
+        # Ensure e is reshaped to a column vector for proper matrix multiplication
+        e = e.reshape(-1, 1)
+        self.W += -self.Gamma @ (phi @ e.T @ self.P_lyap @ self.B_p.T) * self.dt
 
         return v_ad
 
@@ -440,16 +441,6 @@ class Controller:
 
                 # Calculate control action using MRAC
                 control_action = self.lqr_control(state, self.K)
-
-                max = math.radians(20.0)
-                if u[0] > max:
-                    u[0] = max
-                if u[0] < -max:
-                    u[0] = -max
-                if u[1] > max:
-                    u[1] = max
-                if u[1] < -max:
-                    u[1] = -max
 
                 mrac_error = state
                 v_ad = self.adaptive_control(state, mrac_error)
