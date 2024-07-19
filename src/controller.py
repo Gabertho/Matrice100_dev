@@ -70,6 +70,12 @@ class Controller:
             [0, -self.g]
         ])
         # Weights for LQR
+        #Brysons rule
+        max_state_values = np.array([0.05, 0.05, 0.05, 0.05])  
+        max_control_values = np.array([0,349066, 0,349066]) #20 degrees  
+        
+        self.Q = np.diag(1.0 / max_state_values**2)
+        self.R = np.diag(1.0 / max_control_values**2)
         self.Q = np.diag([1, 1, 1, 1])
         self.R = np.diag([0.1, 0.1])
 
