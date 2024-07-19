@@ -465,7 +465,7 @@ class Controller:
 
                 # Definir roll e pitch a partir da ação de controle
                 u[0] = -math.radians(control_action[0])  # Roll
-                u[1] = math.radians(control_action[1])  # Pitch
+                u[1] = -math.radians(control_action[1])  # Pitch
 
                 max = math.radians(20.0)
                 if u[0] > max:
