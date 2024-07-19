@@ -115,7 +115,7 @@ class Controller:
             [-np.eye(2)]
         ])
 
-        self.Qbar = np.diag([1, 1, 1, 1, 1, 1])  
+        self.Qbar = np.diag([1, 1, 1, 1, 1, 1, 1, 1])
         self.Rbar = np.diag([1, 1])  
         self.Pbar = scipy.linalg.solve_continuous_are(self.Abar, self.Bbar, self.Qbar, self.Rbar)
         self.Kbar = np.dot(np.linalg.inv(self.Rbar), np.dot(self.Bbar.T, self.Pbar))
