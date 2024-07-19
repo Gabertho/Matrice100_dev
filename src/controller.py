@@ -289,7 +289,7 @@ class Controller:
         print("phi.shape:", phi.shape)
 
         # Compute adaptive control law
-        v_ad = np.dot(self.W.T, phi)  # `v_ad` is (2, 1)
+        v_ad = np.dot(self.W.T, phi).flatten()  # `v_ad` is flattened to (2,)
         print("v_ad.shape:", v_ad.shape)
 
         # Update adaptive parameters
@@ -313,7 +313,8 @@ class Controller:
         self.W += -adaptation_term
         print("self.W.shape:", self.W.shape)
 
-        return v_ad
+        return v_ad  # Return as a 1D array
+
 
     
 
@@ -446,7 +447,7 @@ class Controller:
                     u[1] = -max
 
             if self.mode == "MRAC":
-                herror = np.array([error[0], error[1]])  # 2x1
+                herror = np.array([error[0], error[1]])  # 1D array with shape (2,)
                 herrorvel = np.array([errorvel[0], errorvel[1]])
                 print("herror:", herror)
                 print("herrorvel:", herrorvel)
@@ -464,7 +465,7 @@ class Controller:
                 print("state:", state)
 
                 # Calculate LQR control action
-                control_input = self.lqr_control(state, self.K)
+                control_input = self.lqr_control(state, self.K)  # control_input is (2,)
                 print("control_input:", control_input)
 
                 # Compute adaptive control law
@@ -473,7 +474,7 @@ class Controller:
                 print("v_ad:", v_ad)
 
                 # Combine LQR and adaptive control laws
-                control_total = control_input + v_ad
+                control_total = control_input + v_ad  # Both should be (2,)
                 print("control_total:", control_total)
 
                 # Define roll and pitch based on control action
@@ -481,7 +482,7 @@ class Controller:
                 u[1] = -math.radians(control_total[0])  # Pitch
 
                 max = math.radians(20.0)
-                
+                max = math.radians(20.0)
                 if u[0] > max:
                     u[0] = max
                 if u[0] < -max:
@@ -490,6 +491,7 @@ class Controller:
                     u[1] = max
                 if u[1] < -max:
                     u[1] = -max
+
 
                 
 
