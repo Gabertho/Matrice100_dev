@@ -76,8 +76,8 @@ class Controller:
         
         self.Q = np.diag(1.0 / max_state_values**2)
         self.R = np.diag(1.0 / max_control_values**2)
-        self.Q = np.diag([1, 1, 1, 1])
-        self.R = np.diag([0.1, 0.1])
+        #self.Q = np.diag([1, 1, 1, 1])
+        #self.R = np.diag([0.1, 0.1])
 
         # Solve Riccati equation
         self.P = scipy.linalg.solve_continuous_are(self.A, self.B, self.Q, self.R)
