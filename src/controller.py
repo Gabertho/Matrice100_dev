@@ -42,7 +42,7 @@ class Controller:
         self.old_err_yaw = 0.0
         self.old_err_z = 0.0
         self.yaw_control_flag = False
-        self.mode = "LQR"
+        self.mode = "MRAC"
         self.trajectory_flag = False
         self.full_trajectory_x = None
         self.full_trajectory_y = None
@@ -78,6 +78,54 @@ class Controller:
 
         # Compute LQR gain
         self.K = np.dot(np.linalg.inv(self.R), np.dot(self.B.T, self.P))
+
+        #MRAC LQR Parameters
+        self.A_p = np.array([
+            [0, 1, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 1],
+            [0, 0, 0, 0]
+        ])
+
+        self.B_p = np.array([
+            [0, 0],
+            [self.g, 0],
+            [0, 0],
+            [0, -self.g]
+        ])
+
+        self.C_p = np.array([
+            [1, 0, 0, 0],
+            [0, 0, 1, 0]
+        ])
+
+        self.Abar = np.block([
+            [self.A_p, np.zeros((4, 2))],
+            [self.C_p, np.zeros((2, 2))]
+        ])
+        self.Bbar = np.block([
+            [self.B_p],
+            [np.zeros((2, 2))]
+        ])
+        self.B_c = np.block([
+            [np.zeros((4, 2))],
+            [-np.eye(2)]
+        ])
+
+        self.Qbar = np.diag([1, 1, 1, 1, 1, 1])  
+        self.Rbar = np.diag([1, 1])  
+        self.Pbar = scipy.linalg.solve_continuous_are(self.Abar, self.Bbar, self.Qbar, self.Rbar)
+        self.Kbar = np.dot(np.linalg.inv(self.Rbar), np.dot(self.Bbar.T, self.Pbar))
+
+        self.int_x = 0.0
+        self.int_dx = 0.0
+        self.int_y = 0.0
+        self.int_dy = 0.0
+
+
+        
+
+        
 
         
                 
@@ -372,6 +420,40 @@ class Controller:
     
                 u[0] = -math.radians(control_input[1]) # roll
                 u[1] = -math.radians(control_input[0]) # pitch
+
+                max = math.radians(20.0)
+                if u[0] > max:
+                    u[0] = max
+                if u[0] < -max:
+                    u[0] = -max
+                if u[1] > max:
+                    u[1] = max
+                if u[1] < -max:
+                    u[1] = -max
+
+            if self.mode == "MRAC":
+                self.int_err_x += error[0] * dt
+                self.int_err_dx += errorvel[0] * dt
+                self.int_err_y += error[1] * dt
+                self.int_err_dy += errorvel[1] * dt
+
+                state = np.array([
+                    self.current_position[0],
+                    self.velocity[0],
+                    self.current_position[1],
+                    self.velocity[1],
+                    self.int_x,
+                    self.int_dx,
+                    self.int_y,
+                    self.int_dy
+                ])
+
+                # Calcular ação de controle
+                control_action = -self.Kbar @ state
+
+                # Definir roll e pitch a partir da ação de controle
+                u[0] = math.radians(control_action[0])  # Roll
+                u[1] = math.radians(control_action[1])  # Pitch
 
                 max = math.radians(20.0)
                 if u[0] > max:
