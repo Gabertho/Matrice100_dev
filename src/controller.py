@@ -473,7 +473,7 @@ class Controller:
                 print("v_ad:", v_ad)
 
                 # Combine LQR and adaptive control laws
-                control_total = control_input + v_ad.flatten()
+                control_total = control_input + v_ad
                 print("control_total:", control_total)
 
                 # Define roll and pitch based on control action
