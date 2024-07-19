@@ -95,14 +95,19 @@ class Controller:
         ])
 
         self.Q_mrac = np.diag([1, 1, 1, 1])
-        self.R_mrac = np.diag([1, 1])
+        self.R_mrac = np.diag([0.1, 0.1])
         self.P_mrac = scipy.linalg.solve_continuous_are(self.A_p, self.B_p, self.Q_mrac, self.R_mrac)
         self.K_mrac = np.dot(np.linalg.inv(self.R_mrac), np.dot(self.B_p.T, self.P_mrac))
 
+        # Reference Model
+        self.Kx = -self.lqr(self.A_p, self.B_p, np.eye(4), np.eye(2))
+        self.Am =  self.A + np.dot(self.B, self.Kx)
+        self.Q_lyap = np.eye(4)
+        self.P_lyap = sp.solve_continuous_lyapunov(self.Am, self.Q_lyap)
+        # Adaptive Parameters
+        self.W = np.zeros((5, 1))  # Adjust dimensions based on Phi(x)
+        self.Gamma = np.eye(5)  # Learning rate matrix
 
-        
-
-        
 
         
                 
@@ -277,6 +282,18 @@ class Controller:
     def lqr_control(self, state, K):
         u = -np.dot(K, state)
         return u
+    
+    def adaptive_control(self, state, e):
+        # Phi(x) includes the state and a bias term 1
+        phi = np.append(state, 1).reshape(-1, 1)
+
+        # Compute adaptive control law
+        v_ad = np.dot(self.W.T, phi)
+
+        # Update adaptive parameters
+        self.W += -self.Gamma @ (phi @ e.T @ self.P_mrac @ self.B_p) * self.dt
+
+        return v_ad
 
     
 
@@ -424,6 +441,20 @@ class Controller:
                 # Calculate control action using MRAC
                 control_action = -self.K_mrac @ state
 
+                max = math.radians(20.0)
+                if u[0] > max:
+                    u[0] = max
+                if u[0] < -max:
+                    u[0] = -max
+                if u[1] > max:
+                    u[1] = max
+                if u[1] < -max:
+                    u[1] = -max
+
+                mrac_error = state
+                v_ad = self.adaptive_control(state, mrac_error)
+                control_total = control_input + v_ad.flatten()
+
                 # Define roll and pitch based on control action
                 u[0] = -math.radians(control_action[1])  # Roll
                 u[1] = -math.radians(control_action[0])  # Pitch
@@ -437,6 +468,8 @@ class Controller:
                     u[1] = max
                 if u[1] < -max:
                     u[1] = -max
+
+                
 
             if self.mode == "simple_pid":
                 print("========================================================================")
