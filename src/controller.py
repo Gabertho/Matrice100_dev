@@ -106,7 +106,7 @@ class Controller:
         self.P_lyap = sp.solve_continuous_lyapunov(self.Am, self.Q_lyap)
         # Adaptive Parameters
         self.W = np.zeros((5, 2))  # Adjust dimensions based on Phi(x)
-        self.Gamma = np.eye(5)  # Learning rate matrix
+        self.Gamma = 0.01 * np.eye(5)  # Learning rate matrix, set to 0.01  # Learning rate matrix
 
 
         
