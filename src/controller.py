@@ -286,13 +286,29 @@ class Controller:
     def adaptive_control(self, state, e):
         # Phi(x) includes the state and a bias term 1
         phi = np.append(state, 1).reshape(-1, 1)  # `phi` is (5, 1)
+        print("phi.shape:", phi.shape)
 
         # Compute adaptive control law
         v_ad = np.dot(self.W.T, phi)  # `v_ad` is (1, 1)
+        print("v_ad.shape:", v_ad.shape)
 
         # Update adaptive parameters
         e = e.reshape(-1, 1)  # `e` is (4, 1)
-        adaptation_term = self.Gamma @ (phi @ (e.T @ self.P_lyap @ self.B_p.T)) * self.dt  # Ensure correct matrix dimensions
+        print("e.shape:", e.shape)
+        
+        # Ensure correct matrix dimensions for adaptation term
+        P_Bp = self.P_lyap @ self.B_p  # Resulting in a (4, 2) matrix
+        print("P_Bp.shape:", P_Bp.shape)
+        
+        e_T_P_Bp = e.T @ P_Bp  # (1, 4) @ (4, 2) -> (1, 2)
+        print("e_T_P_Bp.shape:", e_T_P_Bp.shape)
+        
+        phi_e_T_P_Bp = phi @ e_T_P_Bp  # (5, 1) @ (1, 2) -> (5, 2)
+        print("phi_e_T_P_Bp.shape:", phi_e_T_P_Bp.shape)
+        
+        adaptation_term = self.Gamma @ phi_e_T_P_Bp * self.dt  # (5, 5) @ (5, 2) -> (5, 2)
+        print("adaptation_term.shape:", adaptation_term.shape)
+
         self.W += -adaptation_term
 
         return v_ad
@@ -430,31 +446,40 @@ class Controller:
             if self.mode == "MRAC":
                 herror = np.array([error[0], error[1]])  # 2x1
                 herrorvel = np.array([errorvel[0], errorvel[1]])
-                print("HERROR:", math.degrees(self.current_yaw), herror)
+                print("herror:", herror)
+                print("herrorvel:", herrorvel)
+                
                 theta = -self.current_yaw
                 c, s = np.cos(theta), np.sin(theta)
                 R = np.array(((c, -s), (s, c)))  # 2x2
                 rherror = np.dot(R, herror)
                 rherrorvel = np.dot(R, herrorvel)
+                print("rherror:", rherror)
+                print("rherrorvel:", rherrorvel)
 
                 # Define state for MRAC similar to LQR
                 state = np.array([rherror[0], rherrorvel[0], rherror[1], rherrorvel[1]])
+                print("state:", state)
 
                 # Calculate LQR control action
                 control_input = self.lqr_control(state, self.K)
+                print("control_input:", control_input)
 
                 # Compute adaptive control law
                 mrac_error = state  # Ensure `mrac_error` is the same dimension as `state`
                 v_ad = self.adaptive_control(state, mrac_error)
+                print("v_ad:", v_ad)
 
                 # Combine LQR and adaptive control laws
                 control_total = control_input + v_ad.flatten()
+                print("control_total:", control_total)
 
                 # Define roll and pitch based on control action
                 u[0] = -math.radians(control_total[1])  # Roll
                 u[1] = -math.radians(control_total[0])  # Pitch
 
-                max = math.radians(20.0)
+                max_angle = math.radians(20.0)
+                
                 if u[0] > max:
                     u[0] = max
                 if u[0] < -max:
