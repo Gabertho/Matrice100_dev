@@ -20,9 +20,9 @@ import torch.optim as optim
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.HL1 = nn.Linear(4, 20)  # Ajustar para 4 entradas
-        self.HL2 = nn.Linear(20, 10)
-        self.OL = nn.Linear(10, 2)  # Ajustar para 2 saídas
+        self.HL1 = nn.Linear(4, 20)  # Entrada: 4
+        self.HL2 = nn.Linear(20, 10)  # Camada oculta
+        self.OL = nn.Linear(10, 2)  # Saída: 2
         self.optimizer = optim.Adam(self.parameters(), lr=0.001)
         self.loss_fn = nn.MSELoss()
     
@@ -31,6 +31,7 @@ class Net(nn.Module):
         OL_2 = torch.tanh(self.HL2(OL_1))
         OL_3 = self.OL(OL_2)
         return OL_2, OL_3
+
 
 
 class Controller:
@@ -382,15 +383,21 @@ class Controller:
 
         adaptive_gain = 0.01  # Exemplo de valor, pode ser ajustado conforme necessário
 
-   
+        # Certifique-se de que second_last_layer_output_basis tenha a forma correta
+        if second_last_layer_output_basis.ndim == 1:
+            second_last_layer_output_basis = second_last_layer_output_basis.reshape(-1, 1)
 
-        # Atualiza o peso da última camada usando a regra adaptativa correta
-        self.last_layer_weight += (-self.dt) * adaptive_gain* np.dot(second_last_layer_output_basis, np.dot(error.T, np.dot(P, B)))
+        # Ajustar a transposição e multiplicação corretamente
+        self.last_layer_weight += (-self.dt) * adaptive_gain * np.dot(second_last_layer_output_basis, np.dot(P, B).T @ error)
+
 
     def deep_mrac_torque(self, second_last_layer_output_basis):
-        self.vad = np.dot(self.last_layer_weight.T, second_last_layer_output_basis)
+        if second_last_layer_output_basis.ndim == 1:
+            second_last_layer_output_basis = second_last_layer_output_basis.reshape(-1, 1)
+        self.vad = np.dot(self.last_layer_weight.T, second_last_layer_output_basis).flatten()
         u_net = self.vad
         return u_net
+
     
 
     # Control loop: Computes the control signal in different modes.
@@ -600,7 +607,7 @@ class Controller:
                 # Calcular vad usando a função deep_mrac_torque
                 vad = self.deep_mrac_torque(second_last_layer_output_basis.detach().cpu().numpy())
 
-                control_total = control_input + vad.flatten()
+                control_total = control_input + vad
 
                 u[0] = -math.radians(control_total[1])  # roll
                 u[1] = -math.radians(control_total[0])  # pitch
@@ -608,6 +615,8 @@ class Controller:
                 max_angle = math.radians(20.0)
                 u[0] = np.clip(u[0], -max_angle, max_angle)
                 u[1] = np.clip(u[1], -max_angle, max_angle)
+
+
 
 
             if self.mode == "simple_pid":
