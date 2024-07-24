@@ -377,8 +377,12 @@ class Controller:
         P = self.P_lyap
         B = self.B
 
+        adaptive_gain = 0.01  # Exemplo de valor, pode ser ajustado conforme necessário
+
+   
+
         # Atualiza o peso da última camada usando a regra adaptativa correta
-        self.last_layer_weight += (-self.dt) * np.dot(second_last_layer_output_basis, np.dot(error.T, np.dot(P, B)))
+        self.last_layer_weight += (-self.dt) * adaptive_gain* np.dot(second_last_layer_output_basis, np.dot(error.T, np.dot(P, B)))
 
     def deep_mrac_torque(self, second_last_layer_output_basis):
         self.vad = np.dot(self.last_layer_weight.T, second_last_layer_output_basis)
