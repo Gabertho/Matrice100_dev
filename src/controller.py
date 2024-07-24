@@ -20,9 +20,9 @@ import torch.optim as optim
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.HL1 = nn.Linear(4, 20)  # Entrada: 4
-        self.HL2 = nn.Linear(20, 10)  # Camada oculta
-        self.OL = nn.Linear(10, 2)  # Saída: 2
+        self.HL1 = nn.Linear(6, 20)
+        self.HL2 = nn.Linear(20, 10)
+        self.OL = nn.Linear(10, 3)
         self.optimizer = optim.Adam(self.parameters(), lr=0.001)
         self.loss_fn = nn.MSELoss()
     
@@ -31,7 +31,6 @@ class Net(nn.Module):
         OL_2 = torch.tanh(self.HL2(OL_1))
         OL_3 = self.OL(OL_2)
         return OL_2, OL_3
-
 
 
 class Controller:
@@ -62,7 +61,7 @@ class Controller:
         self.old_err_yaw = 0.0
         self.old_err_z = 0.0
         self.yaw_control_flag = False
-        self.mode = "DMRAC"
+        self.mode = "LQR"
         self.trajectory_flag = False
         self.full_trajectory_x = None
         self.full_trajectory_y = None
@@ -137,19 +136,18 @@ class Controller:
         #DMRAC Parameters
         self.dev = "cpu"
         self.network = Net().to(self.dev)
-        self.last_layer_weight = np.zeros((10, 2))
-        self.vad = np.zeros((2, 1))
+        self.last_layer_weight = np.zeros((10, 3))
+        self.vad = np.zeros((3, 1))
         self.buffer_size = 250
-        self.input_training_data = np.zeros((4, self.buffer_size))  # Dimensão ajustada para 4 entradas
-        self.output_training_data = np.zeros((2, self.buffer_size))  # Dimensão ajustada para 2 saídas
+        self.input_training_data = np.zeros((6, self.buffer_size))
+        self.output_training_data = np.zeros((3, self.buffer_size))
         self.current_iter = 0
 
-
         
 
 
         
-                            
+                
 
     def set_sync(self, flag):
         self.sync_flag = flag
@@ -355,12 +353,10 @@ class Controller:
         return v_ad  # Return as a 1D array
     
     def buffer_fill_simple(self):
-        iter_number = self.current_iter % self.buffer_size
-        # Ajustar o vetor de entrada para corresponder às dimensões esperadas pelo buffer
-        self.input_training_data[:, iter_number] = np.array([self.current_position[0], self.velocity[0], self.current_position[1], self.velocity[1]])
-        self.output_training_data[:, iter_number] = self.vad.flatten()  # Armazenar a estimativa atual de vad
+        iter_number = self.current_iter % (self.buffer_size - 1)
+        self.input_training_data[:, iter_number] = np.array([self.roll, self.D_roll, self.pitch, self.D_pitch, self.yaw, self.D_yaw])
+        self.output_training_data[:, iter_number] = self.vad[:, 0]
         self.current_iter += 1
-
 
     def DMRAC_training(self):
         if self.current_iter > self.buffer_size:
@@ -376,37 +372,6 @@ class Controller:
                 self.network.optimizer.step()
                 self.network.optimizer.zero_grad()
 
-    def DMRAC_last_layer_weight_update(self, error, second_last_layer_output_basis):
-        P = self.P_lyap
-        B = self.B
-
-        adaptive_gain = 0.01  # Exemplo de valor, pode ser ajustado conforme necessário
-
-        # Garantir que second_last_layer_output_basis seja um vetor coluna
-        if second_last_layer_output_basis.ndim == 1:
-            second_last_layer_output_basis = second_last_layer_output_basis.reshape(-1, 1)
-        
-        # Garantir que error seja um vetor coluna
-        if error.ndim == 1:
-            error = error.reshape(-1, 1)
-
-        # Calcular o termo de atualização de pesos
-        update_term = (-self.dt) * adaptive_gain * np.dot(second_last_layer_output_basis, (np.dot(P, B) @ error).T)
-        
-        # Garantir que as dimensões de update_term sejam compatíveis com self.last_layer_weight
-        if update_term.shape != self.last_layer_weight.shape:
-            update_term = update_term[:self.last_layer_weight.shape[0], :self.last_layer_weight.shape[1]]
-
-        # Atualiza o peso da última camada usando a regra adaptativa correta
-        self.last_layer_weight += update_term
-
-
-
-
-    def deep_mrac_torque(self, second_last_layer_output_basis):
-        self.vad = np.dot(self.last_layer_weight.T, second_last_layer_output_basis)
-        u_net = self.vad.flatten()  # Garantir que u_net seja um vetor 1D
-        return u_net
 
 
     
@@ -588,50 +553,7 @@ class Controller:
             
 
 
-            if self.mode == "DMRAC":
-                herror = np.array([error[0], error[1]])
-                herrorvel = np.array([errorvel[0], errorvel[1]])
-
-                theta = -self.current_yaw
-                c, s = np.cos(theta), np.sin(theta)
-                R = np.array(((c, -s), (s, c)))
-                rherror = np.dot(R, herror)
-                rherrorvel = np.dot(R, herrorvel)
-
-                state = np.array([rherror[0], rherrorvel[0], rherror[1], rherrorvel[1]])
-                state_tensor = torch.Tensor(state).to(self.dev).unsqueeze(0)  # Adicionar dimensão extra para batch
-
-                control_input = self.lqr_control(state, self.K)
-
-                mrac_error = state
-
-                # Preencher o buffer e treinar a rede neural
-                self.buffer_fill_simple()
-                self.DMRAC_training()
-
-                # Obter a saída da penúltima camada da rede neural
-                _, second_last_layer_output_basis = self.network(state_tensor)
-
-                # Atualizar os pesos da última camada da rede neural com adaptive_gain
-                self.DMRAC_last_layer_weight_update(mrac_error, second_last_layer_output_basis.detach().cpu().numpy().flatten())
-
-                # Calcular vad usando a função deep_mrac_torque
-                vad = self.deep_mrac_torque(second_last_layer_output_basis.detach().cpu().numpy().flatten())
-
-                control_total = control_input + vad
-
-                u[0] = -math.radians(control_total[1])  # roll
-                u[1] = -math.radians(control_total[0])  # pitch
-
-                max_angle = math.radians(20.0)
-                u[0] = np.clip(u[0], -max_angle, max_angle)
-                u[1] = np.clip(u[1], -max_angle, max_angle)
-
                 
-
-
-
-
 
             if self.mode == "simple_pid":
                 print("========================================================================")
