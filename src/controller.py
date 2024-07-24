@@ -390,8 +390,16 @@ class Controller:
         if error.ndim == 1:
             error = error.reshape(-1, 1)
 
+        # Calcular o termo de atualização de pesos
+        update_term = (-self.dt) * adaptive_gain * np.dot(second_last_layer_output_basis, (np.dot(P, B) @ error).T)
+        
+        # Garantir que as dimensões de update_term sejam compatíveis com self.last_layer_weight
+        if update_term.shape != self.last_layer_weight.shape:
+            update_term = update_term[:self.last_layer_weight.shape[0], :self.last_layer_weight.shape[1]]
+
         # Atualiza o peso da última camada usando a regra adaptativa correta
-        self.last_layer_weight += (-self.dt) * adaptive_gain * np.dot(second_last_layer_output_basis, (np.dot(P, B).T @ error).T)
+        self.last_layer_weight += update_term
+
 
 
 
@@ -618,6 +626,8 @@ class Controller:
                 max_angle = math.radians(20.0)
                 u[0] = np.clip(u[0], -max_angle, max_angle)
                 u[1] = np.clip(u[1], -max_angle, max_angle)
+
+                
 
 
 
