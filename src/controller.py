@@ -607,20 +607,6 @@ class Controller:
                 u[0] = np.clip(u[0], -max_angle, max_angle)
                 u[1] = np.clip(u[1], -max_angle, max_angle)
 
-
-    # Calcular vad usando a função deep_mrac_torque
-    vad = self.deep_mrac_torque(second_last_layer_output_basis.detach().cpu().numpy())
-
-    control_total = control_input + vad.flatten()
-
-    u[0] = -math.radians(control_total[1])  # roll
-    u[1] = -math.radians(control_total[0])  # pitch
-
-    max_angle = math.radians(20.0)
-    u[0] = np.clip(u[0], -max_angle, max_angle)
-    u[1] = np.clip(u[1], -max_angle, max_angle)
-
-
             if self.mode == "simple_pid":
                 print("========================================================================")
                 
