@@ -358,52 +358,26 @@ class Controller:
 
         return v_ad  # Return as a 1D array
     
-    def dmrac_last_layer_weight_update(self, error, second_last_layer_output_basis, P, B):
-        """
-        Atualiza os pesos da última camada do controlador usando o método DMRAC.
+    def dmrac_last_layer_weight_update(self, error, second_last_layer_output_basis):
+        # Using Lyapunov matrix P and matrix B defined in the class
+        P = self.P_lyap
+        B = self.B
 
-        Parâmetros:
-        - error: vetor de erro (n x 1)
-        - second_last_layer_output_basis: matriz de saídas da penúltima camada (m x k)
-        - P: matriz de covariância (k x k)
-        - B: matriz de ajuste (k x k)
-        """
-        # Verifique as dimensões das matrizes envolvidas
-        print("Dimensões de second_last_layer_output_basis:", second_last_layer_output_basis.shape)
-        print("Dimensões de P:", P.shape)
-        print("Dimensões de B:", B.shape)
-        print("Dimensões de error:", error.shape)
-        
-        # Garantir que as dimensões estejam corretas
-        try:
-            # Ajusta o erro para a forma correta se necessário
-            if error.ndim == 1:
-                error = error.reshape(-1, 1)
-                
-            # Confirme a compatibilidade das dimensões
-            assert second_last_layer_output_basis.shape[0] == P.shape[0], \
-                "A dimensão das linhas de second_last_layer_output_basis deve corresponder à dimensão das linhas de P"
-            assert P.shape[1] == B.shape[0], \
-                "A dimensão das colunas de P deve corresponder à dimensão das linhas de B"
-            assert B.shape[1] == error.shape[0], \
-                "A dimensão das colunas de B deve corresponder à dimensão das linhas de error"
-            assert second_last_layer_output_basis.shape[1] == P.shape[0], \
-                "A dimensão das colunas de second_last_layer_output_basis deve corresponder à dimensão das linhas de P"
-            
-            # Realiza a operação de multiplicação matricial
-            adaptation_term = (-self.dt) * self.adaptive_gain * (
-                second_last_layer_output_basis.T @ (P @ B @ error)
-            )
-            return adaptation_term
+        # Ensure proper dimensions
+        error = error.reshape(-1, 1)  # Transform error into a column vector
+        second_last_layer_output_basis = second_last_layer_output_basis.reshape(1, -1)  # Transform to a row vector
 
-        except AssertionError as e:
-            print("Erro de dimensão:", e)
-            raise
+        # Compute adaptation_term
+        adaptation_term = (-self.dt) * self.adaptive_gain * (second_last_layer_output_basis.T @ (P @ B @ error))
 
-        except ValueError as e:
-            print("Erro de multiplicação matricial:", e)
-            raise
+        # Adjust dimensions of adaptation_term to match last_layer_weight
+        # Assuming second_last_layer_output_basis has a shape compatible with last_layer_weight
+        if adaptation_term.shape[1] != self.last_layer_weight.shape[1]:
+            raise ValueError(f"Shape mismatch: adaptation_term.shape[1] {adaptation_term.shape[1]} "
+                            f"does not match last_layer_weight.shape[1] {self.last_layer_weight.shape[1]}")
 
+        # Update last_layer_weight
+        self.last_layer_weight += adaptation_term
 
 
 
