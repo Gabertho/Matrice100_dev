@@ -15,22 +15,36 @@ from scipy import linalg
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import random
 
-#Neural Network
-class Net(nn.Module):
-    def __init__(self):
-        super(Net, self).__init__()
-        self.HL1 = nn.Linear(6, 20)
-        self.HL2 = nn.Linear(20, 10)
-        self.OL = nn.Linear(10, 3)
-        self.optimizer = optim.Adam(self.parameters(), lr=0.001)
-        self.loss_fn = nn.MSELoss()
+class ReplayBuffer:
+    def __init__(self, capacity):
+        self.capacity = capacity
+        self.buffer = []
+    
+    def add(self, state, uncertainty):
+        if len(self.buffer) >= self.capacity:
+            self.buffer.pop(0)
+        self.buffer.append((state, uncertainty))
+    
+    def sample(self, batch_size):
+        return random.sample(self.buffer, batch_size)
+    
+    def size(self):
+        return len(self.buffer)
+
+class DNN(nn.Module):
+    def __init__(self, input_size, output_size):
+        super(DNN, self).__init__()
+        self.fc1 = nn.Linear(input_size, 128)
+        self.fc2 = nn.Linear(128, 128)
+        self.fc3 = nn.Linear(128, output_size)
     
     def forward(self, x):
-        OL_1 = torch.tanh(self.HL1(x))
-        OL_2 = torch.tanh(self.HL2(OL_1))
-        OL_3 = self.OL(OL_2)
-        return OL_2, OL_3
+        x = torch.relu(self.fc1(x))
+        x = torch.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
 
 
 class Controller:
@@ -134,20 +148,12 @@ class Controller:
         self.Gamma = 0.01 * np.eye(5)  # Learning rate matrix, set to 0.01  # Learning rate matrix
 
         #DMRAC Parameters
-        self.dev = "cpu"
-        self.network = Net().to(self.dev)
-        self.last_layer_weight = np.zeros((10, 3))
-        self.vad = np.zeros((3, 1))
-        self.buffer_size = 250
-        self.input_training_data = np.zeros((6, self.buffer_size))
-        self.output_training_data = np.zeros((3, self.buffer_size))
-        self.current_iter = 0
-
-        
-
-
-        
-                
+        self.dnn = DNN(input_size=4, output_size=2).to("cpu")
+        self.replay_buffer = ReplayBuffer(capacity=250)
+        self.optimizer = optim.Adam(self.dnn.parameters(), lr=0.0005)
+        self.loss_fn = nn.MSELoss()
+        self.adaptive_gain = 0.4
+        self.last_layer_weight = np.zeros((128, 2))  # Adjust dimensions based on DNN output
 
     def set_sync(self, flag):
         self.sync_flag = flag
@@ -352,25 +358,44 @@ class Controller:
 
         return v_ad  # Return as a 1D array
     
-    def buffer_fill_simple(self):
-        iter_number = self.current_iter % (self.buffer_size - 1)
-        self.input_training_data[:, iter_number] = np.array([self.roll, self.D_roll, self.pitch, self.D_pitch, self.yaw, self.D_yaw])
-        self.output_training_data[:, iter_number] = self.vad[:, 0]
-        self.current_iter += 1
+    def dmrac_last_layer_weight_update(self, error, second_last_layer_output_basis):
+        # Usando a matriz P de Lyapunov e a matriz B definida na classe
+        P = self.P_lyap
+        B = self.B
 
-    def DMRAC_training(self):
-        if self.current_iter > self.buffer_size:
-            random_numbers = np.random.randint(0, self.buffer_size, 100)
-            random_input_data_for_training = self.input_training_data.T[random_numbers]
-            random_output_data_for_training = self.output_training_data.T[random_numbers]
+        # Ajuste das dimensões
+        error = error.reshape(-1, 1)  # Transforma erro em vetor coluna
+        second_last_layer_output_basis = second_last_layer_output_basis.reshape(-1, 1)  # Transforma em vetor coluna
 
+        # Atualização dos pesos da última camada
+        self.last_layer_weight = self.last_layer_weight + (-self.dt) * self.adaptive_gain * np.dot(second_last_layer_output_basis, np.dot(P, np.dot(B, error).T))
+
+    def deep_mrac_control(self, second_last_layer_output_basis):
+        self.vad = np.dot(self.last_layer_weight.T, second_last_layer_output_basis)
+        return self.vad
+
+    def buffer_fill_simple(self, current_iter):
+        iter_number = current_iter % (self.replay_buffer.capacity - 1)
+        state = np.array([self.current_position[0], self.velocity[0], self.current_position[1], self.velocity[1]])
+        self.replay_buffer.add(state, self.vad)
+
+    def dmrac_training(self, current_iter):
+        if self.replay_buffer.size() > self.replay_buffer.capacity:
+            random_indices = np.random.randint(0, self.replay_buffer.size(), 100)
+            batch = [self.replay_buffer.buffer[i] for i in random_indices]
+            input_data = np.array([data[0] for data in batch])
+            output_data = np.array([data[1] for data in batch])
+            
+            input_tensor = torch.tensor(input_data, dtype=torch.float32).to("cpu")
+            output_tensor = torch.tensor(output_data, dtype=torch.float32).to("cpu")
+            
             for epoch in range(10):
-                pred = self.network(torch.Tensor(random_input_data_for_training).to(self.dev))[1]
-                loss_vals = self.network.loss_fn(pred, torch.Tensor(random_output_data_for_training).to(self.dev))
-
-                loss_vals.backward()
-                self.network.optimizer.step()
-                self.network.optimizer.zero_grad()
+                pred = self.dnn(input_tensor)
+                loss = self.loss_fn(pred, output_tensor)
+                self.optimizer.zero_grad()
+                loss.backward()
+                self.optimizer.step()
+                print(current_iter, loss.item())
 
 
 
@@ -550,7 +575,33 @@ class Controller:
                 if u[1] < -max:
                     u[1] = -max
 
-            
+            if self.mode == "DMRAC":
+                herror = np.array([error[0], error[1]]) 
+                herrorvel = np.array([errorvel[0], errorvel[1]])
+                theta = -self.current_yaw
+                c, s = np.cos(theta), np.sin(theta)
+                R = np.array(((c, -s), (s, c)))  
+                rherror = np.dot(R, herror)
+                rherrorvel = np.dot(R, herrorvel)
+
+                state = np.array([rherror[0], rherrorvel[0], rherror[1], rherrorvel[1]])
+
+                second_last_layer_output_basis = self.dnn(torch.tensor(state, dtype=torch.float32).to("cpu"))[0].detach().numpy()
+                self.dmrac_last_layer_weight_update(rherror, second_last_layer_output_basis)
+
+                v_ad = self.deep_mrac_control(second_last_layer_output_basis)
+
+                control_total = self.lqr_control(state, self.K) + v_ad
+
+                u[0] = -math.radians(control_total[1]) 
+                u[1] = -math.radians(control_total[0]) 
+
+                max_angle = math.radians(20.0)
+                u[0] = np.clip(u[0], -max_angle, max_angle)
+                u[1] = np.clip(u[1], -max_angle, max_angle)
+
+                self.buffer_fill_simple(current_iter=self.current_time)
+                self.dmrac_training(current_iter=self.current_time)
 
 
                 
