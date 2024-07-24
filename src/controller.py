@@ -139,15 +139,16 @@ class Controller:
         self.last_layer_weight = np.zeros((10, 3))
         self.vad = np.zeros((3, 1))
         self.buffer_size = 250
-        self.input_training_data = np.zeros((6, self.buffer_size))
-        self.output_training_data = np.zeros((3, self.buffer_size))
+        self.input_training_data = np.zeros((4, self.buffer_size))  # Dimensão ajustada para 4 entradas
+        self.output_training_data = np.zeros((2, self.buffer_size))  # Dimensão ajustada para 2 saídas
         self.current_iter = 0
 
+
         
 
 
         
-                
+                            
 
     def set_sync(self, flag):
         self.sync_flag = flag
@@ -353,10 +354,12 @@ class Controller:
         return v_ad  # Return as a 1D array
     
     def buffer_fill_simple(self):
-        iter_number = self.current_iter % (self.buffer_size - 1)
+        iter_number = self.current_iter % self.buffer_size
+        # Ajustar o vetor de entrada para corresponder às dimensões esperadas pelo buffer
         self.input_training_data[:, iter_number] = np.array([self.current_position[0], self.velocity[0], self.current_position[1], self.velocity[1]])
-        self.output_training_data[:, iter_number] = self.vad[:, 0]
+        self.output_training_data[:, iter_number] = self.vad.flatten()  # Armazenar a estimativa atual de vad
         self.current_iter += 1
+
 
     def DMRAC_training(self):
         if self.current_iter > self.buffer_size:
@@ -589,7 +592,7 @@ class Controller:
                 # Obter a saída da penúltima camada da rede neural
                 _, second_last_layer_output_basis = self.network(torch.Tensor(state).to(self.dev))
 
-                # Atualizar os pesos da última camada da rede neural
+                # Atualizar os pesos da última camada da rede neural com adaptive_gain
                 self.DMRAC_last_layer_weight_update(mrac_error, second_last_layer_output_basis.detach().cpu().numpy())
 
                 # Calcular vad usando a função deep_mrac_torque
@@ -603,6 +606,20 @@ class Controller:
                 max_angle = math.radians(20.0)
                 u[0] = np.clip(u[0], -max_angle, max_angle)
                 u[1] = np.clip(u[1], -max_angle, max_angle)
+
+
+    # Calcular vad usando a função deep_mrac_torque
+    vad = self.deep_mrac_torque(second_last_layer_output_basis.detach().cpu().numpy())
+
+    control_total = control_input + vad.flatten()
+
+    u[0] = -math.radians(control_total[1])  # roll
+    u[1] = -math.radians(control_total[0])  # pitch
+
+    max_angle = math.radians(20.0)
+    u[0] = np.clip(u[0], -max_angle, max_angle)
+    u[1] = np.clip(u[1], -max_angle, max_angle)
+
 
             if self.mode == "simple_pid":
                 print("========================================================================")
