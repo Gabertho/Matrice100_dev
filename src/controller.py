@@ -20,9 +20,9 @@ import torch.optim as optim
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.HL1 = nn.Linear(6, 20)
+        self.HL1 = nn.Linear(4, 20)  # Ajustar para 4 entradas
         self.HL2 = nn.Linear(20, 10)
-        self.OL = nn.Linear(10, 3)
+        self.OL = nn.Linear(10, 2)  # Ajustar para 2 saídas
         self.optimizer = optim.Adam(self.parameters(), lr=0.001)
         self.loss_fn = nn.MSELoss()
     
