@@ -581,6 +581,8 @@ class Controller:
                 rherrorvel = np.dot(R, herrorvel)
 
                 state = np.array([rherror[0], rherrorvel[0], rherror[1], rherrorvel[1]])
+                state_tensor = torch.Tensor(state).to(self.dev)  # Certifique-se de converter o estado em um tensor
+
                 control_input = self.lqr_control(state, self.K)
 
                 mrac_error = state
@@ -590,7 +592,7 @@ class Controller:
                 self.DMRAC_training()
 
                 # Obter a saída da penúltima camada da rede neural
-                _, second_last_layer_output_basis = self.network(torch.Tensor(state).to(self.dev))
+                _, second_last_layer_output_basis = self.network(state_tensor)
 
                 # Atualizar os pesos da última camada da rede neural com adaptive_gain
                 self.DMRAC_last_layer_weight_update(mrac_error, second_last_layer_output_basis.detach().cpu().numpy())
@@ -606,6 +608,7 @@ class Controller:
                 max_angle = math.radians(20.0)
                 u[0] = np.clip(u[0], -max_angle, max_angle)
                 u[1] = np.clip(u[1], -max_angle, max_angle)
+
 
             if self.mode == "simple_pid":
                 print("========================================================================")
