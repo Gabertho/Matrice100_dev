@@ -12,6 +12,25 @@ import scipy.ndimage
 import math
 import scipy.linalg as sp
 from scipy import linalg
+import torch
+import torch.nn as nn
+import torch.optim as optim
+
+#Neural Network
+class Net(nn.Module):
+    def __init__(self):
+        super(Net, self).__init__()
+        self.HL1 = nn.Linear(6, 20)
+        self.HL2 = nn.Linear(20, 10)
+        self.OL = nn.Linear(10, 3)
+        self.optimizer = optim.Adam(self.parameters(), lr=0.001)
+        self.loss_fn = nn.MSELoss()
+    
+    def forward(self, x):
+        OL_1 = torch.tanh(self.HL1(x))
+        OL_2 = torch.tanh(self.HL2(OL_1))
+        OL_3 = self.OL(OL_2)
+        return OL_2, OL_3
 
 
 class Controller:
@@ -42,7 +61,7 @@ class Controller:
         self.old_err_yaw = 0.0
         self.old_err_z = 0.0
         self.yaw_control_flag = False
-        self.mode = "LQR"
+        self.mode = "DMRAC"
         self.trajectory_flag = False
         self.full_trajectory_x = None
         self.full_trajectory_y = None
@@ -113,6 +132,18 @@ class Controller:
         # Adaptive Parameters
         self.W = np.zeros((5, 2))  # Adjust dimensions based on Phi(x)
         self.Gamma = 0.01 * np.eye(5)  # Learning rate matrix, set to 0.01  # Learning rate matrix
+
+        #DMRAC Parameters
+        self.dev = "cpu"
+        self.network = Net().to(self.dev)
+        self.last_layer_weight = np.zeros((10, 3))
+        self.vad = np.zeros((3, 1))
+        self.buffer_size = 250
+        self.input_training_data = np.zeros((6, self.buffer_size))
+        self.output_training_data = np.zeros((3, self.buffer_size))
+        self.current_iter = 0
+
+        
 
 
         
@@ -320,8 +351,39 @@ class Controller:
         print("self.W.shape:", self.W.shape)
 
         return v_ad  # Return as a 1D array
+    
+    def buffer_fill_simple(self):
+        iter_number = self.current_iter % (self.buffer_size - 1)
+        self.input_training_data[:, iter_number] = np.array([self.current_position[0], self.velocity[0], self.current_position[1], self.velocity[1]])
+        self.output_training_data[:, iter_number] = self.vad[:, 0]
+        self.current_iter += 1
 
+    def DMRAC_training(self):
+        if self.current_iter > self.buffer_size:
+            random_numbers = np.random.randint(0, self.buffer_size, 100)
+            random_input_data_for_training = self.input_training_data.T[random_numbers]
+            random_output_data_for_training = self.output_training_data.T[random_numbers]
 
+            for epoch in range(10):
+                pred = self.network(torch.Tensor(random_input_data_for_training).to(self.dev))[1]
+                loss_vals = self.network.loss_fn(pred, torch.Tensor(random_output_data_for_training).to(self.dev))
+
+                loss_vals.backward()
+                self.network.optimizer.step()
+                self.network.optimizer.zero_grad()
+
+    def DMRAC_last_layer_weight_update(self, error, second_last_layer_output_basis):
+        # Usar a matriz P correta do MRAC
+        P = self.P_lyap
+        B = self.B
+
+        # Atualiza o peso da última camada usando a regra adaptativa correta
+        self.last_layer_weight += (-self.dt) * np.dot(second_last_layer_output_basis, np.dot(error.T, np.dot(P, B)))
+
+    def deep_mrac_torque(self, second_last_layer_output_basis):
+        self.vad = np.dot(self.last_layer_weight.T, second_last_layer_output_basis)
+        u_net = self.vad
+        return u_net
     
 
     # Control loop: Computes the control signal in different modes.
@@ -498,8 +560,45 @@ class Controller:
                 if u[1] < -max:
                     u[1] = -max
 
+            
 
-                
+
+            if self.mode == "DMRAC":
+                herror = np.array([error[0], error[1]])
+                herrorvel = np.array([errorvel[0], errorvel[1]])
+
+                theta = -self.current_yaw
+                c, s = np.cos(theta), np.sin(theta)
+                R = np.array(((c, -s), (s, c)))
+                rherror = np.dot(R, herror)
+                rherrorvel = np.dot(R, herrorvel)
+
+                state = np.array([rherror[0], rherrorvel[0], rherror[1], rherrorvel[1]])
+                control_input = self.lqr_control(state, self.K)
+
+                mrac_error = state
+
+                # Preencher o buffer e treinar a rede neural
+                self.buffer_fill_simple()
+                self.DMRAC_training()
+
+                # Obter a saída da penúltima camada da rede neural
+                _, second_last_layer_output_basis = self.network(torch.Tensor(state).to(self.dev))
+
+                # Atualizar os pesos da última camada da rede neural
+                self.DMRAC_last_layer_weight_update(mrac_error, second_last_layer_output_basis.detach().cpu().numpy())
+
+                # Calcular vad usando a função deep_mrac_torque
+                vad = self.deep_mrac_torque(second_last_layer_output_basis.detach().cpu().numpy())
+
+                control_total = control_input + vad.flatten()
+
+                u[0] = -math.radians(control_total[1])  # roll
+                u[1] = -math.radians(control_total[0])  # pitch
+
+                max_angle = math.radians(20.0)
+                u[0] = np.clip(u[0], -max_angle, max_angle)
+                u[1] = np.clip(u[1], -max_angle, max_angle)
 
             if self.mode == "simple_pid":
                 print("========================================================================")
