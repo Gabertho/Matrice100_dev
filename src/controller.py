@@ -365,10 +365,10 @@ class Controller:
 
         # Ajuste das dimensões
         error = error.reshape(-1, 1)  # Transforma erro em vetor coluna
-        second_last_layer_output_basis = second_last_layer_output_basis.reshape(-1, 1)  # Transforma em vetor coluna
+        second_last_layer_output_basis = second_last_layer_output_basis.reshape(1, -1)  # Transforma em vetor linha
 
         # Atualização dos pesos da última camada
-        adaptation_term = (-self.dt) * self.adaptive_gain * second_last_layer_output_basis @ (P @ B @ error).T
+        adaptation_term = (-self.dt) * self.adaptive_gain * np.dot(second_last_layer_output_basis.T, (P @ B @ error).T)
         self.last_layer_weight = self.last_layer_weight + adaptation_term
 
 
