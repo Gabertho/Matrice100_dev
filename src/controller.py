@@ -368,8 +368,13 @@ class Controller:
         second_last_layer_output_basis = second_last_layer_output_basis.reshape(1, -1)  # Transforma em vetor linha
 
         # Atualização dos pesos da última camada
-        adaptation_term = (-self.dt) * self.adaptive_gain * np.dot(second_last_layer_output_basis.T, (P @ B @ error).T)
+        adaptation_term = (-self.dt) * self.adaptive_gain * (second_last_layer_output_basis.T @ (P @ B @ error).T)
+        
+        # Ajuste das dimensões de adaptation_term para corresponder a last_layer_weight
+        adaptation_term = np.repeat(adaptation_term, self.last_layer_weight.shape[0], axis=1)
+        
         self.last_layer_weight = self.last_layer_weight + adaptation_term
+
 
 
     def deep_mrac_control(self, second_last_layer_output_basis):
