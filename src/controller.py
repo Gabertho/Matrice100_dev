@@ -137,7 +137,7 @@ class Controller:
         self.dev = "cpu"
         self.network = Net().to(self.dev)
         self.last_layer_weight = np.zeros((10, 3))
-        self.vad = np.zeros((3, 1))
+        self.vad = np.zeros((2, 1))
         self.buffer_size = 250
         self.input_training_data = np.zeros((4, self.buffer_size))  # Dimensão ajustada para 4 entradas
         self.output_training_data = np.zeros((2, self.buffer_size))  # Dimensão ajustada para 2 saídas
