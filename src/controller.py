@@ -359,21 +359,26 @@ class Controller:
         return v_ad  # Return as a 1D array
     
     def dmrac_last_layer_weight_update(self, error, second_last_layer_output_basis):
-        # Usando a matriz P de Lyapunov e a matriz B definida na classe
+        # Using Lyapunov matrix P and matrix B defined in the class
         P = self.P_lyap
         B = self.B
 
-        # Ajuste das dimensões
-        error = error.reshape(-1, 1)  # Transforma erro em vetor coluna
-        second_last_layer_output_basis = second_last_layer_output_basis.reshape(1, -1)  # Transforma em vetor linha
+        # Ensure proper dimensions
+        error = error.reshape(-1, 1)  # Transform error into a column vector
+        second_last_layer_output_basis = second_last_layer_output_basis.reshape(1, -1)  # Transform to a row vector
 
-        # Atualização dos pesos da última camada
-        adaptation_term = (-self.dt) * self.adaptive_gain * (second_last_layer_output_basis.T @ (P @ B @ error).T)
-        
-        # Ajuste das dimensões de adaptation_term para corresponder a last_layer_weight
-        adaptation_term = np.repeat(adaptation_term, self.last_layer_weight.shape[0], axis=1)
-        
-        self.last_layer_weight = self.last_layer_weight + adaptation_term
+        # Compute adaptation_term
+        adaptation_term = (-self.dt) * self.adaptive_gain * (second_last_layer_output_basis.T @ (P @ B @ error))
+
+        # Adjust dimensions of adaptation_term to match last_layer_weight
+        # Assuming second_last_layer_output_basis has a shape compatible with last_layer_weight
+        if adaptation_term.shape[1] != self.last_layer_weight.shape[1]:
+            raise ValueError(f"Shape mismatch: adaptation_term.shape[1] {adaptation_term.shape[1]} "
+                            f"does not match last_layer_weight.shape[1] {self.last_layer_weight.shape[1]}")
+
+        # Update last_layer_weight
+        self.last_layer_weight += adaptation_term
+
 
 
 
