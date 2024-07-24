@@ -377,26 +377,29 @@ class Controller:
                 self.network.optimizer.zero_grad()
 
     def DMRAC_last_layer_weight_update(self, error, second_last_layer_output_basis):
-        # Usar a matriz P correta do MRAC
         P = self.P_lyap
         B = self.B
 
         adaptive_gain = 0.01  # Exemplo de valor, pode ser ajustado conforme necessário
 
-        # Certifique-se de que second_last_layer_output_basis tenha a forma correta
+        # Garantir que second_last_layer_output_basis seja um vetor coluna
         if second_last_layer_output_basis.ndim == 1:
             second_last_layer_output_basis = second_last_layer_output_basis.reshape(-1, 1)
+        
+        # Garantir que error seja um vetor coluna
+        if error.ndim == 1:
+            error = error.reshape(-1, 1)
 
-        # Ajustar a transposição e multiplicação corretamente
-        self.last_layer_weight += (-self.dt) * adaptive_gain * np.dot(second_last_layer_output_basis, np.dot(P, B).T @ error)
+        # Atualiza o peso da última camada usando a regra adaptativa correta
+        self.last_layer_weight += (-self.dt) * adaptive_gain * np.dot(second_last_layer_output_basis, (np.dot(P, B).T @ error).T)
+
 
 
     def deep_mrac_torque(self, second_last_layer_output_basis):
-        if second_last_layer_output_basis.ndim == 1:
-            second_last_layer_output_basis = second_last_layer_output_basis.reshape(-1, 1)
-        self.vad = np.dot(self.last_layer_weight.T, second_last_layer_output_basis).flatten()
-        u_net = self.vad
+        self.vad = np.dot(self.last_layer_weight.T, second_last_layer_output_basis)
+        u_net = self.vad.flatten()  # Garantir que u_net seja um vetor 1D
         return u_net
+
 
     
 
@@ -588,7 +591,7 @@ class Controller:
                 rherrorvel = np.dot(R, herrorvel)
 
                 state = np.array([rherror[0], rherrorvel[0], rherror[1], rherrorvel[1]])
-                state_tensor = torch.Tensor(state).to(self.dev)  # Certifique-se de converter o estado em um tensor
+                state_tensor = torch.Tensor(state).to(self.dev).unsqueeze(0)  # Adicionar dimensão extra para batch
 
                 control_input = self.lqr_control(state, self.K)
 
@@ -602,10 +605,10 @@ class Controller:
                 _, second_last_layer_output_basis = self.network(state_tensor)
 
                 # Atualizar os pesos da última camada da rede neural com adaptive_gain
-                self.DMRAC_last_layer_weight_update(mrac_error, second_last_layer_output_basis.detach().cpu().numpy())
+                self.DMRAC_last_layer_weight_update(mrac_error, second_last_layer_output_basis.detach().cpu().numpy().flatten())
 
                 # Calcular vad usando a função deep_mrac_torque
-                vad = self.deep_mrac_torque(second_last_layer_output_basis.detach().cpu().numpy())
+                vad = self.deep_mrac_torque(second_last_layer_output_basis.detach().cpu().numpy().flatten())
 
                 control_total = control_input + vad
 
@@ -615,6 +618,7 @@ class Controller:
                 max_angle = math.radians(20.0)
                 u[0] = np.clip(u[0], -max_angle, max_angle)
                 u[1] = np.clip(u[1], -max_angle, max_angle)
+
 
 
 
