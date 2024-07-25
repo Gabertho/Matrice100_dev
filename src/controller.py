@@ -75,7 +75,7 @@ class Controller:
         self.old_err_yaw = 0.0
         self.old_err_z = 0.0
         self.yaw_control_flag = False
-        self.mode = "DMRAC"
+        self.mode = "MRAC"
         self.trajectory_flag = False
         self.full_trajectory_x = None
         self.full_trajectory_y = None
@@ -154,6 +154,7 @@ class Controller:
         self.loss_fn = nn.MSELoss()
         self.adaptive_gain = 0.4
         self.last_layer_weight = np.zeros((128, 2))  # Adjust dimensions based on DNN output
+        
 
     def set_sync(self, flag):
         self.sync_flag = flag
