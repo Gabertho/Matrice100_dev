@@ -12,40 +12,6 @@ import scipy.ndimage
 import math
 import scipy.linalg as sp
 from scipy import linalg
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import random
-
-class ReplayBuffer:
-    def __init__(self, capacity):
-        self.capacity = capacity
-        self.buffer = []
-    
-    def add(self, state, uncertainty):
-        if len(self.buffer) >= self.capacity:
-            self.buffer.pop(0)
-        self.buffer.append((state, uncertainty))
-    
-    def sample(self, batch_size):
-        return random.sample(self.buffer, batch_size)
-    
-    def size(self):
-        return len(self.buffer)
-
-class DNN(nn.Module):
-    def __init__(self, input_size, output_size):
-        super(DNN, self).__init__()
-        self.fc1 = nn.Linear(input_size, 128)
-        self.fc2 = nn.Linear(128, 128)
-        self.fc3 = nn.Linear(128, output_size)
-    
-    def forward(self, x):
-        x = torch.relu(self.fc1(x))
-        x = torch.relu(self.fc2(x))
-        x = self.fc3(x)
-        return x
-
 
 class Controller:
     def __init__(self, control_mode):
@@ -147,14 +113,6 @@ class Controller:
         self.W = np.zeros((5, 2))  # Adjust dimensions based on Phi(x)
         self.Gamma = 0.01 * np.eye(5)  # Learning rate matrix, set to 0.01  # Learning rate matrix
 
-        #DMRAC Parameters
-        self.dnn = DNN(input_size=4, output_size=2).to("cpu")
-        self.replay_buffer = ReplayBuffer(capacity=250)
-        self.optimizer = optim.Adam(self.dnn.parameters(), lr=0.0005)
-        self.loss_fn = nn.MSELoss()
-        self.adaptive_gain = 0.4
-        self.last_layer_weight = np.zeros((128, 2))  # Adjust dimensions based on DNN output
-        
 
     def set_sync(self, flag):
         self.sync_flag = flag
@@ -359,60 +317,6 @@ class Controller:
 
         return v_ad  # Return as a 1D array
     
-    def dmrac_last_layer_weight_update(self, error, second_last_layer_output_basis):
-        # Using Lyapunov matrix P and matrix B defined in the class
-        P = self.P_lyap
-        B = self.B
-
-        # Ensure proper dimensions
-        error = error.reshape(-1, 1)  # Transform error into a column vector
-        second_last_layer_output_basis = second_last_layer_output_basis.reshape(1, -1)  # Transform to a row vector
-
-        # Compute adaptation_term
-        adaptation_term = (-self.dt) * self.adaptive_gain * (second_last_layer_output_basis.T @ (P @ B @ error))
-
-        # Adjust dimensions of adaptation_term to match last_layer_weight
-        # Assuming second_last_layer_output_basis has a shape compatible with last_layer_weight
-        if adaptation_term.shape[1] != self.last_layer_weight.shape[1]:
-            raise ValueError(f"Shape mismatch: adaptation_term.shape[1] {adaptation_term.shape[1]} "
-                            f"does not match last_layer_weight.shape[1] {self.last_layer_weight.shape[1]}")
-
-        # Update last_layer_weight
-        self.last_layer_weight += adaptation_term
-
-
-
-
-    def deep_mrac_control(self, second_last_layer_output_basis):
-        self.vad = np.dot(self.last_layer_weight.T, second_last_layer_output_basis)
-        return self.vad
-
-    def buffer_fill_simple(self, current_iter):
-        iter_number = current_iter % (self.replay_buffer.capacity - 1)
-        state = np.array([self.current_position[0], self.velocity[0], self.current_position[1], self.velocity[1]])
-        self.replay_buffer.add(state, self.vad)
-
-    def dmrac_training(self, current_iter):
-        if self.replay_buffer.size() > self.replay_buffer.capacity:
-            random_indices = np.random.randint(0, self.replay_buffer.size(), 100)
-            batch = [self.replay_buffer.buffer[i] for i in random_indices]
-            input_data = np.array([data[0] for data in batch])
-            output_data = np.array([data[1] for data in batch])
-            
-            input_tensor = torch.tensor(input_data, dtype=torch.float32).to("cpu")
-            output_tensor = torch.tensor(output_data, dtype=torch.float32).to("cpu")
-            
-            for epoch in range(10):
-                pred = self.dnn(input_tensor)
-                loss = self.loss_fn(pred, output_tensor)
-                self.optimizer.zero_grad()
-                loss.backward()
-                self.optimizer.step()
-                print(current_iter, loss.item())
-
-
-
-    
 
     # Control loop: Computes the control signal in different modes.
 
@@ -588,36 +492,7 @@ class Controller:
                 if u[1] < -max:
                     u[1] = -max
 
-            if self.mode == "DMRAC":
-                herror = np.array([error[0], error[1]]) 
-                herrorvel = np.array([errorvel[0], errorvel[1]])
-                theta = -self.current_yaw
-                c, s = np.cos(theta), np.sin(theta)
-                R = np.array(((c, -s), (s, c)))  
-                rherror = np.dot(R, herror)
-                rherrorvel = np.dot(R, herrorvel)
 
-                state = np.array([rherror[0], rherrorvel[0], rherror[1], rherrorvel[1]])
-
-                second_last_layer_output_basis = self.dnn(torch.tensor(state, dtype=torch.float32).to("cpu"))[0].detach().numpy()
-                self.dmrac_last_layer_weight_update(rherror, second_last_layer_output_basis)
-
-                v_ad = self.deep_mrac_control(second_last_layer_output_basis)
-
-                control_total = self.lqr_control(state, self.K) + v_ad
-
-                u[0] = -math.radians(control_total[1]) 
-                u[1] = -math.radians(control_total[0]) 
-
-                max_angle = math.radians(20.0)
-                u[0] = np.clip(u[0], -max_angle, max_angle)
-                u[1] = np.clip(u[1], -max_angle, max_angle)
-
-                self.buffer_fill_simple(current_iter=self.current_time)
-                self.dmrac_training(current_iter=self.current_time)
-
-
-                
 
             if self.mode == "simple_pid":
                 print("========================================================================")
