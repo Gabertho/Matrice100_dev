@@ -140,7 +140,7 @@ class Controller:
         self.max_thrust = 98 #4 motors x 24.5N (maximum thrust per motor according to DJI)
         self.U1_max = self.max_thrust - (self.m*self.g) #
         max_state_values = np.array([0.05, 0.05, 0.05, 0.05, 0.05, 0.05])  #maximum error for x, dx, y, dy, z, dz 
-        max_control_values = np.array([0.349066, 0.349066, 0.349066]) #20 degrees for roll and pitch and 42 for thrust
+        max_control_values = np.array([0.349066, 0.349066, self.U1_max]) #20 degrees for roll and pitch and 42 for thrust
 
         self.Q_thrust = np.diag(1.0 / max_state_values**2)
         self.R_thrust = np.diag(1.0 / max_control_values**2)
@@ -530,9 +530,12 @@ class Controller:
 
                 # Thrust
                 u[2] = 0 #Reset.
-                u[2] = self.hover_thrust + control_input[2]
+                thrust_force = control_input[2]
+                delta_thrust_percentage = (thrust_force / self.max_thrust) * 100
+                thrust_percentage = self.hover_thrust + delta_thrust_percentage
+                u[2] = thrust_percentage
 
-                print("LQR DELTA THRUST:", control_input[2])
+                print("LQR DELTA THRUST:", delta_thrust_percentage)
 
                 if u[2] < 20.0:
                     u[2] = 20.0
