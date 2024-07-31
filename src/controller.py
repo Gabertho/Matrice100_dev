@@ -500,7 +500,8 @@ class Controller:
 
     
                 # LQR control
-                state = np.array([rherror[0], rherrorvel[0], rherror[1], rherrorvel[1]], error[2], errorvel[2]) # errors x,dx, y, dy, z, dz
+                state = np.array([rherror[0], rherrorvel[0], rherror[1], rherrorvel[1], error[2], errorvel[2]]) # errors x, dx, y, dy, z, dz
+
                 control_input = self.lqr_control(state, self.K_thrust)
 
 
