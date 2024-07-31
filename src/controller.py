@@ -138,7 +138,7 @@ class Controller:
         ##LQR with Thrust Control 
         #Brysons rule
         max_state_values = np.array([0.05, 0.05, 0.05, 0.05, 0.05, 0.05])  #maximum error for x, dx, y, dy, z, dz 
-        max_control_values = np.array([0.349066, 0.349066, 80.0]) #20 degrees for roll and pitch and 80% for thrust
+        max_control_values = np.array([0.349066, 0.349066, 42.0]) #20 degrees for roll and pitch and 42 for thrust
 
         self.Q_thrust = np.diag(1.0 / max_state_values**2)
         self.R_thrust = np.diag(1.0 / max_control_values**2)
