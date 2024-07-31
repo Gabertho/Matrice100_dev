@@ -526,20 +526,17 @@ class Controller:
                     u[1] = -max
 
                 # Thrust
-                #u[2] = 0 #Reset.
-                #u[2] = self.hover_thrust + control_input[2]
+                u[2] = 0 #Reset.
+                u[2] = self.hover_thrust + control_input[2]
 
-                #print("LQR DELTA THRUST:", control_input[2])
+                print("LQR DELTA THRUST:", control_input[2])
 
-                #if u[2] < 20.0:
-                    #u[2] = 20.0
-                #if u[2] > 80.0:
-                    #u[2] = 80.0
+                if u[2] < 20.0:
+                    u[2] = 20.0
+                if u[2] > 80.0:
+                    u[2] = 80.0
                 
-                #print("LQR THRUST:", u[2])
-
-               
-
+                print("LQR THRUST:", u[2])
                 
             if self.mode == "MRAC":
                 herror = np.array([error[0], error[1]])  # 1D array with shape (2,)
