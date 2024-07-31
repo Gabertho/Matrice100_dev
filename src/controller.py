@@ -419,14 +419,14 @@ class Controller:
         print("PID DELTATHRUST:", delta)
         
         # Thrust control signal = thrust required to hover + PID output.
-        u[2] = self.hover_thrust + delta
+        #u[2] = self.hover_thrust + delta
 
-        if u[2] < 20.0:
-            u[2] = 20.0
-        if u[2] > 80.0:
-            u[2] = 80.0
+        #if u[2] < 20.0:
+            #u[2] = 20.0
+        #if u[2] > 80.0:
+            #u[2] = 80.0
 
-        print("PID THRUST:", u[2])
+        #print("PID THRUST:", u[2])
 
         self.old_err_z = error[2]
 
@@ -530,9 +530,10 @@ class Controller:
                     u[1] = -max
 
                 # Thrust
-                u[2] = 0 #Reset.
                 thrust_force = control_input[2]
                 delta_thrust_percentage = (thrust_force / self.max_thrust) * 100
+                print("LQR THRUST FORCE:", thrust_force)
+                print("LQR MAX THRUST:", self.max_thrust)
                 thrust_percentage = self.hover_thrust + delta_thrust_percentage
                 u[2] = thrust_percentage
 
