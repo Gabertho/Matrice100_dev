@@ -530,7 +530,7 @@ class Controller:
                     u[1] = -max
 
                 # Thrust
-                thrust_force = control_input[2]
+                thrust_force = -control_input[2]
                 delta_thrust_percentage = (thrust_force / self.max_thrust) * 100
                 print("LQR THRUST FORCE:", thrust_force)
                 print("LQR MAX THRUST:", self.max_thrust)
