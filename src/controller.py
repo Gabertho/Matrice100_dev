@@ -414,7 +414,7 @@ class Controller:
         # PID thrust: Kp.e+Ki.int_e+Kd.de/dt
         delta = error[2]*pthrust + ithrust*self.int_err_z + dthrust*d_err_z + velthrust*errorvel[2]
 
-        print("DELTATHRUST:", delta)
+        print("PID DELTATHRUST:", delta)
         
         # Thrust control signal = thrust required to hover + PID output.
         u[2] = self.hover_thrust + delta
@@ -424,7 +424,7 @@ class Controller:
         if u[2] > 80.0:
             u[2] = 80.0
 
-        print("thrust calculed by PID: ", u[2])
+        print("PID THRUST:", u[2])
 
         self.old_err_z = error[2]
 
@@ -487,24 +487,26 @@ class Controller:
             if self.mode == "LQR_thrust":
                 print("======================LQR WITH THRUST CONTROL===============================================")
                 ## ROLL AND PITCH 
-                print("ERROR:", error, self.target)
+                #print("ERROR:", error, self.target)
     
                 herror = np.array([error[0], error[1]]) # 2x1
                 herrorvel = np.array([errorvel[0], errorvel[1]])
-                print("HERROR:", math.degrees(self.current_yaw), herror)
+                #print("HERROR:", math.degrees(self.current_yaw), herror)
                 theta = -self.current_yaw
                 c, s = np.cos(theta), np.sin(theta)
                 R = np.array(((c, -s), (s, c))) # 2x2
                 rherror = np.dot(R, herror)
                 rherrorvel = np.dot(R, herrorvel)
-                print("ROTATED HERROR:", rherror)
-                print("ROTATED HERRORVEL:", rherrorvel)
+                #print("ROTATED HERROR:", rherror)
+                #print("ROTATED HERRORVEL:", rherrorvel)
 
     
                 # LQR control
                 state = np.array([rherror[0], rherrorvel[0], rherror[1], rherrorvel[1], error[2], errorvel[2]]) # errors x, dx, y, dy, z, dz
 
                 control_input = self.lqr_control(state, self.K_thrust)
+
+                print("LQR CONTROL INPUT:", control_input)
 
 
                 # Roll and pitch
@@ -525,12 +527,16 @@ class Controller:
                 u[2] = 0 #Reset.
                 u[2] = self.hover_thrust + control_input[2]
 
+                print("LQR DELTA THRUST:", control_input[2])
+
                 if u[2] < 20.0:
                     u[2] = 20.0
                 if u[2] > 80.0:
                     u[2] = 80.0
+                
+                print("LQR THRUST:", u[2])
 
-                print("thrust calculed by LQR: ", u[2])
+               
 
                 
             if self.mode == "MRAC":
