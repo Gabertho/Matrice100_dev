@@ -150,6 +150,18 @@ class Controller:
 
         # Compute LQR gain
         self.K_thrust = np.dot(np.linalg.inv(self.R_thrust), np.dot(self.B_thrust.T, self.P_thrust))
+
+
+        ##MRAC with Thrust Control
+        #MRAC LQR Parameters
+        self.Kx_thrust = -self.lqr(self.A_p, self.B_p, np.eye(6), np.eye(3))
+        self.Am_thrust = self.A + np.dot(self.B_thrust, self.Kx_thrust)
+        self.Q_lyap_thrust = np.eye(6)
+        self.P_lyap = sp.solve_continuous_lyapunov(self.Am_thrust, self.Q_lyap_thrust)
+        # Adaptive Parameters
+        self.W_thrust = np.zeros((7,3))  # Adjust dimensions based on Phi(x)
+        self.Gamma_thrust = 0.01 * np.eye(7)  # Learning rate matrix, set to 0.01  # Learning rate matrix
+
         
 
     def set_sync(self, flag):
@@ -355,6 +367,38 @@ class Controller:
 
         return v_ad  # Return as a 1D array
     
+    def adaptive_control_thrust(self, state, e):
+            # Phi(x) includes the state and a bias term 1
+            phi = np.append(state, 1).reshape(-1, 1)  # `phi` is (7, 1)
+            print("phi.shape:", phi.shape)
+
+            # Compute adaptive control law
+            v_ad = np.dot(self.W_thrust.T, phi).flatten()  # `v_ad` is flattened to (3,)
+            print("v_ad.shape:", v_ad.shape)
+
+            # Update adaptive parameters
+            e = e.reshape(-1, 1)  # `e` is (6, 1)
+            print("e.shape:", e.shape)
+            
+            # Ensure correct matrix dimensions for adaptation term
+            P_Bp = self.P_lyap_thrust @ self.B_thrust  # Resulting in a (6, 3) matrix
+            print("P_Bp.shape:", P_Bp.shape)
+            
+            e_T_P_Bp = e.T @ P_Bp  # (1, 6) @ (6, 3) -> (1, 3)
+            print("e_T_P_Bp.shape:", e_T_P_Bp.shape)
+            
+            phi_e_T_P_Bp = phi @ e_T_P_Bp  # (7, 1) @ (1, 3) -> (7, 3)
+            print("phi_e_T_P_Bp.shape:", phi_e_T_P_Bp.shape)
+            
+            adaptation_term = self.Gamma_thrust @ phi_e_T_P_Bp * self.dt  # (7, 7) @ (7, 3) -> (7, 3)
+            print("adaptation_term.shape:", adaptation_term.shape)
+
+            # Update self.W_thrust to match dimensions
+            self.W_thrust += -adaptation_term
+            print("self.W_thrust.shape:", self.W_thrust.shape)
+
+            return v_ad  # Return as a 1D array
+    
 
     # Control loop: Computes the control signal in different modes.
 
@@ -547,6 +591,7 @@ class Controller:
                 print("LQR THRUST:", u[2])
                 
             if self.mode == "MRAC":
+                print("======================MRAC===============================================")
                 herror = np.array([error[0], error[1]])  # 1D array with shape (2,)
                 herrorvel = np.array([errorvel[0], errorvel[1]])
                 print("herror:", herror)
@@ -591,6 +636,72 @@ class Controller:
                     u[1] = max
                 if u[1] < -max:
                     u[1] = -max
+
+
+            if self.mode == "MRAC_thrust":
+                print("======================MRAC WITH THRUST CONTROL===============================================")
+                ## ROLL AND PITCH 
+                herror = np.array([error[0], error[1]])  # 1D array with shape (2,)
+                herrorvel = np.array([errorvel[0], errorvel[1]])
+                print("herror:", herror)
+                print("herrorvel:", herrorvel)
+                
+                theta = -self.current_yaw
+                c, s = np.cos(theta), np.sin(theta)
+                R = np.array(((c, -s), (s, c)))  # 2x2
+                rherror = np.dot(R, herror)
+                rherrorvel = np.dot(R, herrorvel)
+                print("rherror:", rherror)
+                print("rherrorvel:", rherrorvel)
+
+                # Define state for MRAC similar to LQR
+                state = np.array([rherror[0], rherrorvel[0], rherror[1], rherrorvel[1], error[2], errorvel[2]])
+                print("state:", state)
+
+                # Calculate LQR control action
+                control_input = self.lqr_control(state, self.K_thrust)  # control_input is (3,)
+                print("control_input:", control_input)
+
+                # Compute adaptive control law
+                mrac_error = state  # Ensure `mrac_error` is the same dimension as `state`
+                v_ad = self.adaptive_control_thrust(state, mrac_error)
+                print("v_ad:", v_ad)
+
+                # Combine LQR and adaptive control laws
+                control_total = control_input + v_ad  # Both should be (3,)
+                print("control_total:", control_total)
+
+                # Define roll and pitch based on control action
+                u[0] = -math.radians(control_total[0])  # Roll
+                u[1] = -math.radians(control_total[1])  # Pitch
+
+                max = math.radians(20.0)
+                if u[0] > max:
+                    u[0] = max
+                if u[0] < -max:
+                    u[0] = -max
+                if u[1] > max:
+                    u[1] = max
+                if u[1] < -max:
+                    u[1] = -max
+
+                # Thrust
+                thrust_force = -control_total[2]
+                delta_thrust_percentage = (thrust_force / self.max_thrust) * 100
+                print("MRAC THRUST FORCE:", thrust_force)
+                print("MRAC MAX THRUST:", self.max_thrust)
+                thrust_percentage = self.hover_thrust + delta_thrust_percentage
+                u[2] = thrust_percentage
+
+                print("MRAC DELTA THRUST:", delta_thrust_percentage)
+
+                if u[2] < 20.0:
+                    u[2] = 20.0
+                if u[2] > 80.0:
+                    u[2] = 80.0
+                
+                print("MRAC THRUST:", u[2])
+
 
 
 
