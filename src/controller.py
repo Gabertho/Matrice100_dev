@@ -520,6 +520,7 @@ class Controller:
                     u[1] = -max
 
                 # Thrust
+                u[2] = 0 #Reset.
                 u[2] = self.hover_thrust + control_input[2]
 
                 if u[2] < 20.0:
