@@ -506,8 +506,8 @@ class Controller:
 
 
                 # Roll and pitch
-                u[0] = -math.radians(control_input[1]) # roll
-                u[1] = -math.radians(control_input[0]) # pitch
+                u[0] = -math.radians(control_input[0]) # roll
+                u[1] = -math.radians(control_input[1]) # pitch
 
                 max = math.radians(20.0)
                 if u[0] > max:
