@@ -137,7 +137,7 @@ class Controller:
 
         ##LQR with Thrust Control 
         #Brysons rule
-        self.max_thrust = 98 #4 motors x 24.5N (maximum thrust per motor according to DJI)
+        self.max_thrust = 80 #4 motors x 20N (maximum thrust per motor according to DJI)
         self.U1_max = self.max_thrust - (self.m*self.g) #
         max_state_values = np.array([0.05, 0.05, 0.05, 0.05, 0.05, 0.05])  #maximum error for x, dx, y, dy, z, dz 
         max_control_values = np.array([0.349066, 0.349066, self.U1_max]) #20 degrees for roll and pitch and 42 for thrust
@@ -508,6 +508,7 @@ class Controller:
     
                 # LQR control
                 state = np.array([rherror[0], rherrorvel[0], rherror[1], rherrorvel[1], error[2], errorvel[2]]) # errors x, dx, y, dy, z, dz
+                print("LQR STATE: ", state)
 
                 control_input = self.lqr_control(state, self.K_thrust)
 
