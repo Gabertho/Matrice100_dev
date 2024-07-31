@@ -114,6 +114,42 @@ class Controller:
         self.Gamma = 0.01 * np.eye(5)  # Learning rate matrix, set to 0.01  # Learning rate matrix
 
 
+        # Thrust control
+        self.m = 3.0 #mass
+
+        self.A_thrust = np.array([
+            [0, 1, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 1, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 1],
+            [0, 0, 0, 0, 0, 0]
+        ])
+
+        self.B_thrust = np.array([
+            [0, 0, 0],
+            [0, self.g, 0],
+            [0, 0, 0]
+            [-self.g, 0, 0],
+            [0, 0, 0],
+            [0, 0, 1/self.m]
+        ])
+
+        ##LQR with Thrust Control 
+        #Brysons rule
+        max_state_values = np.array([0.05, 0.05, 0.05, 0.05, 0.05, 0.05])  #maximum error for x, dx, y, dy, z, dz 
+        max_control_values = np.array([0.349066, 0.349066, 80.0]) #20 degrees for roll and pitch and 80% for thrust
+
+        self.Q_thrust = np.diag(1.0 / max_state_values**2)
+        self.R_thrust = np.diag(1.0 / max_control_values**2)
+
+        # Solve Riccati equation
+        self.P_thrust = scipy.linalg.solve_continuous_are(self.A_thrust, self.B_thrust, self.Q_thrust, self.R_thrust)
+
+        # Compute LQR gain
+        self.K_thrust = np.dot(np.linalg.inv(self.R_thrust), np.dot(self.B_thrust.T, self.P_thrust))
+        
+
     def set_sync(self, flag):
         self.sync_flag = flag
 
@@ -446,6 +482,51 @@ class Controller:
                 if u[1] < -max:
                     u[1] = -max
 
+            if self.mode == "LQR_thrust":
+                print("======================LQR WITH THRUST CONTROL===============================================")
+                ## ROLL AND PITCH 
+                print("ERROR:", error, self.target)
+    
+                herror = np.array([error[0], error[1]]) # 2x1
+                herrorvel = np.array([errorvel[0], errorvel[1]])
+                print("HERROR:", math.degrees(self.current_yaw), herror)
+                theta = -self.current_yaw
+                c, s = np.cos(theta), np.sin(theta)
+                R = np.array(((c, -s), (s, c))) # 2x2
+                rherror = np.dot(R, herror)
+                rherrorvel = np.dot(R, herrorvel)
+                print("ROTATED HERROR:", rherror)
+                print("ROTATED HERRORVEL:", rherrorvel)
+
+    
+                # LQR control
+                state = np.array([rherror[0], rherrorvel[0], rherror[1], rherrorvel[1]], error[2], errorvel[2]) # errors x,dx, y, dy, z, dz
+                control_input = self.lqr_control(state, self.K_thrust)
+
+
+                # Roll and pitch
+                u[0] = -math.radians(control_input[1]) # roll
+                u[1] = -math.radians(control_input[0]) # pitch
+
+                max = math.radians(20.0)
+                if u[0] > max:
+                    u[0] = max
+                if u[0] < -max:
+                    u[0] = -max
+                if u[1] > max:
+                    u[1] = max
+                if u[1] < -max:
+                    u[1] = -max
+
+                # Thrust
+                u[2] = self.hover_thrust + control_input[2]
+
+                if u[2] < 20.0:
+                    u[2] = 20.0
+                if u[2] > 80.0:
+                    u[2] = 80.0
+
+                
             if self.mode == "MRAC":
                 herror = np.array([error[0], error[1]])  # 1D array with shape (2,)
                 herrorvel = np.array([errorvel[0], errorvel[1]])
