@@ -424,6 +424,8 @@ class Controller:
         if u[2] > 80.0:
             u[2] = 80.0
 
+        print("thrust calculed by PID: ", u[2])
+
         self.old_err_z = error[2]
 
         # Yaw control = PD.
@@ -527,6 +529,8 @@ class Controller:
                     u[2] = 20.0
                 if u[2] > 80.0:
                     u[2] = 80.0
+
+                print("thrust calculed by LQR: ", u[2])
 
                 
             if self.mode == "MRAC":
