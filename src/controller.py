@@ -154,8 +154,8 @@ class Controller:
 
         ##MRAC with Thrust Control
         #MRAC LQR Parameters
-        self.Kx_thrust = -self.lqr(self.A_p, self.B_p, np.eye(6), np.eye(3))
-        self.Am_thrust = self.A + np.dot(self.B_thrust, self.Kx_thrust)
+        self.Kx_thrust = -self.lqr(self.A_thrust, self.B_thrust, np.eye(6), np.eye(3))
+        self.Am_thrust = self.A_thrust + np.dot(self.B_thrust, self.Kx_thrust)
         self.Q_lyap_thrust = np.eye(6)
         self.P_lyap = sp.solve_continuous_lyapunov(self.Am_thrust, self.Q_lyap_thrust)
         # Adaptive Parameters
