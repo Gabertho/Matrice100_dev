@@ -129,7 +129,7 @@ class Controller:
         self.B_thrust = np.array([
             [0, 0, 0],
             [0, self.g, 0],
-            [0, 0, 0]
+            [0, 0, 0],
             [-self.g, 0, 0],
             [0, 0, 0],
             [0, 0, 1/self.m]
