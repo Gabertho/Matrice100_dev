@@ -157,7 +157,7 @@ class Controller:
         self.Kx_thrust = -self.lqr(self.A_thrust, self.B_thrust, np.eye(6), np.eye(3))
         self.Am_thrust = self.A_thrust + np.dot(self.B_thrust, self.Kx_thrust)
         self.Q_lyap_thrust = np.eye(6)
-        self.P_lyap = sp.solve_continuous_lyapunov(self.Am_thrust, self.Q_lyap_thrust)
+        self.P_lyap_thrust = sp.solve_continuous_lyapunov(self.Am_thrust, self.Q_lyap_thrust)
         # Adaptive Parameters
         self.W_thrust = np.zeros((7,3))  # Adjust dimensions based on Phi(x)
         self.Gamma_thrust = 0.01 * np.eye(7)  # Learning rate matrix, set to 0.01  # Learning rate matrix
