@@ -12,6 +12,24 @@ import scipy.ndimage
 import math
 import scipy.linalg as sp
 from scipy import linalg
+import torch
+import torch.nn as nn
+import torch.optim as optim
+
+class Net(nn.Module):
+    def __init__(self):
+        super(Net, self).__init__()
+        self.HL1 = nn.Linear(6, 20)
+        self.HL2 = nn.Linear(20, 10)
+        self.OL = nn.Linear(10, 3)
+        self.optimizer = optim.Adam(self.parameters(), lr=0.0005)
+        self.loss_fn = nn.MSELoss()
+
+    def forward(self, x):
+        OL_1 = torch.tanh(self.HL1(x))
+        OL_2 = torch.tanh(self.HL2(OL_1))
+        OL_3 = self.OL(OL_2)
+        return OL_2, OL_3
 
 class Controller:
     def __init__(self, control_mode):
@@ -161,6 +179,13 @@ class Controller:
         # Adaptive Parameters
         self.W_thrust = np.zeros((7,3))  # Adjust dimensions based on Phi(x)
         self.Gamma_thrust = 0.01 * np.eye(7)  # Learning rate matrix, set to 0.01  # Learning rate matrix
+
+        # DMRAC Parameters
+        self.dnn = Net()
+        self.replay_buffer = []
+        self.buffer_size = 1000
+        self.batch_size = 64
+        self.zeta_tol = 0.1
 
         
 
@@ -398,6 +423,31 @@ class Controller:
             print("self.W_thrust.shape:", self.W_thrust.shape)
 
             return v_ad  # Return as a 1D array
+    
+
+    def get_dnn_features(self, state):
+        state_tensor = torch.FloatTensor(state).unsqueeze(0)  # Convert to tensor and add batch dimension
+        with torch.no_grad():
+            features, _ = self.dnn(state_tensor)
+        return features.squeeze().numpy()  # Remove batch dimension and convert to numpy array
+
+    def update_replay_buffer(self, state, v_ad):
+        if len(self.replay_buffer) >= self.buffer_size:
+            self.replay_buffer.pop(0)
+        self.replay_buffer.append((state, v_ad))
+
+    def train_dnn(self):
+        if len(self.replay_buffer) < self.batch_size:
+            return
+        batch = np.random.choice(self.replay_buffer, self.batch_size, replace=False)
+        states, v_ads = zip(*batch)
+        states = torch.FloatTensor(states)
+        v_ads = torch.FloatTensor(v_ads)
+        self.dnn.optimizer.zero_grad()
+        _, predictions = self.dnn(states)
+        loss = self.dnn.loss_fn(predictions, v_ads)
+        loss.backward()
+        self.dnn.optimizer.step()
     
 
     # Control loop: Computes the control signal in different modes.
@@ -702,6 +752,59 @@ class Controller:
                 
                 print("MRAC THRUST:", u[2])
 
+            if self.control_mode == "DMRAC":
+                print("======================MRAC WITH THRUST CONTROL===============================================")
+                ## ROLL AND PITCH 
+                herror = np.array([error[0], error[1]])  # 1D array with shape (2,)
+                herrorvel = np.array([errorvel[0], errorvel[1]])
+                print("herror:", herror)
+                print("herrorvel:", herrorvel)
+                
+                theta = -self.current_yaw
+                c, s = np.cos(theta), np.sin(theta)
+                R = np.array(((c, -s), (s, c)))  # 2x2
+                rherror = np.dot(R, herror)
+                rherrorvel = np.dot(R, herrorvel)
+                print("rherror:", rherror)
+                print("rherrorvel:", rherrorvel)
+
+                # Define state for MRAC similar to LQR
+                state = np.array([rherror[0], rherrorvel[0], rherror[1], rherrorvel[1], error[2], errorvel[2]])
+                print("state:", state)
+
+                control_input = self.lqr_control(state, self.K_thrust)
+                mrac_error = state
+
+                phi = self.get_dnn_features(state)
+                v_ad = self.adaptive_control_thrust(phi, mrac_error)
+                self.update_replay_buffer(state, v_ad)
+
+                control_total = control_input + v_ad
+
+                u[0] = -math.radians(control_total[0])  # Roll
+                u[1] = -math.radians(control_total[1])  # Pitch
+
+                max_angle = math.radians(20.0)
+                if u[0] > max_angle:
+                    u[0] = max_angle
+                if u[0] < -max_angle:
+                    u[0] = -max_angle
+                if u[1] > max_angle:
+                    u[1] = max_angle
+                if u[1] < -max_angle:
+                    u[1] = -max_angle
+
+                thrust_force = -control_total[2]
+                delta_thrust_percentage = (thrust_force / self.max_thrust) * 100
+                thrust_percentage = self.hover_thrust + delta_thrust_percentage
+                u[2] = thrust_percentage
+
+                if u[2] < 20.0:
+                    u[2] = 20.0
+                if u[2] > 80.0:
+                    u[2] = 80.0
+
+                self.train_dnn()
 
 
 
