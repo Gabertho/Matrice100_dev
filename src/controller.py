@@ -393,43 +393,50 @@ class Controller:
         return v_ad  # Return as a 1D array
     
     def adaptive_control_thrust(self, state, e):
-            # Phi(x) includes the state and a bias term 1
-            phi = np.append(state, 1).reshape(-1, 1)  # `phi` is (7, 1)
-            print("phi.shape:", phi.shape)
+        # Phi(x) includes the state and a bias term 1
+        print("Adaptive control thrust - state:", state)
+        phi = np.append(state, 1).reshape(-1, 1)  # `phi` is (7, 1)
+        print("Phi:", phi)
 
-            # Compute adaptive control law
-            v_ad = np.dot(self.W_thrust.T, phi).flatten()  # `v_ad` is flattened to (3,)
-            print("v_ad.shape:", v_ad.shape)
+        # Compute adaptive control law
+        v_ad = np.dot(self.W_thrust.T, phi).flatten()  # `v_ad` is flattened to (3,)
+        print("v_ad:", v_ad)
 
-            # Update adaptive parameters
-            e = e.reshape(-1, 1)  # `e` is (6, 1)
-            print("e.shape:", e.shape)
-            
-            # Ensure correct matrix dimensions for adaptation term
-            P_Bp = self.P_lyap_thrust @ self.B_thrust  # Resulting in a (6, 3) matrix
-            print("P_Bp.shape:", P_Bp.shape)
-            
-            e_T_P_Bp = e.T @ P_Bp  # (1, 6) @ (6, 3) -> (1, 3)
-            print("e_T_P_Bp.shape:", e_T_P_Bp.shape)
-            
-            phi_e_T_P_Bp = phi @ e_T_P_Bp  # (7, 1) @ (1, 3) -> (7, 3)
-            print("phi_e_T_P_Bp.shape:", phi_e_T_P_Bp.shape)
-            
-            adaptation_term = self.Gamma_thrust @ phi_e_T_P_Bp * self.dt  # (7, 7) @ (7, 3) -> (7, 3)
-            print("adaptation_term.shape:", adaptation_term.shape)
+        # Update adaptive parameters
+        e = e.reshape(-1, 1)  # `e` is (6, 1)
+        print("e:", e)
+        
+        # Ensure correct matrix dimensions for adaptation term
+        P_Bp = self.P_lyap_thrust @ self.B_thrust  # Resulting in a (6, 3) matrix
+        print("P_Bp:", P_Bp)
+        
+        e_T_P_Bp = e.T @ P_Bp  # (1, 6) @ (6, 3) -> (1, 3)
+        print("e_T_P_Bp:", e_T_P_Bp)
+        
+        phi_e_T_P_Bp = phi @ e_T_P_Bp  # (7, 1) @ (1, 3) -> (7, 3)
+        print("phi_e_T_P_Bp:", phi_e_T_P_Bp)
+        
+        adaptation_term = self.Gamma_thrust @ phi_e_T_P_Bp * self.dt  # (7, 7) @ (7, 3) -> (7, 3)
+        print("adaptation_term:", adaptation_term)
 
-            # Update self.W_thrust to match dimensions
-            self.W_thrust += -adaptation_term
-            print("self.W_thrust.shape:", self.W_thrust.shape)
+        # Update self.W_thrust to match dimensions
+        self.W_thrust += -adaptation_term
+        print("self.W_thrust:", self.W_thrust)
 
-            return v_ad  # Return as a 1D array
+        return v_ad  # Return as a 1D array
     
 
     def get_dnn_features(self, state):
+        print("Original state:", state)
         state_tensor = torch.FloatTensor(state).unsqueeze(0)  # Convert to tensor and add batch dimension
+        print("State tensor:", state_tensor)
         with torch.no_grad():
             features, _ = self.dnn(state_tensor)
-        return features.squeeze().numpy()  # Remove batch dimension and convert to numpy array
+        print("Features before squeeze:", features)
+        features = features.squeeze().numpy()  # Remove batch dimension and convert to numpy array
+        print("Features after squeeze:", features)
+        return features
+
 
     def update_replay_buffer(self, state, v_ad):
         if len(self.replay_buffer) >= self.buffer_size:
@@ -773,13 +780,18 @@ class Controller:
                 print("state:", state)
 
                 control_input = self.lqr_control(state, self.K_thrust)
+                print("control_input:", control_input)
                 mrac_error = state
 
                 phi = self.get_dnn_features(state)
+                print("phi:", phi)
                 v_ad = self.adaptive_control_thrust(phi, mrac_error)
+                print("v_ad:", v_ad)
                 self.update_replay_buffer(state, v_ad)
+                print("Replay buffer length:", len(self.replay_buffer))
 
                 control_total = control_input + v_ad
+                print("control_total:", control_total)
 
                 u[0] = -math.radians(control_total[0])  # Roll
                 u[1] = -math.radians(control_total[1])  # Pitch
