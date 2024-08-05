@@ -807,7 +807,7 @@ class Controller:
                 self.update_replay_buffer(state, v_ad)
                 print("Replay buffer length:", len(self.replay_buffer))
 
-                control_total = control_input + v_ad
+                control_total = control_input - v_ad
                 #print("control_total:", control_total)
 
                 u[0] = -math.radians(control_total[0])  # Roll
