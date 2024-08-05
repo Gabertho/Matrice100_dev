@@ -459,12 +459,13 @@ class Controller:
         batch = replay_buffer_array[batch_indices]
         states, v_ads = zip(*batch)
         states = torch.FloatTensor(states)
-        v_ads = torch.FloatFloatTensor(v_ads)
+        v_ads = torch.FloatTensor(v_ads)
         self.dnn.optimizer.zero_grad()
         _, predictions = self.dnn(states)
         loss = self.dnn.loss_fn(predictions, v_ads)
         loss.backward()
         self.dnn.optimizer.step()
+
 
 
     
