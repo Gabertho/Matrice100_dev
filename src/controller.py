@@ -436,7 +436,10 @@ class Controller:
         print("Features before squeeze:", features)
         features = features.squeeze().numpy()  # Remove batch dimension and convert to numpy array
         print("Features after squeeze:", features)
+        if len(features) == 6:
+            features = np.append(features, 1)  # Append 1 to make it 7 elements
         return features
+
 
 
 
@@ -449,7 +452,8 @@ class Controller:
     def train_dnn(self):
         if len(self.replay_buffer) < self.batch_size:
             return
-        batch = np.random.choice(self.replay_buffer, self.batch_size, replace=False)
+        replay_buffer_array = np.array(self.replay_buffer)  # Convert replay_buffer to a numpy array
+        batch = np.random.choice(replay_buffer_array, self.batch_size, replace=False)
         states, v_ads = zip(*batch)
         states = torch.FloatTensor(states)
         v_ads = torch.FloatTensor(v_ads)
@@ -458,6 +462,7 @@ class Controller:
         loss = self.dnn.loss_fn(predictions, v_ads)
         loss.backward()
         self.dnn.optimizer.step()
+
     
 
     # Control loop: Computes the control signal in different modes.
