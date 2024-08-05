@@ -20,8 +20,8 @@ class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
         self.HL1 = nn.Linear(6, 20)
-        self.HL2 = nn.Linear(20, 10)
-        self.OL = nn.Linear(10, 3)
+        self.HL2 = nn.Linear(20, 6)  # Ajuste o tamanho de saída para 6
+        self.OL = nn.Linear(6, 3)
         self.optimizer = optim.Adam(self.parameters(), lr=0.0005)
         self.loss_fn = nn.MSELoss()
 
@@ -30,6 +30,7 @@ class Net(nn.Module):
         OL_2 = torch.tanh(self.HL2(OL_1))
         OL_3 = self.OL(OL_2)
         return OL_2, OL_3
+
 
 class Controller:
     def __init__(self, control_mode):
@@ -427,15 +428,14 @@ class Controller:
     
 
     def get_dnn_features(self, state):
-        print("Original state:", state)
         state_tensor = torch.FloatTensor(state).unsqueeze(0)  # Convert to tensor and add batch dimension
+        print("Original state:", state)
         print("State tensor:", state_tensor)
         with torch.no_grad():
             features, _ = self.dnn(state_tensor)
         print("Features before squeeze:", features)
-        features = features.squeeze().numpy()  # Remove batch dimension and convert to numpy array
-        print("Features after squeeze:", features)
-        return features
+        return features.squeeze().numpy()  # Remove batch dimension and convert to numpy array
+
 
 
     def update_replay_buffer(self, state, v_ad):
