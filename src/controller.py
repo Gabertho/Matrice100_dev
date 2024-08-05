@@ -759,7 +759,7 @@ class Controller:
                 
                 print("MRAC THRUST:", u[2])
 
-            if self.control_mode == "DMRAC":
+            if self.mode == "DMRAC":
                 print("======================MRAC DNN WITH THRUST CONTROL===============================================")
                 ## ROLL AND PITCH 
                 herror = np.array([error[0], error[1]])  # 1D array with shape (2,)
