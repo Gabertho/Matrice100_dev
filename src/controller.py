@@ -451,16 +451,21 @@ class Controller:
     def train_dnn(self):
         if len(self.replay_buffer) < self.batch_size:
             return
-        replay_buffer_array = np.array(self.replay_buffer)  # Convert replay_buffer to a numpy array
-        batch = np.random.choice(replay_buffer_array, self.batch_size, replace=False)
+        # Converter a lista de tuplas em um array numpy
+        replay_buffer_array = np.array(self.replay_buffer, dtype=object)
+        # Selecionar índices aleatórios do buffer
+        batch_indices = np.random.choice(len(replay_buffer_array), self.batch_size, replace=False)
+        # Criar o batch a partir dos índices selecionados
+        batch = replay_buffer_array[batch_indices]
         states, v_ads = zip(*batch)
         states = torch.FloatTensor(states)
-        v_ads = torch.FloatTensor(v_ads)
+        v_ads = torch.FloatFloatTensor(v_ads)
         self.dnn.optimizer.zero_grad()
         _, predictions = self.dnn(states)
         loss = self.dnn.loss_fn(predictions, v_ads)
         loss.backward()
         self.dnn.optimizer.step()
+
 
     
 
