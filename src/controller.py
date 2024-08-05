@@ -436,9 +436,8 @@ class Controller:
         print("Features before squeeze:", features)
         features = features.squeeze().numpy()  # Remove batch dimension and convert to numpy array
         print("Features after squeeze:", features)
-        if len(features) == 6:
-            features = np.append(features, 1)  # Append 1 to make it 7 elements
-        return features
+        return features  # Ensure this returns 6 elements
+
 
 
 
