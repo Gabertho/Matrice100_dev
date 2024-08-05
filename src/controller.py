@@ -434,7 +434,10 @@ class Controller:
         with torch.no_grad():
             features, _ = self.dnn(state_tensor)
         print("Features before squeeze:", features)
-        return features.squeeze().numpy()  # Remove batch dimension and convert to numpy array
+        features = features.squeeze().numpy()  # Remove batch dimension and convert to numpy array
+        print("Features after squeeze:", features)
+        return features
+
 
 
 
