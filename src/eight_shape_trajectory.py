@@ -18,9 +18,6 @@ class EightShapeTrajectory:
         self.time_elapsed = 0.0
         self.enabled_flag = False
         self.target_yaw = 0.0
-        self.x = 0.0
-        self.y = 0.0
-        self.z = 0.0
         self.targets = self.generate_eight_shape()
 
     def generate_eight_shape(self):
@@ -39,15 +36,17 @@ class EightShapeTrajectory:
         return self.enabled_flag
 
     def enable(self):
-        self.enabled_flag = True
-        self.time_elapsed = 0.0
-        print("EightShapeTrajectory: Trajetória ativada")
+        if not self.enabled_flag:
+            self.enabled_flag = True
+            self.time_elapsed = 0.0
+            print("EightShapeTrajectory: Trajetória ativada")
 
     def disable(self):
         self.enabled_flag = False
         print("EightShapeTrajectory: Trajetória desativada")
 
     def notify_position(self, x, y, z):
+        # Atualiza a posição atual do drone
         self.x = x
         self.y = y
         self.z = z
@@ -106,8 +105,7 @@ class EightShapeTrajectory:
         self.time_elapsed += 0.02  # Considerando dt = 0.02
         index = int((self.time_elapsed * self.target_speed) % len(self.targets))
         self.target_x, self.target_y, self.target_z = self.targets[index]
-        self.x, self.y, self.z = self.target_x, self.target_y, self.target_z
-        print(f"EightShapeTrajectory: Movendo para x: {self.x}, y: {self.y}, z: {self.z}")
+        print(f"EightShapeTrajectory: Movendo para x: {self.target_x}, y: {self.target_y}, z: {self.target_z}")
 
     def tick(self, dt):
         if not self.enabled_flag:
