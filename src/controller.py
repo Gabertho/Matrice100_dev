@@ -22,8 +22,8 @@ class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
         self.HL1 = nn.Linear(6, 20)
-        self.HL2 = nn.Linear(20, 6)  # Ajuste o tamanho de saída para 6
-        self.OL = nn.Linear(6, 3)
+        self.HL2 = nn.Linear(20, 10)  # Ajuste o tamanho de saída para 6
+        self.OL = nn.Linear(10, 3)
         self.optimizer = optim.Adam(self.parameters(), lr=0.0005)
         self.loss_fn = nn.MSELoss()
 
@@ -180,8 +180,8 @@ class Controller:
         self.Q_lyap_thrust = np.eye(6)
         self.P_lyap_thrust = sp.solve_continuous_lyapunov(self.Am_thrust, self.Q_lyap_thrust)
         # Adaptive Parameters
-        self.W_thrust = np.zeros((7,3))  # Adjust dimensions based on Phi(x)
-        self.Gamma_thrust = 0.01 * np.eye(7)  # Learning rate matrix, set to 0.01  # Learning rate matrix
+        self.W_thrust = np.zeros((10,3))  # Adjust dimensions based on Phi(x)
+        self.Gamma_thrust = 0.01 * np.eye(10)  # Learning rate matrix, set to 0.01  # Learning rate matrix
 
         # DMRAC Parameters
         self.dnn = Net()
@@ -432,6 +432,27 @@ class Controller:
 
         return v_ad  # Return as a 1D array
     
+    def adaptive_control_thrust_dmrac(self, phi, e):
+        # `phi` agora tem 10 elementos, ajustando o código para refletir isso
+        phi = phi.reshape(-1, 1)  # `phi` agora é (10, 1)
+
+        # Calcular a lei de controle adaptativo
+        v_ad = np.dot(self.W_thrust.T, phi).flatten()  # `v_ad` agora é (3,)
+        
+        e = e.reshape(-1, 1)  # `e` deve ser (6, 1)
+
+        # Adaptar as dimensões para garantir a compatibilidade
+        P_Bp = self.P_lyap_thrust @ self.B_thrust  # Resulta em uma matriz (6, 3)
+        e_T_P_Bp = e.T @ P_Bp  # Resulta em (1, 3)
+        phi_e_T_P_Bp = phi @ e_T_P_Bp  # Resulta em (10, 3)
+
+        # Termo de adaptação
+        adaptation_term = self.Gamma_thrust @ phi_e_T_P_Bp * self.dt  # Resulta em (10, 3)
+
+        # Atualiza `W_thrust` com as novas dimensões
+        self.W_thrust += -adaptation_term
+
+        return v_ad  # Retorna como um array 1D
 
     def get_dnn_features(self, state):
         state_tensor = torch.FloatTensor(state).unsqueeze(0)  # Convert to tensor and add batch dimension
@@ -850,7 +871,7 @@ class Controller:
 
                 phi = self.get_dnn_features(state)
                 print("phi:", phi)
-                v_ad = self.adaptive_control_thrust(phi, mrac_error)
+                v_ad = self.adaptive_control_thrust_dmrac(phi, mrac_error)
                 print("vad roll:", math.radians(v_ad[0]))
                 print("vad pitch:", math.radians(v_ad[1]))
                 print("vad thrust:", v_ad[2])
