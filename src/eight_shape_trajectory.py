@@ -5,13 +5,13 @@ from geometry_msgs.msg import PointStamped, PoseStamped, Point
 from std_msgs.msg import Float64
 
 class EightShapeTrajectory:
-    def __init__(self, speed):
-        self.start_x = None
-        self.start_y = None
-        self.start_z = None
-        self.target_x = None
-        self.target_y = None
-        self.target_z = None
+    def __init__(self, x=None, y=None, z=None, speed=1.0):
+        self.start_x = x
+        self.start_y = y
+        self.start_z = z
+        self.target_x = x
+        self.target_y = y
+        self.target_z = z
         self.target_speed = speed
         self.radius = 5.0  # Raio do círculo do "oito"
         self.angular_velocity = self.target_speed / self.radius
@@ -19,6 +19,9 @@ class EightShapeTrajectory:
         self.enabled_flag = False
         self.target_yaw = 0.0
         self.targets = []
+
+        if self.start_x is not None and self.start_y is not None and self.start_z is not None:
+            self.generate_eight_shape()
 
     def generate_eight_shape(self):
         # Gerar a forma de oito como uma lista de pontos
