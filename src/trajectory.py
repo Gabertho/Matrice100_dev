@@ -19,6 +19,8 @@ from sensor_msgs.msg import Joy, LaserScan, BatteryState
 
 from goto_trajectory import GotoTrajectory
 from spline_trajectory import SplineTrajectory
+from eight_shape_trajectory import EightShapeTrajectory  
+
 
 from optparse import OptionParser
 from threading import Lock, Event
@@ -218,6 +220,7 @@ if __name__ == "__main__":
     speed = rospy.get_param("~speed", 3.0)
     control_mode = rospy.get_param("control_mode", "velocity")
     spline_flag =  rospy.get_param("~spline", False)
+    eight_shape_flag = rospy.get_param("~eight_shape", False)  
 
     full_trajectory_flag = rospy.get_param("full_trajectory", False)
 
@@ -225,6 +228,8 @@ if __name__ == "__main__":
 
     if spline_flag:
         trajectory = SplineTrajectory(x, y, z, speed)
+    elif eight_shape_flag:
+        trajectory = EightShapeTrajectory(x, y, z, speed)
     else:
         trajectory = GotoTrajectory(x, y, z, speed)
     
