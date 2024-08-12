@@ -1,7 +1,8 @@
 import rospy
 import math
+import numpy as np
 from nav_msgs.msg import Path
-from geometry_msgs.msg import PointStamped, PoseStamped
+from geometry_msgs.msg import PointStamped, PoseStamped, Point
 from std_msgs.msg import Float64
 
 class EightShapeTrajectory:
@@ -9,36 +10,40 @@ class EightShapeTrajectory:
         self.start_x = x
         self.start_y = y
         self.start_z = z
-        self.target_x = x
-        self.target_y = y
-        self.target_z = z
         self.target_speed = speed
-        self.acc = 1.0
-        self.phase = "acc"
-        self.have_initial_position = False
-        self.have_initial_position_from_pose = False
-        self.speed = 0.0
-        self.travel_length = 0.0
-        self.joy_x = 0.0
-        self.joy_y = 0.0
-        self.joy_z = 0.0
+        self.radius = 5.0  # Raio do círculo do "oito"
+        self.angular_velocity = self.target_speed / self.radius
+        self.time_elapsed = 0.0
         self.enabled_flag = False
         self.target_yaw = 0.0
         self.x = x
         self.y = y
         self.z = z
-        self.acc_len = 0.0
-        self.radius = 5.0  # Raio do círculo do "oito"
-        self.angular_velocity = self.target_speed / self.radius
-        self.time_elapsed = 0.0
 
-        print(f"EightShapeTrajectory inicializada: x={x}, y={y}, z={z}, speed={speed}")
+        self.path_points = self.calculate_eight_shape_path()
+        self.current_path_index = 0
+
+    def calculate_eight_shape_path(self):
+        points = []
+        times = np.arange(0.0, 2 * math.pi / self.angular_velocity, 0.1)
+        for t in times:
+            x = self.start_x + self.radius * math.sin(self.angular_velocity * t)
+            y = self.start_y + self.radius * math.sin(2 * self.angular_velocity * t) / 2
+            z = self.start_z
+            p = Point()
+            p.x = x
+            p.y = y
+            p.z = z
+            points.append(p)
+        return points
 
     def enabled(self):
         return self.enabled_flag
 
     def enable(self):
         self.enabled_flag = True
+        self.current_path_index = 0
+        self.time_elapsed = 0.0
         print("EightShapeTrajectory: Trajetória ativada")
 
     def disable(self):
@@ -46,39 +51,11 @@ class EightShapeTrajectory:
         print("EightShapeTrajectory: Trajetória desativada")
 
     def notify_position(self, x, y, z):
-        if not self.have_initial_position_from_pose:
-            self.have_initial_position_from_pose = True
-            self.x = x
-            self.y = y
-            self.z = z
-            print(f"EightShapeTrajectory: Posição inicial notificada - x: {x}, y: {y}, z: {z}")
-
-    def set_target(self, x, y, z):
-        print(f"EightShapeTrajectory: Novo alvo definido - x: {x}, y: {y}, z: {z}")
-        self.target_x = x
-        self.target_y = y
-        self.target_z = z
-        self.reset()
-
-    def move_target(self, joy_x, joy_y, joy_z):
-        self.joy_x = joy_x
-        self.joy_y = joy_y
-        self.joy_z = joy_z
-        print(f"EightShapeTrajectory: Movendo alvo - joy_x: {joy_x}, joy_y: {joy_y}, joy_z: {joy_z}")
-
-    def reset(self):
-        if not self.have_initial_position:
+        if not self.enabled_flag:
             return
-        self.time_elapsed = 0.0
-        self.speed = 0.0
-        self.phase = "acc"
-        self.acc_len = 0.0
-
-        # Resetando para o início da forma de "oito"
-        self.x = self.start_x
-        self.y = self.start_y
-        self.z = self.start_z
-        print("EightShapeTrajectory: Reset da trajetória realizado")
+        self.x = x
+        self.y = y
+        self.z = z
 
     def get_point_stamped(self):
         msg = PointStamped()
@@ -101,77 +78,46 @@ class EightShapeTrajectory:
         msg.pose.orientation.w = 1.0
         return msg
 
-    def get_target_point_stamped(self):
-        msg = PointStamped()
-        msg.header.frame_id = "world"
-        msg.header.stamp = rospy.Time.now()
-        msg.point.x = self.target_x
-        msg.point.y = self.target_y
-        msg.point.z = self.target_z
-        return msg
-
     def get_target_yaw(self):
         msg = Float64()
         msg.data = self.target_yaw
         return msg
 
-    def set_initial_position(self, x, y, z):
-        if self.enabled_flag:
-            return
-        print(f"EightShapeTrajectory: Posição inicial configurada - x: {x}, y: {y}, z: {z}")
-        self.x = x
-        self.y = y
-        self.z = z
-        if not self.have_initial_position:
-            self.reset()
-            self.have_initial_position = True
+    def get_path_points(self):
+        return self.path_points
 
     def get_path(self, dt):
         pathmsg = Path()
         pathmsg.header.frame_id = "world"
-        pathmsg.header.stamp.secs = 0
-        pathmsg.header.stamp.nsecs = int(1000000000.0 * dt)
+        pathmsg.header.stamp = rospy.Time.now()
 
-        points = []
-        for i in range(0, 360):
-            t = math.radians(i)
-            x = self.start_x + self.radius * math.sin(self.angular_velocity * t)
-            y = self.start_y + self.radius * math.sin(2 * self.angular_velocity * t) / 2
-            z = self.start_z
+        for point in self.path_points:
+            msg = PoseStamped()
+            msg.header.frame_id = "world"
+            msg.pose.position.x = point.x
+            msg.pose.position.y = point.y
+            msg.pose.position.z = point.z
+            msg.pose.orientation.x = 0.0
+            msg.pose.orientation.y = 0.0
+            msg.pose.orientation.z = 0.0
+            msg.pose.orientation.w = 1.0
+            pathmsg.poses.append(msg)
 
-            point = PoseStamped()
-            point.header.frame_id = "world"
-            point.pose.position.x = x
-            point.pose.position.y = y
-            point.pose.position.z = z
-            point.pose.orientation.w = 1.0
-
-            pathmsg.poses.append(point)
-            points.append((x, y, z))
-
-        print(f"EightShapeTrajectory: Caminho gerado com {len(points)} pontos.")
         return pathmsg
 
     def move_tick(self):
-        self.target_x += self.joy_x
-        self.target_y += self.joy_y
-        self.target_z += self.joy_z
-        print(f"EightShapeTrajectory: move_tick chamado - target_x: {self.target_x}, target_y: {self.target_y}, target_z: {self.target_z}")
-
-        if not self.enabled_flag:
-            self.reset()
-            return
+        # A trajetória é fixa, então move_tick não altera a trajetória
+        pass
 
     def tick(self, dt):
         if not self.enabled_flag:
             return
 
-        # Atualiza a posição ao longo da trajetória em forma de oito
-        self.time_elapsed += dt
-        self.x = self.start_x + self.radius * math.sin(self.angular_velocity * self.time_elapsed)
-        self.y = self.start_y + self.radius * math.sin(2 * self.angular_velocity * self.time_elapsed) / 2
-        self.z = self.start_z
-
-        self.target_yaw = math.atan2(self.y - self.start_y, self.x - self.start_x)
-
-        print(f"EightShapeTrajectory: Posição atualizada (tick) - x: {self.x}, y: {self.y}, z: {self.z}, yaw: {self.target_yaw}")
+        if self.current_path_index < len(self.path_points):
+            self.x = self.path_points[self.current_path_index].x
+            self.y = self.path_points[self.current_path_index].y
+            self.z = self.path_points[self.current_path_index].z
+            self.target_yaw = math.atan2(self.y - self.start_y, self.x - self.start_x)
+            self.current_path_index += 1
+        else:
+            self.disable()  # Desativa após completar a trajetória
