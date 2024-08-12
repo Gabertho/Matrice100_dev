@@ -1,8 +1,7 @@
 import rospy
 import math
-import numpy as np
 from nav_msgs.msg import Path
-from geometry_msgs.msg import PointStamped, PoseStamped, Point
+from geometry_msgs.msg import PointStamped, PoseStamped
 from std_msgs.msg import Float64
 
 class EightShapeTrajectory:
@@ -10,22 +9,25 @@ class EightShapeTrajectory:
         self.start_x = x
         self.start_y = y
         self.start_z = z
+        self.target_x = x
+        self.target_y = y
+        self.target_z = z
         self.target_speed = speed
-        self.acc = 1.0  # Aceleração constante
+        self.acc = 1.0
         self.phase = "acc"
         self.have_initial_position = False
         self.have_initial_position_from_pose = False
         self.speed = 0.0
         self.travel_length = 0.0
-        self.acc_len = 0.0
         self.joy_x = 0.0
         self.joy_y = 0.0
         self.joy_z = 0.0
         self.enabled_flag = False
         self.target_yaw = 0.0
-        self.x = x
-        self.y = y
-        self.z = z
+        self.x = 0.0
+        self.y = 0.0
+        self.z = 0.0
+        self.acc_len = 0.0
         self.radius = 5.0  # Raio do círculo do "oito"
         self.angular_velocity = self.target_speed / self.radius
         self.time_elapsed = 0.0
@@ -45,6 +47,31 @@ class EightShapeTrajectory:
             self.x = x
             self.y = y
             self.z = z
+
+    def set_target(self, x, y, z):
+        print("set_target:", x, y, z)
+        self.target_x = x
+        self.target_y = y
+        self.target_z = z
+        self.reset()
+
+    def move_target(self, joy_x, joy_y, joy_z):
+        self.joy_x = joy_x
+        self.joy_y = joy_y
+        self.joy_z = joy_z
+
+    def reset(self):
+        if not self.have_initial_position:
+            return
+        self.time_elapsed = 0.0
+        self.speed = 0.0
+        self.phase = "acc"
+        self.acc_len = 0.0
+
+        # Resetando para o início da forma de "oito"
+        self.x = self.start_x
+        self.y = self.start_y
+        self.z = self.start_z
 
     def get_point_stamped(self):
         msg = PointStamped()
@@ -67,6 +94,15 @@ class EightShapeTrajectory:
         msg.pose.orientation.w = 1.0
         return msg
 
+    def get_target_point_stamped(self):
+        msg = PointStamped()
+        msg.header.frame_id = "world"
+        msg.header.stamp = rospy.Time.now()
+        msg.point.x = self.target_x
+        msg.point.y = self.target_y
+        msg.point.z = self.target_z
+        return msg
+
     def get_target_yaw(self):
         msg = Float64()
         msg.data = self.target_yaw
@@ -80,85 +116,115 @@ class EightShapeTrajectory:
         self.y = y
         self.z = z
         if not self.have_initial_position:
-            self.have_initial_position = True
             self.reset()
-
-    def reset(self):
-        self.time_elapsed = 0.0
-        self.speed = 0.0
-        self.phase = "acc"
-        self.acc_len = 0.0
-
-    def get_path_points(self):
-        points = []
-        time_span = np.arange(0, 2 * math.pi / self.angular_velocity, 0.1)
-
-        for t in time_span:
-            x = self.start_x + self.radius * math.sin(self.angular_velocity * t)
-            y = self.start_y + self.radius * math.sin(2 * self.angular_velocity * t) / 2
-            z = self.start_z  # Mantém altura constante
-
-            point = Point()
-            point.x = x
-            point.y = y
-            point.z = z
-            points.append(point)
-        return points
+            self.have_initial_position = True
 
     def get_path(self, dt):
+        x = self.x
+        y = self.y
+        z = self.z
+        phase = "acc"
+        speed = 0.0
+        acc_len = 0.0
+
+        self.reset()
+
         pathmsg = Path()
+
         pathmsg.header.frame_id = "world"
         pathmsg.header.stamp.secs = 0
         pathmsg.header.stamp.nsecs = int(1000000000.0 * dt)
 
-        points = self.get_path_points()
-        for point in points:
+        # While we are not hovering, i.e., we didn't reach the target position:
+        while phase != "hover":
+            if phase == "acc":
+                speed += self.acc * dt
+                if speed > self.target_speed:
+                    speed = self.target_speed
+                    phase = "cruise"
+                else:
+                    if acc_len >= self.travel_length / 2.0:
+                        phase = "brake"
+
+            if phase == "brake":
+                speed -= self.acc * dt
+                if speed < 0.0:
+                    speed = 0.0
+                    phase = "hover"
+
+            if phase == "cruise":
+                if acc_len >= self.travel_length / 2.0:
+                    phase = "brake"
+
+            len_traveled = speed * dt
+            acc_len += len_traveled
+
+            # Calculando nova posição na trajetória em forma de "oito"
+            self.time_elapsed += dt
+            x = self.start_x + self.radius * math.sin(self.angular_velocity * self.time_elapsed) * (speed / self.target_speed)
+            y = self.start_y + self.radius * math.sin(2 * self.angular_velocity * self.time_elapsed) / 2 * (speed / self.target_speed)
+            z = self.start_z
+
             msg = PoseStamped()
             msg.header.frame_id = "world"
-            msg.pose.position.x = point.x
-            msg.pose.position.y = point.y
-            msg.pose.position.z = point.z
+            msg.pose.position.x = x
+            msg.pose.position.y = y
+            msg.pose.position.z = z
             msg.pose.orientation.x = 0.0
             msg.pose.orientation.y = 0.0
             msg.pose.orientation.z = 0.0
             msg.pose.orientation.w = 1.0
-            pathmsg.poses.append(msg)
+
+            if phase == "hover":
+                pathmsg.poses[-1] = msg
+            else:
+                pathmsg.poses.append(msg)
 
         return pathmsg
 
     def move_tick(self):
-        # Mantém o método vazio para compatibilidade, mas sem funcionalidade.
-        pass
+        self.target_x += self.joy_x
+        self.target_y += self.joy_y
+        self.target_z += self.joy_z
+
+        if not self.enabled_flag:
+            self.reset()
+            return
 
     def tick(self, dt):
         if not self.enabled_flag:
             return
 
-        # Fase de Aceleração
+        dx = self.target_x - self.x
+        dy = self.target_y - self.y
+        dz = self.target_z - self.z
+        dist_to_target = math.sqrt(dx * dx + dy * dy + dz * dz)
+
         if self.phase == "acc":
             self.speed += self.acc * dt
-            if self.speed >= self.target_speed:
+            if self.speed > self.target_speed:
                 self.speed = self.target_speed
                 self.phase = "cruise"
-            self.acc_len += self.speed * dt
+            else:
+                if self.acc_len >= self.travel_length / 2.0:
+                    self.phase = "brake"
 
-        # Fase de Cruzeiro
-        if self.phase == "cruise":
-            if self.acc_len >= self.travel_length / 2.0:
-                self.phase = "brake"
-
-        # Fase de Desaceleração
         if self.phase == "brake":
             self.speed -= self.acc * dt
-            if self.speed <= 0.0:
+            if self.speed < 0.0 or (dist_to_target < 0.05):
                 self.speed = 0.0
                 self.phase = "hover"
 
-        # Atualiza a posição com base na fase atual e no tempo decorrido
+        if self.phase == "cruise":
+            if dist_to_target <= self.acc_len:
+                self.phase = "brake"
+
+        len_traveled = self.speed * dt
+
         self.time_elapsed += dt
         self.x = self.start_x + self.radius * math.sin(self.angular_velocity * self.time_elapsed) * (self.speed / self.target_speed)
         self.y = self.start_y + self.radius * math.sin(2 * self.angular_velocity * self.time_elapsed) / 2 * (self.speed / self.target_speed)
-        self.z = self.start_z  # Mantém altura constante
+        self.z = self.start_z
 
-        # Calcula a orientação (yaw) baseada na direção do movimento
+        self.acc_len += len_traveled
         self.target_yaw = math.atan2(self.y - self.start_y, self.x - self.start_x)
