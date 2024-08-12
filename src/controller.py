@@ -11,10 +11,12 @@ import scipy
 import scipy.ndimage
 import math
 import scipy.linalg as sp
+from scipy.linalg import svd
 from scipy import linalg
 import torch
 import torch.nn as nn
 import torch.optim as optim
+
 
 class Net(nn.Module):
     def __init__(self):
@@ -187,6 +189,10 @@ class Controller:
         self.buffer_size = 1000
         self.batch_size = 64
         self.zeta_tol = 0.1
+
+        #Counter for triggering DNN training
+        self.new_samples_collected = 0
+        self.training_interval = 100  # Train every 100 new samples
 
         
 
@@ -440,13 +446,57 @@ class Controller:
 
 
 
+    def calculate_independence_metric(self, x, y):
+        """
+        Calcula uma métrica de independência baseada na covariância.
+        """
+        phi_x = self.get_dnn_features(x)
+        y_pred = np.dot(self.W_thrust.T, phi_x)
+
+        # Usamos a diferença entre a predição e o valor real como proxy da independência
+        independence_metric = np.linalg.norm(y - y_pred)
+        return independence_metric
+    
+    def remove_least_representative(self):
+        """
+        Remove o dado menos representativo usando a decomposição SVD.
+        """
+        # Cria uma matriz dos dados no buffer
+        buffer_matrix = np.array([np.hstack([x, y]) for x, y in self.replay_buffer])
+
+        # Realiza a decomposição SVD
+        _, _, vh = svd(buffer_matrix, full_matrices=False)
+
+        # A amostra correspondente ao menor valor singular é a menos representativa
+        least_representative_index = np.argmin(vh[-1])
+
+        # Remove essa amostra do buffer
+        del self.replay_buffer[least_representative_index]
 
 
 
-    def update_replay_buffer(self, state, v_ad):
-        if len(self.replay_buffer) >= self.buffer_size:
-            self.replay_buffer.pop(0)
-        self.replay_buffer.append((state, v_ad))
+    def update_replay_buffer(self, x, y):
+        """
+        Atualiza o replay buffer com base na métrica de independência e realiza SVD se necessário.
+        """
+        independence_metric = self.calculate_independence_metric(x, y)
+
+        if independence_metric > self.zeta_tol:
+            # Adiciona o par (x, y) ao buffer
+            self.replay_buffer.append((x, y))
+            self.new_samples_collected += 1  # Atualiza o contador de novas amostras
+
+            # Remove o dado menos representativo se o buffer estiver cheio
+            if len(self.replay_buffer) > self.buffer_size:
+                self.remove_least_representative()
+
+            # Treina a DNN após coletar um número significativo de novas amostras
+            if self.new_samples_collected >= self.training_interval:
+                self.train_dnn()
+                self.new_samples_collected = 0  # Reseta o contador de amostras
+
+ 
+
 
     def train_dnn(self):
         if len(self.replay_buffer) < self.batch_size:
