@@ -24,9 +24,9 @@ class EightShapeTrajectory:
         self.joy_z = 0.0
         self.enabled_flag = False
         self.target_yaw = 0.0
-        self.x = 0.0
-        self.y = 0.0
-        self.z = 0.0
+        self.x = x
+        self.y = y
+        self.z = z
         self.acc_len = 0.0
         self.radius = 5.0  # Raio do círculo do "oito"
         self.angular_velocity = self.target_speed / self.radius
@@ -132,48 +132,24 @@ class EightShapeTrajectory:
         pathmsg.header.stamp.secs = 0
         pathmsg.header.stamp.nsecs = int(1000000000.0 * dt)
 
-        print("EightShapeTrajectory: Iniciando geração do caminho")
+        points = []
+        for i in range(0, 360):
+            t = math.radians(i)
+            x = self.start_x + self.radius * math.sin(self.angular_velocity * t)
+            y = self.start_y + self.radius * math.sin(2 * self.angular_velocity * t) / 2
+            z = self.start_z
 
-        if self.phase == "acc":
-            self.speed += self.acc * dt
-            if self.speed >= self.target_speed:
-                self.speed = self.target_speed
-                self.phase = "cruise"
-                print("EightShapeTrajectory: Fase de cruzeiro iniciada")
-            self.acc_len += self.speed * dt
+            point = PoseStamped()
+            point.header.frame_id = "world"
+            point.pose.position.x = x
+            point.pose.position.y = y
+            point.pose.position.z = z
+            point.pose.orientation.w = 1.0
 
-        if self.phase == "cruise":
-            if self.acc_len >= self.travel_length / 2.0:
-                self.phase = "brake"
-                print("EightShapeTrajectory: Fase de desaceleração iniciada")
+            pathmsg.poses.append(point)
+            points.append((x, y, z))
 
-        if self.phase == "brake":
-            self.speed -= self.acc * dt
-            if self.speed <= 0.0:
-                self.speed = 0.0
-                self.phase = "hover"
-                print("EightShapeTrajectory: Fase de hover atingida")
-
-        self.time_elapsed += dt
-        self.x = self.start_x + self.radius * math.sin(self.angular_velocity * self.time_elapsed) * (self.speed / self.target_speed)
-        self.y = self.start_y + self.radius * math.sin(2 * self.angular_velocity * self.time_elapsed) / 2 * (self.speed / self.target_speed)
-        self.z = self.start_z
-
-        self.target_yaw = math.atan2(self.y - self.start_y, self.x - self.start_x)
-
-        print(f"EightShapeTrajectory: Posição atualizada - x: {self.x}, y: {self.y}, z: {self.z}, yaw: {self.target_yaw}")
-
-        msg = PoseStamped()
-        msg.header.frame_id = "world"
-        msg.pose.position.x = self.x
-        msg.pose.position.y = self.y
-        msg.pose.position.z = self.z
-        msg.pose.orientation.x = 0.0
-        msg.pose.orientation.y = 0.0
-        msg.pose.orientation.z = 0.0
-        msg.pose.orientation.w = 1.0
-
-        pathmsg.poses.append(msg)
+        print(f"EightShapeTrajectory: Caminho gerado com {len(points)} pontos.")
         return pathmsg
 
     def move_tick(self):
@@ -190,40 +166,12 @@ class EightShapeTrajectory:
         if not self.enabled_flag:
             return
 
-        dx = self.target_x - self.x
-        dy = self.target_y - self.y
-        dz = self.target_z - self.z
-        dist_to_target = math.sqrt(dx * dx + dy * dy + dz * dz)
-
-        if self.phase == "acc":
-            self.speed += self.acc * dt
-            if self.speed > self.target_speed:
-                self.speed = self.target_speed
-                self.phase = "cruise"
-                print("EightShapeTrajectory: Fase de cruzeiro iniciada (tick)")
-            else:
-                if self.acc_len >= self.travel_length / 2.0:
-                    self.phase = "brake"
-                    print("EightShapeTrajectory: Fase de freio iniciada (tick)")
-
-        if self.phase == "brake":
-            self.speed -= self.acc * dt
-            if self.speed < 0.0 or (dist_to_target < 0.05):
-                self.speed = 0.0
-                self.phase = "hover"
-                print("EightShapeTrajectory: Fase de hover atingida (tick)")
-
-        if self.phase == "cruise":
-            if dist_to_target <= self.acc_len:
-                self.phase = "brake"
-                print("EightShapeTrajectory: Fase de freio iniciada (tick)")
-
+        # Atualiza a posição ao longo da trajetória em forma de oito
         self.time_elapsed += dt
-        self.x = self.start_x + self.radius * math.sin(self.angular_velocity * self.time_elapsed) * (self.speed / self.target_speed)
-        self.y = self.start_y + self.radius * math.sin(2 * self.angular_velocity * self.time_elapsed) / 2 * (self.speed / self.target_speed)
+        self.x = self.start_x + self.radius * math.sin(self.angular_velocity * self.time_elapsed)
+        self.y = self.start_y + self.radius * math.sin(2 * self.angular_velocity * self.time_elapsed) / 2
         self.z = self.start_z
 
-        self.acc_len += self.speed * dt
         self.target_yaw = math.atan2(self.y - self.start_y, self.x - self.start_x)
 
         print(f"EightShapeTrajectory: Posição atualizada (tick) - x: {self.x}, y: {self.y}, z: {self.z}, yaw: {self.target_yaw}")
