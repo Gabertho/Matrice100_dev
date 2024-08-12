@@ -5,7 +5,7 @@ from geometry_msgs.msg import PointStamped, PoseStamped, Point
 from std_msgs.msg import Float64
 
 class EightShapeTrajectory:
-    def __init__(self, x=None, y=None, z=None, speed=1.0):
+    def __init__(self, x, y, z, speed):
         self.start_x = x
         self.start_y = y
         self.start_z = z
@@ -18,16 +18,10 @@ class EightShapeTrajectory:
         self.time_elapsed = 0.0
         self.enabled_flag = False
         self.target_yaw = 0.0
-        self.targets = []
-
-        if self.start_x is not None and self.start_y is not None and self.start_z is not None:
-            self.generate_eight_shape()
+        self.targets = self.generate_eight_shape()
 
     def generate_eight_shape(self):
         # Gerar a forma de oito como uma lista de pontos
-        if self.start_x is None or self.start_y is None or self.start_z is None:
-            return  # Trajetória ainda não pode ser gerada
-
         targets = []
         num_points = 100
         for i in range(num_points):
@@ -36,26 +30,13 @@ class EightShapeTrajectory:
             y = self.start_y + self.radius * math.sin(2 * t) / 2
             z = self.start_z
             targets.append([x, y, z])
-        self.targets = targets
-
-    def set_initial_position(self, x, y, z):
-        if self.start_x is None and self.start_y is None and self.start_z is None:
-            # Defina a origem da trajetória como a posição inicial do drone
-            self.start_x = x
-            self.start_y = y
-            self.start_z = z
-            self.generate_eight_shape()  # Gera a trajetória apenas uma vez com a posição inicial
-            print(f"EightShapeTrajectory: Posição inicial configurada - x: {x}, y: {y}, z: {z}")
-
-        self.target_x = x
-        self.target_y = y
-        self.target_z = z
+        return targets
 
     def enabled(self):
         return self.enabled_flag
 
     def enable(self):
-        if not self.enabled_flag and self.start_x is not None:
+        if not self.enabled_flag:
             self.enabled_flag = True
             self.time_elapsed = 0.0
             print("EightShapeTrajectory: Trajetória ativada")
@@ -71,6 +52,18 @@ class EightShapeTrajectory:
         self.z = z
         print(f"EightShapeTrajectory: Posição atual notificada - x: {x}, y: {y}, z: {z}")
 
+    def set_target(self, x, y, z):
+        print(f"EightShapeTrajectory: Novo alvo definido - x: {x}, y: {y}, z: {z}")
+        self.target_x = x
+        self.target_y = y
+        self.target_z = z
+
+    def set_initial_position(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
+        print(f"EightShapeTrajectory: Posição inicial configurada - x: {x}, y: {y}, z: {z}")
+
     def get_point_stamped(self):
         msg = PointStamped()
         msg.header.frame_id = "world"
@@ -78,6 +71,20 @@ class EightShapeTrajectory:
         msg.point.x = self.x
         msg.point.y = self.y
         msg.point.z = self.z
+        return msg
+
+    def get_target_point_stamped(self):
+        msg = PointStamped()
+        msg.header.frame_id = "world"
+        msg.header.stamp = rospy.Time.now()
+        msg.point.x = self.target_x
+        msg.point.y = self.target_y
+        msg.point.z = self.target_z
+        return msg
+
+    def get_target_yaw(self):
+        msg = Float64()
+        msg.data = self.target_yaw
         return msg
 
     def get_path_points(self):
