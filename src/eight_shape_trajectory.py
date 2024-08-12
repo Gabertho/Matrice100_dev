@@ -6,9 +6,9 @@ from std_msgs.msg import Float64
 
 class EightShapeTrajectory:
     def __init__(self, x, y, z, speed):
-        self.start_x = x
-        self.start_y = y
-        self.start_z = z
+        self.start_x = 0.0
+        self.start_y = 0.0
+        self.start_z = 2.0
         self.target_x = x
         self.target_y = y
         self.target_z = z
