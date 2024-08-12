@@ -13,7 +13,7 @@ class EightShapeTrajectory:
         self.target_y = y
         self.target_z = z
         self.target_speed = speed
-        self.radius = 5.0  # Raio do círculo do "oito"
+        self.radius = 1.0  # Raio do círculo do "oito"
         self.angular_velocity = self.target_speed / self.radius
         self.time_elapsed = 0.0
         self.enabled_flag = False
