@@ -18,13 +18,14 @@ class EightShapeTrajectory:
         self.time_elapsed = 0.0
         self.enabled_flag = False
         self.target_yaw = 0.0
-        self.x = 0.0
-        self.y = 0.0
-        self.z = 0.0
-        self.targets = self.generate_eight_shape()
+        self.x = x
+        self.y = y
+        self.z = z
+        self.have_initial_position = False
+        self.targets = []
 
     def generate_eight_shape(self):
-        # Gerar a forma de oito como uma lista de pontos
+        # Gerar a forma de oito como uma lista de pontos, baseada na posição inicial do drone
         targets = []
         num_points = 100
         for i in range(num_points):
@@ -39,6 +40,10 @@ class EightShapeTrajectory:
         return self.enabled_flag
 
     def enable(self):
+        if not self.have_initial_position:
+            rospy.logwarn("Initial position not set. Trajectory not enabled.")
+            return
+        self.targets = self.generate_eight_shape()
         self.enabled_flag = True
         self.time_elapsed = 0.0
         print("EightShapeTrajectory: Trajetória ativada")
@@ -60,9 +65,14 @@ class EightShapeTrajectory:
         self.target_z = z
 
     def set_initial_position(self, x, y, z):
+        self.start_x = x
+        self.start_y = y
+        self.start_z = z
         self.x = x
         self.y = y
         self.z = z
+        self.have_initial_position = True
+        self.targets = self.generate_eight_shape()
         print(f"EightShapeTrajectory: Posição inicial configurada - x: {x}, y: {y}, z: {z}")
 
     def get_point_stamped(self):
