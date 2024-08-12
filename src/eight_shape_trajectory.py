@@ -98,6 +98,24 @@ class EightShapeTrajectory:
             points.append(p)
         return points
 
+    def get_path(self, dt):
+        # Retorna o caminho completo como uma mensagem de Path
+        pathmsg = Path()
+        pathmsg.header.frame_id = "world"
+        pathmsg.header.stamp = rospy.Time.now()
+
+        for target in self.targets:
+            pose = PoseStamped()
+            pose.header.frame_id = "world"
+            pose.header.stamp = rospy.Time.now()
+            pose.pose.position.x = target[0]
+            pose.pose.position.y = target[1]
+            pose.pose.position.z = target[2]
+            pose.pose.orientation.w = 1.0  # Sem rotação
+            pathmsg.poses.append(pose)
+
+        return pathmsg
+
     def move_tick(self):
         if not self.enabled_flag:
             return
