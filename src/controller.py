@@ -182,6 +182,8 @@ class Controller:
         self.Q_lyap_thrust = np.eye(6)
         self.P_lyap_thrust = sp.solve_continuous_lyapunov(self.Am_thrust, self.Q_lyap_thrust)
         # Adaptive Parameters
+        self.Wmrac_thrust = np.zeros((10,3))  # Adjust dimensions based on Phi(x)
+
         self.W_thrust = np.zeros((10,3))  # Adjust dimensions based on Phi(x)
         self.Gamma_thrust = 0.01 * np.eye(10)  # Learning rate matrix, set to 0.01  # Learning rate matrix
 
@@ -434,7 +436,7 @@ class Controller:
         #print("Phi:", phi)
 
         # Compute adaptive control law
-        v_ad = np.dot(self.W_thrust.T, phi).flatten()  # `v_ad` is flattened to (3,)
+        v_ad = np.dot(self.Wmrac_thrust.T, phi).flatten()  # `v_ad` is flattened to (3,)
         #print("v_ad:", v_ad)
 
         # Update adaptive parameters
@@ -455,7 +457,7 @@ class Controller:
         #print("adaptation_term:", adaptation_term)
 
         # Update self.W_thrust to match dimensions
-        self.W_thrust += -adaptation_term
+        self.Wmrac_thrust += -adaptation_term
         #print("self.W_thrust:", self.W_thrust)
 
         return v_ad  # Return as a 1D array
