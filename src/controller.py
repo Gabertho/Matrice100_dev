@@ -423,7 +423,7 @@ class Controller:
         adaptation_term = self.Gamma @ phi_e_T_P_Bp * self.dt  # (5, 5) @ (5, 2) -> (5, 2)
         print("adaptation_term.shape:", adaptation_term.shape)
 
-        # Update self.W to match dimensions
+        # Update self.W to matchthrust dimensions
         self.W += -adaptation_term
         print("self.W.shape:", self.W.shape)
 
@@ -715,12 +715,12 @@ class Controller:
         print("PID DELTATHRUST:", delta)
         
         # Thrust control signal = thrust required to hover + PID output.
-        u[2] = self.hover_thrust + delta
+        #u[2] = self.hover_thrust + delta
 
-        if u[2] < 20.0:
-            u[2] = 20.0
-        if u[2] > 80.0:
-            u[2] = 80.0
+        #if u[2] < 20.0:
+            #u[2] = 20.0
+        #if u[2] > 80.0:
+            #u[2] = 80.0
 
         #print("PID THRUST:", u[2])
 
