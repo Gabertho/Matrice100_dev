@@ -5,7 +5,7 @@ from geometry_msgs.msg import PointStamped, PoseStamped, Point
 from std_msgs.msg import Float64
 
 class EightShapeTrajectory:
-    def __init__(self, x, y, z, speed):
+    def __init__(self, x, y, z, speed, num_laps=1):
         self.start_x = 0.0
         self.start_y = 0.0
         self.start_z = 2.0
@@ -18,6 +18,8 @@ class EightShapeTrajectory:
         self.time_elapsed = 0.0
         self.enabled_flag = False
         self.target_yaw = 0.0
+        self.num_laps = num_laps  # Número de voltas que o drone deve percorrer
+        self.current_lap = 0  # Contador de voltas
         self.targets = self.generate_eight_shape()
 
     def generate_eight_shape(self):
@@ -39,6 +41,7 @@ class EightShapeTrajectory:
         if not self.enabled_flag:
             self.enabled_flag = True
             self.time_elapsed = 0.0
+            self.current_lap = 0  # Reinicia o contador de voltas
             print("EightShapeTrajectory: Trajetória ativada")
 
     def disable(self):
@@ -122,6 +125,16 @@ class EightShapeTrajectory:
         # Atualiza o tempo e a posição do drone ao longo da trajetória em forma de oito
         self.time_elapsed += 0.02  # Considerando dt = 0.02
         index = int((self.time_elapsed * self.target_speed) % len(self.targets))
+        
+        if index == 0 and self.time_elapsed > 0.02:
+            self.current_lap += 1  # Incrementa o número de voltas concluídas
+            print(f"EightShapeTrajectory: Completou volta {self.current_lap}/{self.num_laps}")
+        
+        if self.current_lap >= self.num_laps:
+            print("EightShapeTrajectory: Número de voltas concluídas.")
+            self.disable()
+            return
+
         self.target_x, self.target_y, self.target_z = self.targets[index]
         print(f"EightShapeTrajectory: Movendo para x: {self.target_x}, y: {self.target_y}, z: {self.target_z}")
 
