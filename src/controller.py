@@ -205,6 +205,8 @@ class Controller:
 
         rospy.Service('/plot_trajectories', Trigger, self.plot_service_callback)
         rospy.Service('/calculate_mse', Trigger, self.mse_service_callback)
+        rospy.Service('/calculate_rmse', Trigger, self.rmse_service_callback)
+        
 
 
         
@@ -372,6 +374,10 @@ class Controller:
     def mse_service_callback(self, req):
         mse_position, mse_velocity = self.calculate_mse()
         return TriggerResponse(success=True, message=f"MSE Posição: {mse_position}, MSE Velocidade: {mse_velocity}")
+    
+    def rmse_service_callback(self, req):
+        rmse_position, rmse_velocity = self.calculate_mse()
+        return TriggerResponse(success=True, message=f"RMSE Posição: {rmse_position}, RMSE Velocidade: {rmse_velocity}")
 
     # Getters
 
@@ -562,6 +568,12 @@ class Controller:
         mse_position = np.mean((np.array(self.actual_positions) - np.array(self.reference_positions))**2)
         mse_velocity = np.mean((np.array(self.actual_velocities) - np.array(self.reference_velocities))**2)
         return mse_position, mse_velocity
+    
+    def calculate_rmse(self):
+        rmse_position = np.sqrt(np.mean((np.array(self.actual_positions) - np.array(self.reference_positions))**2))
+        rmse_velocity = np.sqrt(np.mean((np.array(self.actual_velocities) - np.array(self.reference_velocities))**2))
+        return rmse_position, rmse_velocity
+
     
     def plot_trajectories(self):
         """Plota as trajetórias desejadas e reais para comparação, incluindo velocidades."""
