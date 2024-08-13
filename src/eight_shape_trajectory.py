@@ -5,7 +5,7 @@ from geometry_msgs.msg import PointStamped, PoseStamped, Point
 from std_msgs.msg import Float64
 
 class EightShapeTrajectory:
-    def __init__(self, x, y, z, speed, num_laps=1):
+    def __init__(self, x, y, z, speed, num_laps=10):
         self.start_x = 0.0
         self.start_y = 0.0
         self.start_z = 2.0
