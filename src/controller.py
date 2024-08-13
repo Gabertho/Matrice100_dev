@@ -220,7 +220,6 @@ class Controller:
         rospy.Service('/plot_trajectories', Trigger, self.plot_service_callback)
         rospy.Service('/calculate_mse', Trigger, self.mse_service_callback)
         rospy.Service('/calculate_rmse', Trigger, self.rmse_service_callback)
-        rospy.Subscriber("full_trajectory", Path, self.path_callback)
         
 
 
