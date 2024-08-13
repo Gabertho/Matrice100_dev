@@ -64,7 +64,7 @@ class Controller:
         self.old_err_yaw = 0.0
         self.old_err_z = 0.0
         self.yaw_control_flag = False
-        self.mode = "MRAC_thrust"
+        self.mode = "simple_pid"
         self.trajectory_flag = False
         self.full_trajectory_x = None
         self.full_trajectory_y = None
@@ -713,12 +713,12 @@ class Controller:
         print("PID DELTATHRUST:", delta)
         
         # Thrust control signal = thrust required to hover + PID output.
-        #u[2] = self.hover_thrust + delta
+        u[2] = self.hover_thrust + delta
 
-        #if u[2] < 20.0:
-            #u[2] = 20.0
-        #if u[2] > 80.0:
-            #u[2] = 80.0
+        if u[2] < 20.0:
+            u[2] = 20.0
+        if u[2] > 80.0:
+            u[2] = 80.0
 
         #print("PID THRUST:", u[2])
 
