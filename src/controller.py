@@ -208,14 +208,6 @@ class Controller:
         self.reference_velocities = []
         self.control_inputs = []  # Para armazenar roll, pitch e thrust
 
-        self.mission_complete = False
-        self.final_target_reached = False
-        self.stabilization_start_time = None
-        self.stabilization_duration = 2.0  # Tempo de estabilização em segundos
-        
-        # Atributos para a trajetória
-        self.final_target_position = None  # Posição do último ponto da trajetória
-
         
         rospy.Service('/plot_trajectories', Trigger, self.plot_service_callback)
         rospy.Service('/calculate_mse', Trigger, self.mse_service_callback)
@@ -235,7 +227,6 @@ class Controller:
         x = [data.pose.position.x for data in path.poses]
         y = [data.pose.position.y for data in path.poses]
         z = [data.pose.position.z for data in path.poses]
-        self.final_target_position = np.array([x[-1], y[-1], z[-1]])
         vx = []
         vy = []
         vz = []
@@ -395,73 +386,7 @@ class Controller:
         rmse_position, rmse_velocity = self.calculate_mse()
         return TriggerResponse(success=True, message=f"RMSE Posição: {rmse_position}, RMSE Velocidade: {rmse_velocity}")
     
-    def check_mission_status(self):
-        if self.mission_complete:
-            return
-
-        if self.final_target_position is None:
-            return
-
-        # Verifica se o drone está próximo do ponto final
-        distance_to_final_target = np.linalg.norm(self.current_position - self.final_target_position)
-
-        if distance_to_final_target < 0.1:  # Tolerância para considerar o alvo atingido
-            if not self.final_target_reached:
-                self.final_target_reached = True
-                self.stabilization_start_time = time.time()
-                rospy.loginfo("Ponto final atingido, iniciando estabilização...")
-            elif time.time() - self.stabilization_start_time >= self.stabilization_duration:
-                self.mission_complete = True
-                rospy.loginfo("Missão concluída com sucesso!")
-                self.call_services()
-        else:
-            self.final_target_reached = False
-            self.stabilization_start_time = None
-
-    def call_services(self):
-        # Chamar serviço de plotagem
-        try:
-            rospy.wait_for_service('/plot_trajectories', timeout=5)
-            plot_service = rospy.ServiceProxy('/plot_trajectories', Trigger)
-            response = plot_service()
-            if response.success:
-                rospy.loginfo("Plotagem concluída com sucesso.")
-            else:
-                rospy.logwarn(f"Falha na plotagem: {response.message}")
-        except rospy.ServiceException as e:
-            rospy.logerr(f"Erro ao chamar o serviço de plotagem: {e}")
-        except rospy.ROSException as e:
-            rospy.logerr(f"Serviço de plotagem não disponível: {e}")
-        
-        # Chamar serviço de cálculo de MSE
-        try:
-            rospy.wait_for_service('/calculate_mse', timeout=5)
-            mse_service = rospy.ServiceProxy('/calculate_mse', Trigger)
-            response = mse_service()
-            if response.success:
-                rospy.loginfo(f"Cálculo de MSE concluído: {response.message}")
-            else:
-                rospy.logwarn(f"Falha no cálculo de MSE: {response.message}")
-        except rospy.ServiceException as e:
-            rospy.logerr(f"Erro ao chamar o serviço de MSE: {e}")
-        except rospy.ROSException as e:
-            rospy.logerr(f"Serviço de MSE não disponível: {e}")
-        
-        # Chamar serviço de cálculo de RMSE
-        try:
-            rospy.wait_for_service('/calculate_rmse', timeout=5)
-            rmse_service = rospy.ServiceProxy('/calculate_rmse', Trigger)
-            response = rmse_service()
-            if response.success:
-                rospy.loginfo(f"Cálculo de RMSE concluído: {response.message}")
-            else:
-                rospy.logwarn(f"Falha no cálculo de RMSE: {response.message}")
-        except rospy.ServiceException as e:
-            rospy.logerr(f"Erro ao chamar o serviço de RMSE: {e}")
-        except rospy.ROSException as e:
-            rospy.logerr(f"Serviço de RMSE não disponível: {e}")
- 
-
+  
     # Getters
 
     def get_yaw_control(self):
@@ -1182,8 +1107,6 @@ class Controller:
         self.actual_velocities.append(self.velocity)
         self.reference_velocities.append(self.targetvel)
         self.control_inputs.append([u[0], u[1], u[2]])
-
-        self.check_mission_status()
 
         return (u, error[0], error[1], error[2])
 
