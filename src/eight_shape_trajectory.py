@@ -53,7 +53,7 @@ class EightShapeTrajectory:
         self.x = x
         self.y = y
         self.z = z
-        print(f"EightShapeTrajectory: Posição atual notificada - x: {x}, y: {y}, z: {z}")
+        #print(f"EightShapeTrajectory: Posição atual notificada - x: {x}, y: {y}, z: {z}")
 
     def set_target(self, x, y, z):
         print(f"EightShapeTrajectory: Novo alvo definido - x: {x}, y: {y}, z: {z}")
@@ -145,4 +145,4 @@ class EightShapeTrajectory:
 
     def move_target(self, joy_x, joy_y, joy_z):
         # Este método é necessário para compatibilidade, mas não precisa fazer nada para a trajetória em forma de oito.
-        print(f"EightShapeTrajectory: move_target chamado com joy_x: {joy_x}, joy_y: {joy_y}, joy_z: {joy_z}")
+        #print(f"EightShapeTrajectory: move_target chamado com joy_x: {joy_x}, joy_y: {joy_y}, joy_z: {joy_z}")
