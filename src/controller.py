@@ -18,6 +18,7 @@ import torch.nn as nn
 import torch.optim as optim
 import matplotlib.pyplot as plt
 from std_srvs.srv import Trigger, TriggerResponse
+import time
 
 
 class Net(nn.Module):
@@ -207,9 +208,13 @@ class Controller:
         self.reference_velocities = []
         self.control_inputs = []  # Para armazenar roll, pitch e thrust
 
+        self.last_path_time = time.time()
+        self.path_timeout = 5.0  # Tempo em segundos sem novas mensagens para considerar a missão concluída
+
         rospy.Service('/plot_trajectories', Trigger, self.plot_service_callback)
         rospy.Service('/calculate_mse', Trigger, self.mse_service_callback)
         rospy.Service('/calculate_rmse', Trigger, self.rmse_service_callback)
+        rospy.Subscriber("full_trajectory", Path, self.path_callback)
         
 
 
@@ -371,6 +376,50 @@ class Controller:
     def set_yawrate(self, yaw_rate):
         self.yaw_rate = yaw_rate
 
+    def call_services(self):
+        # Chamar serviço de plotagem
+        try:
+            rospy.wait_for_service('/plot_trajectories', timeout=5)
+            plot_service = rospy.ServiceProxy('/plot_trajectories', Trigger)
+            response = plot_service()
+            if response.success:
+                rospy.loginfo("Plotagem concluída com sucesso.")
+            else:
+                rospy.logwarn(f"Falha na plotagem: {response.message}")
+        except rospy.ServiceException as e:
+            rospy.logerr(f"Erro ao chamar o serviço de plotagem: {e}")
+        except rospy.ROSException as e:
+            rospy.logerr(f"Serviço de plotagem não disponível: {e}")
+        
+        # Chamar serviço de cálculo de MSE
+        try:
+            rospy.wait_for_service('/calculate_mse', timeout=5)
+            mse_service = rospy.ServiceProxy('/calculate_mse', Trigger)
+            response = mse_service()
+            if response.success:
+                rospy.loginfo(f"Cálculo de MSE concluído: {response.message}")
+            else:
+                rospy.logwarn(f"Falha no cálculo de MSE: {response.message}")
+        except rospy.ServiceException as e:
+            rospy.logerr(f"Erro ao chamar o serviço de MSE: {e}")
+        except rospy.ROSException as e:
+            rospy.logerr(f"Serviço de MSE não disponível: {e}")
+        
+        # Chamar serviço de cálculo de RMSE
+        try:
+            rospy.wait_for_service('/calculate_rmse', timeout=5)
+            rmse_service = rospy.ServiceProxy('/calculate_rmse', Trigger)
+            response = rmse_service()
+            if response.success:
+                rospy.loginfo(f"Cálculo de RMSE concluído: {response.message}")
+            else:
+                rospy.logwarn(f"Falha no cálculo de RMSE: {response.message}")
+        except rospy.ServiceException as e:
+            rospy.logerr(f"Erro ao chamar o serviço de RMSE: {e}")
+        except rospy.ROSException as e:
+            rospy.logerr(f"Serviço de RMSE não disponível: {e}")
+
+
     def plot_service_callback(self, req):
         self.plot_trajectories()
         return TriggerResponse(success=True, message="Trajetórias plotadas com sucesso.")
@@ -382,6 +431,16 @@ class Controller:
     def rmse_service_callback(self, req):
         rmse_position, rmse_velocity = self.calculate_mse()
         return TriggerResponse(success=True, message=f"RMSE Posição: {rmse_position}, RMSE Velocidade: {rmse_velocity}")
+    
+    def path_callback(self, data):
+        self.last_path_time = time.time()  # Atualize o tempo da última mensagem recebida
+
+    def check_mission_status(self):
+        # Se o tempo decorrido desde a última mensagem no tópico Path for maior que o timeout, considere a missão concluída
+        if not self.mission_complete and (time.time() - self.last_path_time > self.path_timeout):
+            self.mission_complete = True
+            rospy.loginfo("Missão concluída. Executando serviços...")
+            self.call_services()
 
     # Getters
 
@@ -1103,6 +1162,8 @@ class Controller:
         self.actual_velocities.append(self.velocity)
         self.reference_velocities.append(self.targetvel)
         self.control_inputs.append([u[0], u[1], u[2]])
+
+        self.check_mission_status()
 
         return (u, error[0], error[1], error[2])
 
