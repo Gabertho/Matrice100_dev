@@ -208,8 +208,10 @@ class Controller:
         self.reference_velocities = []
         self.control_inputs = []  # Para armazenar roll, pitch e thrust
 
-        self.last_path_time = time.time()
+        self.mission_complete = False  # Flag para verificar se a missão foi concluída
+        self.last_path_time = time.time()  # Registra o tempo da última mensagem no tópico Path
         self.path_timeout = 5.0  # Tempo em segundos sem novas mensagens para considerar a missão concluída
+        
 
         rospy.Service('/plot_trajectories', Trigger, self.plot_service_callback)
         rospy.Service('/calculate_mse', Trigger, self.mse_service_callback)
