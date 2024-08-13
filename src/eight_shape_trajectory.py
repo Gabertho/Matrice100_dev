@@ -5,7 +5,7 @@ from geometry_msgs.msg import PointStamped, PoseStamped, Point
 from std_msgs.msg import Float64
 
 class EightShapeTrajectory:
-    def __init__(self, x, y, z, speed, num_laps=10):
+    def __init__(self, x, y, z, speed, num_laps=3):
         self.start_x = 0.0
         self.start_y = 0.0
         self.start_z = 2.0
@@ -19,8 +19,7 @@ class EightShapeTrajectory:
         self.enabled_flag = False
         self.target_yaw = 0.0
         self.num_laps = num_laps  # Número de voltas que o drone deve percorrer
-        self.current_lap = 0  # Contador de voltas
-        self.targets = self.generate_eight_shape()
+        self.targets = self.generate_eight_shape() * self.num_laps  # Replicar os pontos
 
     def generate_eight_shape(self):
         # Gerar a forma de oito como uma lista de pontos
@@ -41,7 +40,6 @@ class EightShapeTrajectory:
         if not self.enabled_flag:
             self.enabled_flag = True
             self.time_elapsed = 0.0
-            self.current_lap = 0  # Reinicia o contador de voltas
             print("EightShapeTrajectory: Trajetória ativada")
 
     def disable(self):
@@ -53,7 +51,7 @@ class EightShapeTrajectory:
         self.x = x
         self.y = y
         self.z = z
-        #print(f"EightShapeTrajectory: Posição atual notificada - x: {x}, y: {y}, z: {z}")
+        print(f"EightShapeTrajectory: Posição atual notificada - x: {x}, y: {y}, z: {z}")
 
     def set_target(self, x, y, z):
         print(f"EightShapeTrajectory: Novo alvo definido - x: {x}, y: {y}, z: {z}")
@@ -124,20 +122,8 @@ class EightShapeTrajectory:
             return
         # Atualiza o tempo e a posição do drone ao longo da trajetória em forma de oito
         self.time_elapsed += 0.02  # Considerando dt = 0.02
-        total_points = len(self.targets) * self.num_laps
-        index = int((self.time_elapsed * self.target_speed) % total_points)
-        
-        current_index = index % len(self.targets)
-        if current_index == 0 and index > 0:
-            self.current_lap += 1  # Incrementa o número de voltas concluídas
-            print(f"EightShapeTrajectory: Completou volta {self.current_lap}/{self.num_laps}")
-        
-        if self.current_lap >= self.num_laps:
-            print("EightShapeTrajectory: Número de voltas concluídas.")
-            self.disable()
-            return
-
-        self.target_x, self.target_y, self.target_z = self.targets[current_index]
+        index = int((self.time_elapsed * self.target_speed) % len(self.targets))
+        self.target_x, self.target_y, self.target_z = self.targets[index]
         print(f"EightShapeTrajectory: Movendo para x: {self.target_x}, y: {self.target_y}, z: {self.target_z}")
 
     def tick(self, dt):

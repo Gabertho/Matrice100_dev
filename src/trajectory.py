@@ -229,7 +229,7 @@ if __name__ == "__main__":
     if spline_flag:
         trajectory = SplineTrajectory(x, y, z, speed)
     elif eight_shape_flag:
-        trajectory = EightShapeTrajectory(x, y, z, speed, num_laps=10)
+        trajectory = EightShapeTrajectory(x, y, z, speed, num_laps=3)
     else:
         trajectory = GotoTrajectory(x, y, z, speed)
     
