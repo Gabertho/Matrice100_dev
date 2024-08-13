@@ -65,7 +65,7 @@ class Controller:
         self.old_err_yaw = 0.0
         self.old_err_z = 0.0
         self.yaw_control_flag = False
-        self.mode = "MRAC_thrust"
+        self.mode = "LQR_thrust"
         self.trajectory_flag = False
         self.full_trajectory_x = None
         self.full_trajectory_y = None
