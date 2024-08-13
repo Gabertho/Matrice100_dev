@@ -16,6 +16,8 @@ from scipy import linalg
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import matplotlib.pyplot as plt
+from std_srvs.srv import Trigger, TriggerResponse
 
 
 class Net(nn.Module):
@@ -194,6 +196,17 @@ class Controller:
         self.new_samples_collected = 0
         self.training_interval = 100  # Train every 100 new samples
 
+
+        #Data Collection
+        self.actual_positions = []
+        self.reference_positions = []
+        self.actual_velocities = []
+        self.reference_velocities = []
+
+        rospy.Service('/plot_trajectories', Trigger, self.plot_service_callback)
+        rospy.Service('/calculate_mse', Trigger, self.mse_service_callback)
+
+
         
 
     def set_sync(self, flag):
@@ -351,6 +364,14 @@ class Controller:
 
     def set_yawrate(self, yaw_rate):
         self.yaw_rate = yaw_rate
+
+    def plot_service_callback(self, req):
+        self.plot_trajectories()
+        return TriggerResponse(success=True, message="Trajetórias plotadas com sucesso.")
+
+    def mse_service_callback(self, req):
+        mse_position, mse_velocity = self.calculate_mse()
+        return TriggerResponse(success=True, message=f"MSE Posição: {mse_position}, MSE Velocidade: {mse_velocity}")
 
     # Getters
 
@@ -537,6 +558,38 @@ class Controller:
         loss.backward()
         self.dnn.optimizer.step()
 
+    def calculate_mse(self):
+        mse_position = np.mean((np.array(self.actual_positions) - np.array(self.reference_positions))**2)
+        mse_velocity = np.mean((np.array(self.actual_velocities) - np.array(self.reference_velocities))**2)
+        return mse_position, mse_velocity
+    
+    def plot_trajectories(self):
+        """Plota as trajetórias desejadas e reais para comparação."""
+        actual_positions = np.array(self.actual_positions)
+        reference_positions = np.array(self.reference_positions)
+        
+        plt.figure()
+        
+        plt.subplot(3, 1, 1)
+        plt.plot(actual_positions[:, 0], label='Real X')
+        plt.plot(reference_positions[:, 0], label='Desired X')
+        plt.title('Trajectory in X')
+        plt.legend()
+
+        plt.subplot(3, 1, 2)
+        plt.plot(actual_positions[:, 1], label='Real Y')
+        plt.plot(reference_positions[:, 1], label='Desired Y')
+        plt.title('Trajectory in Y')
+        plt.legend()
+
+        plt.subplot(3, 1, 3)
+        plt.plot(actual_positions[:, 2], label='Real Z')
+        plt.plot(reference_positions[:, 2], label='Desired Z')
+        plt.title('Trajectory in Z')
+        plt.legend()
+
+        plt.tight_layout()
+        plt.show()
 
 
     
@@ -984,6 +1037,12 @@ class Controller:
                 u[1] = max
             if u[1] < -max:
                 u[1] = -max
+
+
+        self.actual_positions.append(self.current_position)
+        self.reference_positions.append(self.target)
+        self.actual_velocities.append(self.velocity)
+        self.reference_velocities.append(self.targetvel)
 
         return (u, error[0], error[1], error[2])
 
