@@ -183,6 +183,7 @@ class Controller:
         self.P_lyap_thrust = sp.solve_continuous_lyapunov(self.Am_thrust, self.Q_lyap_thrust)
         # Adaptive Parameters
         self.Wmrac_thrust = np.zeros((7,3))  # Adjust dimensions based on Phi(x)
+        self.Gammamrac_thrust = 0.01 * np.eye(7)  # Learning rate matrix, set to 0.01  # Learning rate matrix
 
         self.W_thrust = np.zeros((10,3))  # Adjust dimensions based on Phi(x)
         self.Gamma_thrust = 0.01 * np.eye(10)  # Learning rate matrix, set to 0.01  # Learning rate matrix
@@ -453,7 +454,7 @@ class Controller:
         phi_e_T_P_Bp = phi @ e_T_P_Bp  # (7, 1) @ (1, 3) -> (7, 3)
         #print("phi_e_T_P_Bp:", phi_e_T_P_Bp)
         
-        adaptation_term = self.Gamma_thrust @ phi_e_T_P_Bp * self.dt  # (7, 7) @ (7, 3) -> (7, 3)
+        adaptation_term = self.Gammamrac_thrust @ phi_e_T_P_Bp * self.dt  # (7, 7) @ (7, 3) -> (7, 3)
         #print("adaptation_term:", adaptation_term)
 
         # Update self.W_thrust to match dimensions
