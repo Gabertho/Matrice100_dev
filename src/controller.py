@@ -64,7 +64,7 @@ class Controller:
         self.old_err_yaw = 0.0
         self.old_err_z = 0.0
         self.yaw_control_flag = False
-        self.mode = "DMRAC"
+        self.mode = "LQR_thrust"
         self.trajectory_flag = False
         self.full_trajectory_x = None
         self.full_trajectory_y = None
@@ -202,6 +202,7 @@ class Controller:
         self.reference_positions = []
         self.actual_velocities = []
         self.reference_velocities = []
+        self.control_inputs = []  # Para armazenar roll, pitch e thrust
 
         rospy.Service('/plot_trajectories', Trigger, self.plot_service_callback)
         rospy.Service('/calculate_mse', Trigger, self.mse_service_callback)
@@ -576,54 +577,72 @@ class Controller:
 
     
     def plot_trajectories(self):
-        """Plota as trajetórias desejadas e reais para comparação, incluindo velocidades."""
+        """Plota as trajetórias desejadas e reais para comparação, as velocidades e as entradas de controle."""
         actual_positions = np.array(self.actual_positions)
         reference_positions = np.array(self.reference_positions)
         actual_velocities = np.array(self.actual_velocities)
         reference_velocities = np.array(self.reference_velocities)
+        control_inputs = np.array(self.control_inputs)
         
-        plt.figure(figsize=(10, 12))
+        plt.figure(figsize=(12, 10))
         
-        # Plotting position trajectories
-        plt.subplot(3, 2, 1)
+        # Plotando trajetórias
+        plt.subplot(3, 3, 1)
         plt.plot(actual_positions[:, 0], label='Real X')
         plt.plot(reference_positions[:, 0], label='Desired X')
-        plt.title('Position in X')
+        plt.title('Trajectory in X')
         plt.legend()
 
-        plt.subplot(3, 2, 3)
+        plt.subplot(3, 3, 2)
         plt.plot(actual_positions[:, 1], label='Real Y')
         plt.plot(reference_positions[:, 1], label='Desired Y')
-        plt.title('Position in Y')
+        plt.title('Trajectory in Y')
         plt.legend()
 
-        plt.subplot(3, 2, 5)
+        plt.subplot(3, 3, 3)
         plt.plot(actual_positions[:, 2], label='Real Z')
         plt.plot(reference_positions[:, 2], label='Desired Z')
-        plt.title('Position in Z')
+        plt.title('Trajectory in Z')
         plt.legend()
 
-        # Plotting velocity trajectories
-        plt.subplot(3, 2, 2)
-        plt.plot(actual_velocities[:, 0], label='Real VX')
-        plt.plot(reference_velocities[:, 0], label='Desired VX')
+        # Plotando velocidades
+        plt.subplot(3, 3, 4)
+        plt.plot(actual_velocities[:, 0], label='Real Vx')
+        plt.plot(reference_velocities[:, 0], label='Desired Vx')
         plt.title('Velocity in X')
         plt.legend()
 
-        plt.subplot(3, 2, 4)
-        plt.plot(actual_velocities[:, 1], label='Real VY')
-        plt.plot(reference_velocities[:, 1], label='Desired VY')
+        plt.subplot(3, 3, 5)
+        plt.plot(actual_velocities[:, 1], label='Real Vy')
+        plt.plot(reference_velocities[:, 1], label='Desired Vy')
         plt.title('Velocity in Y')
         plt.legend()
 
-        plt.subplot(3, 2, 6)
-        plt.plot(actual_velocities[:, 2], label='Real VZ')
-        plt.plot(reference_velocities[:, 2], label='Desired VZ')
+        plt.subplot(3, 3, 6)
+        plt.plot(actual_velocities[:, 2], label='Real Vz')
+        plt.plot(reference_velocities[:, 2], label='Desired Vz')
         plt.title('Velocity in Z')
+        plt.legend()
+
+        # Plotando entradas de controle
+        plt.subplot(3, 3, 7)
+        plt.plot(control_inputs[:, 0], label='Roll')
+        plt.title('Control Input: Roll')
+        plt.legend()
+
+        plt.subplot(3, 3, 8)
+        plt.plot(control_inputs[:, 1], label='Pitch')
+        plt.title('Control Input: Pitch')
+        plt.legend()
+
+        plt.subplot(3, 3, 9)
+        plt.plot(control_inputs[:, 2], label='Thrust')
+        plt.title('Control Input: Thrust')
         plt.legend()
 
         plt.tight_layout()
         plt.show()
+
 
 
 
@@ -1080,6 +1099,7 @@ class Controller:
         self.reference_positions.append(self.target)
         self.actual_velocities.append(self.velocity)
         self.reference_velocities.append(self.targetvel)
+        self.control_inputs.append([u[0], u[1], u[2]])
 
         return (u, error[0], error[1], error[2])
 
