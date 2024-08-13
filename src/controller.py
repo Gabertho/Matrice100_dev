@@ -208,11 +208,15 @@ class Controller:
         self.reference_velocities = []
         self.control_inputs = []  # Para armazenar roll, pitch e thrust
 
-        self.mission_complete = False  # Flag para verificar se a missão foi concluída
-        self.last_path_time = time.time()  # Registra o tempo da última mensagem no tópico Path
-        self.path_timeout = 5.0  # Tempo em segundos sem novas mensagens para considerar a missão concluída
+        self.mission_complete = False
+        self.final_target_reached = False
+        self.stabilization_start_time = None
+        self.stabilization_duration = 2.0  # Tempo de estabilização em segundos
         
+        # Atributos para a trajetória
+        self.final_target_position = None  # Posição do último ponto da trajetória
 
+        
         rospy.Service('/plot_trajectories', Trigger, self.plot_service_callback)
         rospy.Service('/calculate_mse', Trigger, self.mse_service_callback)
         rospy.Service('/calculate_rmse', Trigger, self.rmse_service_callback)
@@ -232,6 +236,7 @@ class Controller:
         x = [data.pose.position.x for data in path.poses]
         y = [data.pose.position.y for data in path.poses]
         z = [data.pose.position.z for data in path.poses]
+        self.final_target_position = np.array([x[-1], y[-1], z[-1]])
         vx = []
         vy = []
         vz = []
@@ -378,6 +383,42 @@ class Controller:
     def set_yawrate(self, yaw_rate):
         self.yaw_rate = yaw_rate
 
+
+    def plot_service_callback(self, req):
+        self.plot_trajectories()
+        return TriggerResponse(success=True, message="Trajetórias plotadas com sucesso.")
+
+    def mse_service_callback(self, req):
+        mse_position, mse_velocity = self.calculate_mse()
+        return TriggerResponse(success=True, message=f"MSE Posição: {mse_position}, MSE Velocidade: {mse_velocity}")
+    
+    def rmse_service_callback(self, req):
+        rmse_position, rmse_velocity = self.calculate_mse()
+        return TriggerResponse(success=True, message=f"RMSE Posição: {rmse_position}, RMSE Velocidade: {rmse_velocity}")
+    
+    def check_mission_status(self):
+        if self.mission_complete:
+            return
+
+        if self.final_target_position is None:
+            return
+
+        # Verifica se o drone está próximo do ponto final
+        distance_to_final_target = np.linalg.norm(self.current_position - self.final_target_position)
+
+        if distance_to_final_target < 0.1:  # Tolerância para considerar o alvo atingido
+            if not self.final_target_reached:
+                self.final_target_reached = True
+                self.stabilization_start_time = time.time()
+                rospy.loginfo("Ponto final atingido, iniciando estabilização...")
+            elif time.time() - self.stabilization_start_time >= self.stabilization_duration:
+                self.mission_complete = True
+                rospy.loginfo("Missão concluída com sucesso!")
+                self.call_services()
+        else:
+            self.final_target_reached = False
+            self.stabilization_start_time = None
+
     def call_services(self):
         # Chamar serviço de plotagem
         try:
@@ -420,29 +461,7 @@ class Controller:
             rospy.logerr(f"Erro ao chamar o serviço de RMSE: {e}")
         except rospy.ROSException as e:
             rospy.logerr(f"Serviço de RMSE não disponível: {e}")
-
-
-    def plot_service_callback(self, req):
-        self.plot_trajectories()
-        return TriggerResponse(success=True, message="Trajetórias plotadas com sucesso.")
-
-    def mse_service_callback(self, req):
-        mse_position, mse_velocity = self.calculate_mse()
-        return TriggerResponse(success=True, message=f"MSE Posição: {mse_position}, MSE Velocidade: {mse_velocity}")
-    
-    def rmse_service_callback(self, req):
-        rmse_position, rmse_velocity = self.calculate_mse()
-        return TriggerResponse(success=True, message=f"RMSE Posição: {rmse_position}, RMSE Velocidade: {rmse_velocity}")
-    
-    def path_callback(self, data):
-        self.last_path_time = time.time()  # Atualize o tempo da última mensagem recebida
-
-    def check_mission_status(self):
-        # Se o tempo decorrido desde a última mensagem no tópico Path for maior que o timeout, considere a missão concluída
-        if not self.mission_complete and (time.time() - self.last_path_time > self.path_timeout):
-            self.mission_complete = True
-            rospy.loginfo("Missão concluída. Executando serviços...")
-            self.call_services()
+ 
 
     # Getters
 
