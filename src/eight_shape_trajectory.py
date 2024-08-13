@@ -124,9 +124,11 @@ class EightShapeTrajectory:
             return
         # Atualiza o tempo e a posição do drone ao longo da trajetória em forma de oito
         self.time_elapsed += 0.02  # Considerando dt = 0.02
-        index = int((self.time_elapsed * self.target_speed) % len(self.targets))
+        total_points = len(self.targets) * self.num_laps
+        index = int((self.time_elapsed * self.target_speed) % total_points)
         
-        if index == 0 and self.time_elapsed > 0.02:
+        current_index = index % len(self.targets)
+        if current_index == 0 and index > 0:
             self.current_lap += 1  # Incrementa o número de voltas concluídas
             print(f"EightShapeTrajectory: Completou volta {self.current_lap}/{self.num_laps}")
         
@@ -135,7 +137,7 @@ class EightShapeTrajectory:
             self.disable()
             return
 
-        self.target_x, self.target_y, self.target_z = self.targets[index]
+        self.target_x, self.target_y, self.target_z = self.targets[current_index]
         print(f"EightShapeTrajectory: Movendo para x: {self.target_x}, y: {self.target_y}, z: {self.target_z}")
 
     def tick(self, dt):
@@ -145,4 +147,4 @@ class EightShapeTrajectory:
 
     def move_target(self, joy_x, joy_y, joy_z):
         # Este método é necessário para compatibilidade, mas não precisa fazer nada para a trajetória em forma de oito.
-        #print(f"EightShapeTrajectory: move_target chamado com joy_x: {joy_x}, joy_y: {joy_y}, joy_z: {joy_z}")
+        print(f"EightShapeTrajectory: move_target chamado com joy_x: {joy_x}, joy_y: {joy_y}, joy_z: {joy_z}")
