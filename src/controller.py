@@ -564,32 +564,57 @@ class Controller:
         return mse_position, mse_velocity
     
     def plot_trajectories(self):
-        """Plota as trajetórias desejadas e reais para comparação."""
+        """Plota as trajetórias desejadas e reais para comparação, incluindo velocidades."""
         actual_positions = np.array(self.actual_positions)
         reference_positions = np.array(self.reference_positions)
+        actual_velocities = np.array(self.actual_velocities)
+        reference_velocities = np.array(self.reference_velocities)
         
-        plt.figure()
+        plt.figure(figsize=(10, 12))
         
-        plt.subplot(3, 1, 1)
+        # Plotting position trajectories
+        plt.subplot(3, 2, 1)
         plt.plot(actual_positions[:, 0], label='Real X')
         plt.plot(reference_positions[:, 0], label='Desired X')
-        plt.title('Trajectory in X')
+        plt.title('Position in X')
         plt.legend()
 
-        plt.subplot(3, 1, 2)
+        plt.subplot(3, 2, 3)
         plt.plot(actual_positions[:, 1], label='Real Y')
         plt.plot(reference_positions[:, 1], label='Desired Y')
-        plt.title('Trajectory in Y')
+        plt.title('Position in Y')
         plt.legend()
 
-        plt.subplot(3, 1, 3)
+        plt.subplot(3, 2, 5)
         plt.plot(actual_positions[:, 2], label='Real Z')
         plt.plot(reference_positions[:, 2], label='Desired Z')
-        plt.title('Trajectory in Z')
+        plt.title('Position in Z')
+        plt.legend()
+
+        # Plotting velocity trajectories
+        plt.subplot(3, 2, 2)
+        plt.plot(actual_velocities[:, 0], label='Real VX')
+        plt.plot(reference_velocities[:, 0], label='Desired VX')
+        plt.title('Velocity in X')
+        plt.legend()
+
+        plt.subplot(3, 2, 4)
+        plt.plot(actual_velocities[:, 1], label='Real VY')
+        plt.plot(reference_velocities[:, 1], label='Desired VY')
+        plt.title('Velocity in Y')
+        plt.legend()
+
+        plt.subplot(3, 2, 6)
+        plt.plot(actual_velocities[:, 2], label='Real VZ')
+        plt.plot(reference_velocities[:, 2], label='Desired VZ')
+        plt.title('Velocity in Z')
         plt.legend()
 
         plt.tight_layout()
         plt.show()
+
+
+
 
 
     
