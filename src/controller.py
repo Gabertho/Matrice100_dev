@@ -65,7 +65,7 @@ class Controller:
         self.old_err_yaw = 0.0
         self.old_err_z = 0.0
         self.yaw_control_flag = False
-        self.mode = "simple_pid"
+        self.mode = "MRAC_thrust"
         self.trajectory_flag = False
         self.full_trajectory_x = None
         self.full_trajectory_y = None
@@ -900,20 +900,20 @@ class Controller:
                 ## ROLL AND PITCH 
                 herror = np.array([error[0], error[1]])  # 1D array with shape (2,)
                 herrorvel = np.array([errorvel[0], errorvel[1]])
-                print("herror:", herror)
-                print("herrorvel:", herrorvel)
+                #print("herror:", herror)
+                #print("herrorvel:", herrorvel)
                 
                 theta = -self.current_yaw
                 c, s = np.cos(theta), np.sin(theta)
                 R = np.array(((c, -s), (s, c)))  # 2x2
                 rherror = np.dot(R, herror)
                 rherrorvel = np.dot(R, herrorvel)
-                print("rherror:", rherror)
-                print("rherrorvel:", rherrorvel)
+                #print("rherror:", rherror)
+                #print("rherrorvel:", rherrorvel)
 
                 # Define state for MRAC similar to LQR
                 state = np.array([rherror[0], rherrorvel[0], rherror[1], rherrorvel[1], error[2], errorvel[2]])
-                print("state:", state)
+                #print("state:", state)
 
                 # Calculate LQR control action
                 control_input = self.lqr_control(state, self.K_thrust)  # control_input is (3,)
@@ -932,6 +932,9 @@ class Controller:
                 u[0] = -math.radians(control_total[0])  # Roll
                 u[1] = -math.radians(control_total[1])  # Pitch
 
+                print("MRAC roll before clip:", u[0])
+                print("MRAC pitch before clip:", u[1])
+
                 max = math.radians(20.0)
                 if u[0] > max:
                     u[0] = max
@@ -942,21 +945,27 @@ class Controller:
                 if u[1] < -max:
                     u[1] = -max
 
+                
+
                 # Thrust
                 thrust_force = -control_total[2]
                 delta_thrust_percentage = (thrust_force / self.max_thrust) * 100
-                print("MRAC THRUST FORCE:", thrust_force)
-                print("MRAC MAX THRUST:", self.max_thrust)
+                #print("MRAC THRUST FORCE:", thrust_force)
+                #print("MRAC MAX THRUST:", self.max_thrust)
                 thrust_percentage = self.hover_thrust + delta_thrust_percentage
                 u[2] = thrust_percentage
 
-                print("MRAC DELTA THRUST:", delta_thrust_percentage)
+                #print("MRAC DELTA THRUST:", delta_thrust_percentage)
 
                 if u[2] < 20.0:
                     u[2] = 20.0
                 if u[2] > 80.0:
                     u[2] = 80.0
-                
+
+
+                print("MRAC roll after clip:", u[0])
+                print("MRAC pitch after clip:", u[1])
+
                 print("MRAC THRUST:", u[2])
 
             if self.mode == "DMRAC":
