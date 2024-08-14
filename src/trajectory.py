@@ -211,17 +211,29 @@ def print_speed(pathmsg, dt):
 
 
 def generate_helix_trajectory(initial_point, radius=5.0, height=5.0, loops=3, points_per_loop=100):
-    trajectory_points = [initial_point]  # Começa na posição inicial do drone
+    trajectory_points = []
+
+    # Define uma altura mínima para evitar que a hélice entre no chão
+    min_height = 2.0  # Ajuste essa altura conforme necessário
+
+    # Garantir que a altura inicial seja suficiente para a descida
+    initial_z = max(initial_point[2], height * loops + min_height)
+
+    # Atualiza o ponto inicial com a nova altura
+    initial_point = [initial_point[0], initial_point[1], initial_z]
+    trajectory_points.append(initial_point)
+
     t = np.linspace(0, 2 * np.pi * loops, points_per_loop * loops)
     
     # Inverter o cálculo de z para fazer o drone descer
     for i in range(len(t)):
         x = radius * np.cos(t[i])
         y = radius * np.sin(t[i])
-        z = initial_point[2] - height * (i / len(t))  # Diminuir o valor de z para descer
+        z = initial_z - height * (i / len(t))  # Diminuir o valor de z para descer
         trajectory_points.append([x, y, z])
     
     return trajectory_points
+
 
 
 
