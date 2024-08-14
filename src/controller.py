@@ -702,7 +702,9 @@ class Controller:
        # Verificação de proximidade com o início da hélice
         if not self.data_collection_started:
             initial_helix_point = np.array([self.full_trajectory_x[0], self.full_trajectory_y[0], self.full_trajectory_z[0]])
+            print("initial helix point:", initial_helix_point)
             distance_to_helix_start = np.linalg.norm(self.current_position - initial_helix_point)
+            print("distance_to_helix_start", distance_to_helix_start)
             
             if distance_to_helix_start < start_threshold:
                 self.data_collection_started = True
