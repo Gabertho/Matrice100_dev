@@ -243,9 +243,13 @@ if __name__ == "__main__":
     print("MODE X Y Z SPEED - trajectory:", control_mode, x, y, z, speed, full_trajectory_flag)
 
     if spline_flag:
-        initial_point = [current_pose.pose.position.x, current_pose.pose.position.y, current_pose.pose.position.z]
-        fixed_targets = generate_helix_trajectory(initial_point, radius=5.0, height=10.0, loops=3, points_per_loop=100)
-        trajectory = SplineTrajectory(x, y, z, speed, fixed_targets=fixed_targets)
+        initial_x = current_pose.pose.position.x
+        initial_y = current_pose.pose.position.y
+        initial_z = current_pose.pose.position.z
+    
+        fixed_targets = generate_helix_trajectory([initial_x, initial_y, initial_z], radius=5.0, height=10.0, loops=3, points_per_loop=100)
+        trajectory = SplineTrajectory(initial_x, initial_y, initial_z, speed, fixed_targets=fixed_targets)
+
     elif eight_shape_flag:
         trajectory = EightShapeTrajectory(x, y, z, speed, num_laps=3)
     else:
