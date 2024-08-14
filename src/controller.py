@@ -404,13 +404,15 @@ class Controller:
         mse_velocity, rmse_velocity = self.calculate_mse_rmse(self.desired_velocities, self.actual_velocities)
         
         message = (f"MSE Position: {mse_position:.4f}, RMSE Position: {rmse_position:.4f}\n"
-                f"MSE Velocity: {mse_velocity:.4f}, RMSE Velocity: {rmse_velocity:.4f}")
+                   f"MSE Velocity: {mse_velocity:.4f}, RMSE Velocity: {rmse_velocity:.4f}")
         
-        # Armazenar a mensagem em um arquivo de texto
-        with open("error_metrics.txt", "a") as file:
+        # Armazenar a mensagem em um arquivo de texto na pasta dos plots
+        file_path = os.path.join(save_dir, "error_metrics.txt")
+        with open(file_path, "a") as file:
             file.write(message + "\n")
         
         return TriggerResponse(success=True, message=message)
+
 
     
   
