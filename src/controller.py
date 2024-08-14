@@ -19,6 +19,7 @@ import torch.optim as optim
 import matplotlib.pyplot as plt
 from std_srvs.srv import Trigger, TriggerResponse
 import time
+import matplotlib.pyplot as plt
 
 
 class Net(nn.Module):
@@ -201,6 +202,18 @@ class Controller:
         #Counter for triggering DNN training
         self.new_samples_collected = 0
         self.training_interval = 100  # Train every 100 new samples
+
+        #Data collecting
+        self.desired_trajectory = []
+        self.actual_trajectory = []
+        self.desired_positions = []
+        self.actual_positions = []
+        self.time_stamps = []
+        self.desired_velocities = []
+        self.actual_velocities = []
+        self.control_inputs = []
+
+        rospy.Service('plot_trajectories', Trigger, self.plot_service_callback)
  
 
     def set_sync(self, flag):
@@ -360,17 +373,13 @@ class Controller:
         self.yaw_rate = yaw_rate
 
 
+    
     def plot_service_callback(self, req):
         self.plot_trajectories()
-        return TriggerResponse(success=True, message="Trajetórias plotadas com sucesso.")
-
-    def mse_service_callback(self, req):
-        mse_position, mse_velocity = self.calculate_mse()
-        return TriggerResponse(success=True, message=f"MSE Posição: {mse_position}, MSE Velocidade: {mse_velocity}")
-    
-    def rmse_service_callback(self, req):
-        rmse_position, rmse_velocity = self.calculate_mse()
-        return TriggerResponse(success=True, message=f"RMSE Posição: {rmse_position}, RMSE Velocidade: {rmse_velocity}")
+        self.plot_positions()
+        self.plot_velocities()
+        self.plot_control_inputs()
+        return TriggerResponse(success=True, message="Dados plotados com sucesso.")
     
   
     # Getters
@@ -557,6 +566,99 @@ class Controller:
         loss = self.dnn.loss_fn(predictions, v_ads)
         loss.backward()
         self.dnn.optimizer.step()
+
+    def plot_trajectories(self):
+        desired = np.array(self.desired_trajectory)
+        actual = np.array(self.actual_trajectory)
+        
+        plt.figure()
+        ax = plt.axes(projection='3d')
+        ax.plot3D(desired[:, 0], desired[:, 1], desired[:, 2], 'r-', label='Trajetória Desejada')
+        ax.plot3D(actual[:, 0], actual[:, 1], actual[:, 2], 'b-', label='Trajetória Percorrida')
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_zlabel('Z')
+        plt.title('Trajetórias Desejada vs Percorrida')
+        plt.legend()
+        plt.show()
+
+    def plot_positions(self):
+        desired = np.array(self.desired_positions)
+        actual = np.array(self.actual_positions)
+        time = np.array(self.time_stamps)
+        
+        plt.figure()
+        plt.subplot(3, 1, 1)
+        plt.plot(time, desired[:, 0], 'r-', label='X Desejado')
+        plt.plot(time, actual[:, 0], 'b-', label='X Real')
+        plt.ylabel('Posição X')
+        plt.legend()
+
+        plt.subplot(3, 1, 2)
+        plt.plot(time, desired[:, 1], 'r-', label='Y Desejado')
+        plt.plot(time, actual[:, 1], 'b-', label='Y Real')
+        plt.ylabel('Posição Y')
+        plt.legend()
+
+        plt.subplot(3, 1, 3)
+        plt.plot(time, desired[:, 2], 'r-', label='Z Desejado')
+        plt.plot(time, actual[:, 2], 'b-', label='Z Real')
+        plt.ylabel('Posição Z')
+        plt.xlabel('Tempo')
+        plt.legend()
+        
+        plt.show()
+
+    def plot_velocities(self):
+        desired = np.array(self.desired_velocities)
+        actual = np.array(self.actual_velocities)
+        time = np.array(self.time_stamps)
+        
+        plt.figure()
+        plt.subplot(3, 1, 1)
+        plt.plot(time, desired[:, 0], 'r-', label='Vx Desejado')
+        plt.plot(time, actual[:, 0], 'b-', label='Vx Real')
+        plt.ylabel('Velocidade X')
+        plt.legend()
+
+        plt.subplot(3, 1, 2)
+        plt.plot(time, desired[:, 1], 'r-', label='Vy Desejado')
+        plt.plot(time, actual[:, 1], 'b-', label='Vy Real')
+        plt.ylabel('Velocidade Y')
+        plt.legend()
+
+        plt.subplot(3, 1, 3)
+        plt.plot(time, desired[:, 2], 'r-', label='Vz Desejado')
+        plt.plot(time, actual[:, 2], 'b-', label='Vz Real')
+        plt.ylabel('Velocidade Z')
+        plt.xlabel('Tempo')
+        plt.legend()
+        
+        plt.show()
+
+    def plot_control_inputs(self):
+        controls = np.array(self.control_inputs)
+        time = np.array(self.time_stamps)
+        
+        plt.figure()
+        plt.subplot(3, 1, 1)
+        plt.plot(time, controls[:, 0], 'g-', label='Roll')
+        plt.ylabel('Roll')
+        plt.legend()
+
+        plt.subplot(3, 1, 2)
+        plt.plot(time, controls[:, 1], 'r-', label='Pitch')
+        plt.ylabel('Pitch')
+        plt.legend()
+
+        plt.subplot(3, 1, 3)
+        plt.plot(time, controls[:, 2], 'b-', label='Thrust')
+        plt.ylabel('Thrust')
+        plt.xlabel('Tempo')
+        plt.legend()
+        
+        plt.show()
+
 
 
     # Control loop: Computes the control signal in different modes.
@@ -1011,6 +1113,17 @@ class Controller:
                 u[1] = max
             if u[1] < -max:
                 u[1] = -max
+
+
+        # Coletando dados para plotagem
+        self.desired_trajectory.append((self.target[0], self.target[1], self.target[2]))
+        self.actual_trajectory.append((self.current_position[0], self.current_position[1], self.current_position[2]))
+        self.desired_positions.append(self.target)
+        self.actual_positions.append(self.current_position)
+        self.time_stamps.append(self.current_time)
+        self.desired_velocities.append(self.targetvel)
+        self.actual_velocities.append(self.velocity)
+        self.control_inputs.append(u)
                 
 
         return (u, error[0], error[1], error[2])
