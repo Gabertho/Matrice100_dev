@@ -16,10 +16,20 @@ from scipy import linalg
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import os
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from std_srvs.srv import Trigger, TriggerResponse
 import time
 from mpl_toolkits.mplot3d import Axes3D
+
+# Diretório para salvar as figuras
+save_dir = '/home/gab/Desktop/plots/'
+
+# Certifique-se de que o diretório exista
+if not os.path.exists(save_dir):
+    os.makedirs(save_dir)
 
 class Net(nn.Module):
     def __init__(self):
@@ -603,7 +613,10 @@ class Controller:
         ax.set_title('Reference vs Actual Trajectories', fontsize=16)
         ax.legend(fontsize=12)
         ax.grid(True)
-        plt.show()
+        file_path = os.path.join(save_dir, 'trajectories.png')
+        plt.savefig(file_path)
+        print(f"Figura salva em: {file_path}")
+        plt.close()
 
 
     def plot_positions(self):
@@ -635,7 +648,11 @@ class Controller:
         plt.grid(True)
         
         plt.suptitle('Desired vs Actual Positions Over Time', fontsize=16)
-        plt.show()
+        # Salvando a figura
+        file_path = os.path.join(save_dir, 'positions.png')
+        plt.savefig(file_path)
+        print(f"Figura salva em: {file_path}")
+        plt.close()
 
 
     def plot_velocities(self):
@@ -667,7 +684,11 @@ class Controller:
         plt.grid(True)
         
         plt.suptitle('Desired vs Actual Velocities Over Time', fontsize=16)
-        plt.show()
+        # Salvando a figura
+        file_path = os.path.join(save_dir, 'velocities.png')
+        plt.savefig(file_path)
+        print(f"Figura salva em: {file_path}")
+        plt.close()
 
 
 
@@ -696,7 +717,11 @@ class Controller:
         plt.grid(True)
         
         plt.suptitle('Control Inputs Over Time', fontsize=16)
-        plt.show() 
+        # Salvando a figura
+        file_path = os.path.join(save_dir, 'control_inputs.png')
+        plt.savefig(file_path)
+        print(f"Figura salva em: {file_path}")
+        plt.close()
 
 
 
