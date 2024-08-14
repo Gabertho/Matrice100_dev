@@ -734,44 +734,6 @@ class Controller:
         error = self.target - self.current_position
         errorvel = self.targetvel - self.velocity
 
-        # Thrust control
-        pthrust = 1.5
-        ithrust = 0.0019
-        dthrust = 0.0
-        #pthrust = 1.5
-        #ithrust = 0.0
-        ithrust = 0.01        
-        #dthrust = 0.0
-        velthrust = 6.0
-
-        #print("TARGET:", self.target)
-        #print("CUPOS:", self.current_position)
-        #print("THRUSTERROR:", error[2])
-        #print("HOVERTHRUST:", self.hover_thrust)
-
-        self.int_err_z += error[2]
-        d_err_z = (error[2] - self.old_err_z)/dt
-
-        #print("INTERROR:", self.int_err_z)
-        #print("D_ERR_Z:", d_err_z)
-
-        # PID thrust: Kp.e+Ki.int_e+Kd.de/dt
-        delta = error[2]*pthrust + ithrust*self.int_err_z + dthrust*d_err_z + velthrust*errorvel[2]
-
-        #print("PID DELTATHRUST:", delta)
-        
-        # Thrust control signal = thrust required to hover + PID output.
-        u[2] = self.hover_thrust + delta
-
-        if u[2] < 20.0:
-            u[2] = 20.0
-        if u[2] > 80.0:
-            u[2] = 80.0
-
-        #print("PID THRUST:", u[2])
-
-        self.old_err_z = error[2]
-
         # Yaw control = PD.
         pyaw = 1.0
         iyaw = 0.0
@@ -1092,6 +1054,44 @@ class Controller:
 
                 print("ROTATET HERROR:", rherror)
                 print("ROTATET HERRORVEL:", rherrorvel)
+
+                # Thrust control
+                pthrust = 1.5
+                ithrust = 0.0019
+                dthrust = 0.0
+                #pthrust = 1.5
+                #ithrust = 0.0
+                ithrust = 0.01        
+                #dthrust = 0.0
+                velthrust = 6.0
+
+                #print("TARGET:", self.target)
+                #print("CUPOS:", self.current_position)
+                #print("THRUSTERROR:", error[2])
+                #print("HOVERTHRUST:", self.hover_thrust)
+
+                self.int_err_z += error[2]
+                d_err_z = (error[2] - self.old_err_z)/dt
+
+                #print("INTERROR:", self.int_err_z)
+                #print("D_ERR_Z:", d_err_z)
+
+                # PID thrust: Kp.e+Ki.int_e+Kd.de/dt
+                delta = error[2]*pthrust + ithrust*self.int_err_z + dthrust*d_err_z + velthrust*errorvel[2]
+
+                #print("PID DELTATHRUST:", delta)
+                
+                # Thrust control signal = thrust required to hover + PID output.
+                u[2] = self.hover_thrust + delta
+
+                if u[2] < 20.0:
+                    u[2] = 20.0
+                if u[2] > 80.0:
+                    u[2] = 80.0
+
+                #print("PID THRUST:", u[2])
+
+                self.old_err_z = error[2]
 
                 #PID control
                 derr_pitch = (rherror[0] - self.old_err_pitch)/dt
