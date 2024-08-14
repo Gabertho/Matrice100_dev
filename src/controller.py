@@ -78,6 +78,7 @@ class Controller:
         self.dt = 0.02
         #flag for start collecting data 
         self.data_collection_started = False
+        self.servicos_chamados = False  # Adiciona a variável de controle
 
         # LQR Parameters
         self.g = 9.81
@@ -1158,6 +1159,16 @@ class Controller:
         self.desired_velocities.append(self.targetvel)
         self.actual_velocities.append(self.velocity)
         self.control_inputs.append(u)
+
+        tempo_adicional = 5.0  # tempo adicional em segundos
+        if not self.servicos_chamados and self.current_time >= self.full_trajectory_time[-1] + tempo_adicional:
+            # Chamar os serviços automaticamente ao final do controle
+            self.plot_service_callback(None)
+            self.calculate_errors_service_callback(None)
+
+            # Marcar que os serviços foram chamados
+            self.servicos_chamados = True
+
                 
 
         return (u, error[0], error[1], error[2])
