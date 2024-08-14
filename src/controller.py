@@ -693,35 +693,52 @@ class Controller:
 
 
     def plot_control_inputs(self):
+        if len(self.control_inputs) == 0:
+            print("Nenhum dado de controle disponível para plotar.")
+            return
+        
         controls = np.array(self.control_inputs)
+        
+        if controls.ndim != 2 or controls.shape[1] != 4:
+            print("Os dados de controle não têm a estrutura esperada. Esperado: (N, 4). Recebido:", controls.shape)
+            return
+        
         time = np.array(self.time_stamps)
         
         plt.figure(figsize=(10, 7), dpi=300)
-        plt.subplot(3, 1, 1)
-        plt.plot(time, controls[0], 'g-', label='Roll', linewidth=2)
+        plt.subplot(4, 1, 1)
+        plt.plot(time, controls[:, 0], 'g-', label='Roll', linewidth=2)
         plt.ylabel('Roll (rad)', fontsize=14)
         plt.legend(fontsize=12)
         plt.grid(True)
 
-        plt.subplot(3, 1, 2)
-        plt.plot(time, controls[1], 'r-', label='Pitch', linewidth=2)
+        plt.subplot(4, 1, 2)
+        plt.plot(time, controls[:, 1], 'r-', label='Pitch', linewidth=2)
         plt.ylabel('Pitch (rad)', fontsize=14)
         plt.legend(fontsize=12)
         plt.grid(True)
 
-        plt.subplot(3, 1, 3)
-        plt.plot(time, controls[2], 'b-', label='Thrust', linewidth=2)
+        plt.subplot(4, 1, 3)
+        plt.plot(time, controls[:, 2], 'b-', label='Thrust', linewidth=2)
         plt.ylabel('Thrust (%)', fontsize=14)
+        plt.legend(fontsize=12)
+        plt.grid(True)
+
+        plt.subplot(4, 1, 4)
+        plt.plot(time, controls[:, 3], 'm-', label='Yaw Rate', linewidth=2)
+        plt.ylabel('Yaw Rate (rad/s)', fontsize=14)
         plt.xlabel('Time (s)', fontsize=14)
         plt.legend(fontsize=12)
         plt.grid(True)
         
         plt.suptitle('Control Inputs Over Time', fontsize=16)
+
         # Salvando a figura
-        file_path = os.path.join(save_dir, 'control_inputs.png')
+        file_path = '/home/gab/Desktop/plots/control_inputs.png'
         plt.savefig(file_path)
         print(f"Figura salva em: {file_path}")
         plt.close()
+
 
 
 
