@@ -214,13 +214,15 @@ def generate_helix_trajectory(initial_point, radius=5.0, height=5.0, loops=3, po
     trajectory_points = [initial_point]  # Começa na posição inicial do drone
     t = np.linspace(0, 2 * np.pi * loops, points_per_loop * loops)
     
+    # Inverter o cálculo de z para fazer o drone descer
     for i in range(len(t)):
         x = radius * np.cos(t[i])
         y = radius * np.sin(t[i])
-        z = height * (i / len(t))
+        z = initial_point[2] - height * (i / len(t))  # Diminuir o valor de z para descer
         trajectory_points.append([x, y, z])
     
     return trajectory_points
+
 
 
 
