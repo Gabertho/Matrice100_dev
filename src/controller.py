@@ -695,6 +695,8 @@ class Controller:
         error = self.target - self.current_position
         errorvel = self.targetvel - self.velocity
 
+        distance_to_helix_start = None
+
         # Adicionar a verificação de proximidade com o início da hélice
         if not self.data_collection_started:
             initial_helix_point = np.array([self.full_trajectory_x[0], self.full_trajectory_y[0], self.full_trajectory_z[0]])
