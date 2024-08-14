@@ -696,15 +696,18 @@ class Controller:
         errorvel = self.targetvel - self.velocity
 
         distance_to_helix_start = None
+        start_threshold = np.inf
 
-        # Adicionar a verificação de proximidade com o início da hélice
+        
+       # Verificação de proximidade com o início da hélice
         if not self.data_collection_started:
             initial_helix_point = np.array([self.full_trajectory_x[0], self.full_trajectory_y[0], self.full_trajectory_z[0]])
             distance_to_helix_start = np.linalg.norm(self.current_position - initial_helix_point)
-            start_threshold = 0.1  # Limiar de distância para começar a coleta de dados
-        if distance_to_helix_start < start_threshold:
-            self.data_collection_started = True
-            rospy.loginfo("Iniciando coleta de dados: drone alcançou a trajetória helicoidal")
+            
+            if distance_to_helix_start < start_threshold:
+                self.data_collection_started = True
+                rospy.loginfo("Iniciando coleta de dados: drone alcançou a trajetória helicoidal")
+
 
 
         # Thrust control
