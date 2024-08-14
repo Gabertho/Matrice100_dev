@@ -289,7 +289,7 @@ class Controller:
             msg.pose.position.y = self.target[1]
             msg.pose.position.z = self.target[2]
             quat = quaternion_from_euler(0.0, 0.0, self.target_yaw)
-            print("QUAT:", quat)
+            #print("QUAT:", quat)
             msg.pose.orientation.x = 0.0
             msg.pose.orientation.y = 0.0
             msg.pose.orientation.z = 0.0
@@ -1084,11 +1084,11 @@ class Controller:
             if self.mode == "simple_pid":
                 print("========================================================================")
                 
-                print("ERROR:", error, self.target)
+                #print("ERROR:", error, self.target)
 
                 herror = np.array([error[0], error[1]]) #2x1
                 herrorvel = np.array([errorvel[0], errorvel[1]])
-                print("HERROR:", math.degrees(self.current_yaw), herror)
+                #print("HERROR:", math.degrees(self.current_yaw), herror)
                 theta = -self.current_yaw
                 c, s = np.cos(theta), np.sin(theta)
                 R = np.array(((c, -s), (s, c))) #2x2
@@ -1097,8 +1097,8 @@ class Controller:
                 rherror = np.dot(R, herror)
                 rherrorvel = np.dot(R, herrorvel)
 
-                print("ROTATET HERROR:", rherror)
-                print("ROTATET HERRORVEL:", rherrorvel)
+                #print("ROTATET HERROR:", rherror)
+                #print("ROTATET HERRORVEL:", rherrorvel)
 
                 # Thrust control
                 pthrust = 1.5
