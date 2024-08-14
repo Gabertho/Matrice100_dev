@@ -65,7 +65,7 @@ class Controller:
         self.old_err_yaw = 0.0
         self.old_err_z = 0.0
         self.yaw_control_flag = False
-        self.mode = "MRAC_thrust"
+        self.mode = "simple_pid"
         self.trajectory_flag = False
         self.full_trajectory_x = None
         self.full_trajectory_y = None
@@ -213,6 +213,7 @@ class Controller:
         self.control_inputs = []
 
         rospy.Service('plot_trajectories', Trigger, self.plot_service_callback)
+        rospy.Service('calculate_errors', Trigger, self.calculate_errors_service_callback)
  
 
     def set_sync(self, flag):
@@ -371,14 +372,30 @@ class Controller:
     def set_yawrate(self, yaw_rate):
         self.yaw_rate = yaw_rate
 
+    # Função para calcular MSE e RMSE
+    def calculate_mse_rmse(self, desired, actual):
+        desired = np.array(desired)
+        actual = np.array(actual)
+        mse = np.mean((desired - actual) ** 2)
+        rmse = np.sqrt(mse)
+        return mse, rmse
 
-    
     def plot_service_callback(self, req):
         self.plot_trajectories()
         self.plot_positions()
         self.plot_velocities()
         self.plot_control_inputs()
         return TriggerResponse(success=True, message="Dados plotados com sucesso.")
+    
+    # Implementação do serviço de cálculo de erros
+    def calculate_errors_service_callback(self, req):
+        mse_position, rmse_position = self.calculate_mse_rmse(self.desired_positions, self.actual_positions)
+        mse_velocity, rmse_velocity = self.calculate_mse_rmse(self.desired_velocities, self.actual_velocities)
+        
+        message = (f"MSE Position: {mse_position:.4f}, RMSE Position: {rmse_position:.4f}\n"
+                   f"MSE Velocity: {mse_velocity:.4f}, RMSE Velocity: {rmse_velocity:.4f}")
+        
+        return TriggerResponse(success=True, message=message)
     
   
     # Getters
@@ -744,12 +761,12 @@ class Controller:
         #print("PID DELTATHRUST:", delta)
         
         # Thrust control signal = thrust required to hover + PID output.
-        #u[2] = self.hover_thrust + delta
+        u[2] = self.hover_thrust + delta
 
-        #if u[2] < 20.0:
-            #u[2] = 20.0
-        #if u[2] > 80.0:
-            #u[2] = 80.0
+        if u[2] < 20.0:
+            u[2] = 20.0
+        if u[2] > 80.0:
+            u[2] = 80.0
 
         #print("PID THRUST:", u[2])
 
