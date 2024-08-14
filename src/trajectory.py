@@ -208,6 +208,21 @@ def print_speed(pathmsg, dt):
         dz = p1.z-p0.z
         speeds.append(round(math.sqrt(dx*dx+dy*dy+dz*dz)/dt, 2))
     print("SPEED FROM PATHMSG:", speeds)
+
+
+def generate_figure_eight_trajectory(radius=5.0, height=2.5, points_per_loop=50, loops=1):
+    trajectory_points = []
+    t = np.linspace(0, 2 * np.pi, points_per_loop)
+    
+    for loop in range(loops):
+        for i in range(points_per_loop):
+            x = radius * np.sin(t[i])
+            y = radius * np.sin(t[i]) * np.cos(t[i])
+            z = height * np.sin(t[i] / 2) + loop * height  # Opcional: múltiplos loops
+            trajectory_points.append([x, y, z])
+    
+    return trajectory_points
+
     
 if __name__ == "__main__":
     rospy.init_node ("trajectory")
@@ -227,12 +242,7 @@ if __name__ == "__main__":
     print("MODE X Y Z SPEED - trajectory:", control_mode, x, y, z, speed, full_trajectory_flag)
 
     if spline_flag:
-        fixed_targets = [
-        [3.0, 0.0, 2.5],
-        [4.0, 1.0, 2.5],
-        [5.0, 0.0, 2.5],
-        # Adicione mais pontos conforme necessário
-        ]
+        fixed_targets = generate_figure_eight_trajectory(radius=5.0, height=2.5, points_per_loop=100, loops=2)
         trajectory = SplineTrajectory(x, y, z, speed, fixed_targets=fixed_targets)
     elif eight_shape_flag:
         trajectory = EightShapeTrajectory(x, y, z, speed, num_laps=3)
