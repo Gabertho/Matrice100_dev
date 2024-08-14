@@ -545,6 +545,8 @@ class Controller:
                 self.train_dnn()
                 self.new_samples_collected = 0  # Reseta o contador de amostras
 
+ 
+
 
     def train_dnn(self):
         if len(self.replay_buffer) < self.batch_size:
@@ -564,7 +566,6 @@ class Controller:
         loss.backward()
         self.dnn.optimizer.step()
 
-        # Função para salvar as trajetórias
     def plot_trajectories(self):
         desired = np.array(self.desired_trajectory)
         actual = np.array(self.actual_trajectory)
@@ -578,10 +579,8 @@ class Controller:
         ax.set_zlabel('Z')
         plt.title('Trajetórias Desejada vs Percorrida')
         plt.legend()
-        plt.savefig('trajetorias.png')  # Salvar a figura
-        plt.close()  # Fechar a figura para liberar memória
+        plt.show()
 
-    # Função para salvar as posições
     def plot_positions(self):
         desired = np.array(self.desired_positions)
         actual = np.array(self.actual_positions)
@@ -607,10 +606,8 @@ class Controller:
         plt.xlabel('Tempo')
         plt.legend()
         
-        plt.savefig('posicoes.png')  # Salvar a figura
-        plt.close()  # Fechar a figura para liberar memória
+        plt.show()
 
-    # Função para salvar as velocidades
     def plot_velocities(self):
         desired = np.array(self.desired_velocities)
         actual = np.array(self.actual_velocities)
@@ -636,10 +633,8 @@ class Controller:
         plt.xlabel('Tempo')
         plt.legend()
         
-        plt.savefig('velocidades.png')  # Salvar a figura
-        plt.close()  # Fechar a figura para liberar memória
+        plt.show()
 
-    # Função para salvar as entradas de controle
     def plot_control_inputs(self):
         controls = np.array(self.control_inputs)
         time = np.array(self.time_stamps)
@@ -661,8 +656,8 @@ class Controller:
         plt.xlabel('Tempo')
         plt.legend()
         
-        plt.savefig('entradas_controle.png')  # Salvar a figura
-        plt.close()  # Fechar a figura para liberar memória
+        plt.show()
+
 
 
     # Control loop: Computes the control signal in different modes.
