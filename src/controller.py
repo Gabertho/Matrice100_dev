@@ -597,8 +597,7 @@ class Controller:
         ax.set_title('Reference vs Actual Trajectories', fontsize=16)
         ax.legend(fontsize=12)
         ax.grid(True)
-        plt.savefig('professional_trajectories.png', bbox_inches='tight', pad_inches=0.1)
-        plt.close()
+        plt.show()
 
 
     def plot_positions(self):
@@ -630,8 +629,7 @@ class Controller:
         plt.grid(True)
         
         plt.suptitle('Desired vs Actual Positions Over Time', fontsize=16)
-        plt.savefig('professional_positions.png', bbox_inches='tight', pad_inches=0.1)
-        plt.close()
+        plt.show()
 
 
     def plot_velocities(self):
@@ -663,8 +661,8 @@ class Controller:
         plt.grid(True)
         
         plt.suptitle('Desired vs Actual Velocities Over Time', fontsize=16)
-        plt.savefig('professional_velocities.png', bbox_inches='tight', pad_inches=0.1)
-        plt.close()
+        plt.show()
+
 
 
     def plot_control_inputs(self):
@@ -692,8 +690,7 @@ class Controller:
         plt.grid(True)
         
         plt.suptitle('Control Inputs Over Time', fontsize=16)
-        plt.savefig('professional_control_inputs.png', bbox_inches='tight', pad_inches=0.1)
-        plt.close()
+        plt.show() 
 
 
 
