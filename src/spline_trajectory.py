@@ -21,9 +21,11 @@ from std_msgs.msg import Float64
 # --acc-->--cruise-->--brake-->hover or --acc-->--brake-->hover
 
 class SplineTrajectory:
-    def __init__(self, x, y, z, speed):
+    def __init__(self, x, y, z, speed, fixed_targets=None):
         # Coordinates of desired point (goal), and desired speed and acceleration to reach it.
         self.targets = [np.array([x, y, z])]
+        if fixed_targets:
+            self.targets.extend([np.array(t) for t in fixed_targets])
         self.target_speed = speed
         self.acc = 1.0
         self.have_initial_position_from_pose = False

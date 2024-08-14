@@ -227,7 +227,13 @@ if __name__ == "__main__":
     print("MODE X Y Z SPEED - trajectory:", control_mode, x, y, z, speed, full_trajectory_flag)
 
     if spline_flag:
-        trajectory = SplineTrajectory(x, y, z, speed)
+        fixed_targets = [
+        [3.0, 0.0, 2.5],
+        [4.0, 1.0, 2.5],
+        [5.0, 0.0, 2.5],
+        # Adicione mais pontos conforme necessário
+        ]
+        trajectory = SplineTrajectory(x, y, z, speed, fixed_targets=fixed_targets)
     elif eight_shape_flag:
         trajectory = EightShapeTrajectory(x, y, z, speed, num_laps=3)
     else:
