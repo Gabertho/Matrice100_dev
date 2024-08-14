@@ -1205,7 +1205,7 @@ class Controller:
         self.time_stamps.append(self.current_time)
         self.desired_velocities.append(self.targetvel)
         self.actual_velocities.append(self.velocity)
-        self.control_inputs.append(u[0], u[1], u[2], u[3])
+        self.control_inputs.append((u[0], u[1], u[2], u[3]))
 
         tempo_adicional = 5.0  # tempo adicional em segundos
         if not self.servicos_chamados and self.current_time >= self.full_trajectory_time[-1] + tempo_adicional:
