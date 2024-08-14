@@ -210,8 +210,8 @@ def print_speed(pathmsg, dt):
     print("SPEED FROM PATHMSG:", speeds)
 
 
-def generate_helix_trajectory(radius=5.0, height=5.0, loops=3, points_per_loop=100):
-    trajectory_points = []
+def generate_helix_trajectory(initial_point, radius=5.0, height=5.0, loops=3, points_per_loop=100):
+    trajectory_points = [initial_point]  # Começa na posição inicial do drone
     t = np.linspace(0, 2 * np.pi * loops, points_per_loop * loops)
     
     for i in range(len(t)):
@@ -221,6 +221,7 @@ def generate_helix_trajectory(radius=5.0, height=5.0, loops=3, points_per_loop=1
         trajectory_points.append([x, y, z])
     
     return trajectory_points
+
 
 
     
@@ -242,7 +243,8 @@ if __name__ == "__main__":
     print("MODE X Y Z SPEED - trajectory:", control_mode, x, y, z, speed, full_trajectory_flag)
 
     if spline_flag:
-        fixed_targets = generate_helix_trajectory(radius=5.0, height=10.0, loops=3, points_per_loop=100)
+        initial_point = [current_pose.pose.position.x, current_pose.pose.position.y, current_pose.pose.position.z]
+        fixed_targets = generate_helix_trajectory(initial_point, radius=5.0, height=10.0, loops=3, points_per_loop=100)
         trajectory = SplineTrajectory(x, y, z, speed, fixed_targets=fixed_targets)
     elif eight_shape_flag:
         trajectory = EightShapeTrajectory(x, y, z, speed, num_laps=3)
