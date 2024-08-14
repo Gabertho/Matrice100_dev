@@ -85,17 +85,18 @@ class SplineTrajectory:
             if not self.have_initial_position_from_pose:
                 return
 
-            time = [0.0]
-            for i in range(len(self.targets)):
-                time.append(time[i] + 1.0/len(self.targets)*(i+1))
-            #print("TIME:", time)
-            #print("TARGETS:", self.targets)
+            # Incluir o ponto inicial do drone como o primeiro ponto da spline
+            initial_point = np.array([self.x, self.y, self.z])
+            all_points = [initial_point] + self.targets
+
+            time = np.linspace(0, len(all_points), len(all_points))
+            
             try:
-                spline_x = CubicSpline(time, [self.x] + [t[0] for t in self.targets])
-                spline_y = CubicSpline(time, [self.y] + [t[1] for t in self.targets])
-                spline_z = CubicSpline(time, [self.z] + [t[2] for t in self.targets])
-            except:
-                print("DUPLICATE TIMES")
+                spline_x = CubicSpline(time, [p[0] for p in all_points])
+                spline_y = CubicSpline(time, [p[1] for p in all_points])
+                spline_z = CubicSpline(time, [p[2] for p in all_points])
+            except Exception as e:
+                print("DUPLICATE TIMES", e)
                 return
 
             seglengths = []
@@ -104,28 +105,25 @@ class SplineTrajectory:
                 end = time[i]
                 seglengths.append(self.get_spline_length(start, end, spline_x, spline_y, spline_z))
             spline_tot_length = sum(seglengths)
-            # print("SPLINE TOTLEN:", tot_length, spline_tot_length, seglengths)
             
             acctime = 0.0
             time = [0.0]
             for seglen in seglengths:
                 acctime += seglen/self.target_speed
                 time.append(acctime)
-            # print("TIME REAL:", time)
             self.tot_time = time[-1]
             
             try:
-                self.spline_x = CubicSpline(time, [self.x] + [t[0] for t in self.targets])
-                self.spline_y = CubicSpline(time, [self.y] + [t[1] for t in self.targets])
-                self.spline_z = CubicSpline(time, [self.z] + [t[2] for t in self.targets])
-            except:
-                print("DUPLICATE TIMES")
+                self.spline_x = CubicSpline(time, [p[0] for p in all_points])
+                self.spline_y = CubicSpline(time, [p[1] for p in all_points])
+                self.spline_z = CubicSpline(time, [p[2] for p in all_points])
+            except Exception as e:
+                print("DUPLICATE TIMES", e)
                 return
                 
-            ### self.plot_speed()
-            
         except Exception as e:
             print("EXCEPTION update_spline:", e)
+
                 
 
     def next_target(self):
