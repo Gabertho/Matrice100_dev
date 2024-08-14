@@ -201,23 +201,7 @@ class Controller:
         #Counter for triggering DNN training
         self.new_samples_collected = 0
         self.training_interval = 100  # Train every 100 new samples
-
-
-        #Data Collection
-        self.actual_positions = []
-        self.reference_positions = []
-        self.actual_velocities = []
-        self.reference_velocities = []
-        self.control_inputs = []  # Para armazenar roll, pitch e thrust
-
-        
-        rospy.Service('/plot_trajectories', Trigger, self.plot_service_callback)
-        rospy.Service('/calculate_mse', Trigger, self.mse_service_callback)
-        rospy.Service('/calculate_rmse', Trigger, self.rmse_service_callback)
-        
-
-
-        
+ 
 
     def set_sync(self, flag):
         self.sync_flag = flag
@@ -574,90 +558,6 @@ class Controller:
         loss.backward()
         self.dnn.optimizer.step()
 
-    def calculate_mse(self):
-        mse_position = np.mean((np.array(self.actual_positions) - np.array(self.reference_positions))**2)
-        mse_velocity = np.mean((np.array(self.actual_velocities) - np.array(self.reference_velocities))**2)
-        return mse_position, mse_velocity
-    
-    def calculate_rmse(self):
-        rmse_position = np.sqrt(np.mean((np.array(self.actual_positions) - np.array(self.reference_positions))**2))
-        rmse_velocity = np.sqrt(np.mean((np.array(self.actual_velocities) - np.array(self.reference_velocities))**2))
-        return rmse_position, rmse_velocity
-
-    
-    def plot_trajectories(self):
-        """Plota as trajetórias desejadas e reais para comparação, as velocidades e as entradas de controle."""
-        actual_positions = np.array(self.actual_positions)
-        reference_positions = np.array(self.reference_positions)
-        actual_velocities = np.array(self.actual_velocities)
-        reference_velocities = np.array(self.reference_velocities)
-        control_inputs = np.array(self.control_inputs)
-        
-        plt.figure(figsize=(12, 10))
-        
-        # Plotando trajetórias
-        plt.subplot(3, 3, 1)
-        plt.plot(actual_positions[:, 0], label='Real X')
-        plt.plot(reference_positions[:, 0], label='Desired X')
-        plt.title('Trajectory in X')
-        plt.legend()
-
-        plt.subplot(3, 3, 2)
-        plt.plot(actual_positions[:, 1], label='Real Y')
-        plt.plot(reference_positions[:, 1], label='Desired Y')
-        plt.title('Trajectory in Y')
-        plt.legend()
-
-        plt.subplot(3, 3, 3)
-        plt.plot(actual_positions[:, 2], label='Real Z')
-        plt.plot(reference_positions[:, 2], label='Desired Z')
-        plt.title('Trajectory in Z')
-        plt.legend()
-
-        # Plotando velocidades
-        plt.subplot(3, 3, 4)
-        plt.plot(actual_velocities[:, 0], label='Real Vx')
-        plt.plot(reference_velocities[:, 0], label='Desired Vx')
-        plt.title('Velocity in X')
-        plt.legend()
-
-        plt.subplot(3, 3, 5)
-        plt.plot(actual_velocities[:, 1], label='Real Vy')
-        plt.plot(reference_velocities[:, 1], label='Desired Vy')
-        plt.title('Velocity in Y')
-        plt.legend()
-
-        plt.subplot(3, 3, 6)
-        plt.plot(actual_velocities[:, 2], label='Real Vz')
-        plt.plot(reference_velocities[:, 2], label='Desired Vz')
-        plt.title('Velocity in Z')
-        plt.legend()
-
-        # Plotando entradas de controle
-        plt.subplot(3, 3, 7)
-        plt.plot(control_inputs[:, 0], label='Roll')
-        plt.title('Control Input: Roll')
-        plt.legend()
-
-        plt.subplot(3, 3, 8)
-        plt.plot(control_inputs[:, 1], label='Pitch')
-        plt.title('Control Input: Pitch')
-        plt.legend()
-
-        plt.subplot(3, 3, 9)
-        plt.plot(control_inputs[:, 2], label='Thrust')
-        plt.title('Control Input: Thrust')
-        plt.legend()
-
-        plt.tight_layout()
-        plt.show()
-
-
-
-
-
-
-    
 
     # Control loop: Computes the control signal in different modes.
 
@@ -694,23 +594,6 @@ class Controller:
         # Error = desired x,y,z position - actual x,y,z position.
         error = self.target - self.current_position
         errorvel = self.targetvel - self.velocity
-
-        distance_to_helix_start = None
-        start_threshold = np.inf
-
-        
-       # Verificação de proximidade com o início da hélice
-        if not self.data_collection_started:
-            initial_helix_point = np.array([self.full_trajectory_x[0], self.full_trajectory_y[0], self.full_trajectory_z[0]])
-            print("initial helix point:", initial_helix_point)
-            distance_to_helix_start = np.linalg.norm(self.current_position - initial_helix_point)
-            print("distance_to_helix_start", distance_to_helix_start)
-            
-            if distance_to_helix_start < start_threshold:
-                self.data_collection_started = True
-                rospy.loginfo("Iniciando coleta de dados: drone alcançou a trajetória helicoidal")
-
-
 
         # Thrust control
         pthrust = 1.5
@@ -1129,13 +1012,6 @@ class Controller:
             if u[1] < -max:
                 u[1] = -max
                 
-        if self.data_collection_started:
-            self.actual_positions.append(self.current_position)
-            self.reference_positions.append(self.target)
-            self.actual_velocities.append(self.velocity)
-            self.reference_velocities.append(self.targetvel)
-            self.control_inputs.append([u[0], u[1], u[2]])
-            print("Points added")
 
         return (u, error[0], error[1], error[2])
 
