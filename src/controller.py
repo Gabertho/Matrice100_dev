@@ -662,7 +662,7 @@ class Controller:
     # Control loop: Computes the control signal in different modes.
 
     def control(self, dt):
-        print("DO CONTROL:", dt, self.control_mode, self.full_trajectory_flag)
+        #print("DO CONTROL:", dt, self.control_mode, self.full_trajectory_flag)
 
         self.dt = dt
 
@@ -687,7 +687,7 @@ class Controller:
             target_vx = np.interp(self.current_time, self.full_trajectory_time, self.full_trajectory_vx)
             target_vy = np.interp(self.current_time, self.full_trajectory_time, self.full_trajectory_vy)
             target_vz = np.interp(self.current_time, self.full_trajectory_time, self.full_trajectory_vz)
-            print("FULL TRAJ CONTROL:", dt, self.control_mode, target_x, target_y, target_z)
+            #print("FULL TRAJ CONTROL:", dt, self.control_mode, target_x, target_y, target_z)
             self.target = np.array([target_x, target_y, target_z])
             self.targetvel = np.array([target_vx, target_vy, target_vz])
             
@@ -720,21 +720,21 @@ class Controller:
         #dthrust = 0.0
         velthrust = 6.0
 
-        print("TARGET:", self.target)
-        print("CUPOS:", self.current_position)
-        print("THRUSTERROR:", error[2])
-        print("HOVERTHRUST:", self.hover_thrust)
+        #print("TARGET:", self.target)
+        #print("CUPOS:", self.current_position)
+        #print("THRUSTERROR:", error[2])
+        #print("HOVERTHRUST:", self.hover_thrust)
 
         self.int_err_z += error[2]
         d_err_z = (error[2] - self.old_err_z)/dt
 
-        print("INTERROR:", self.int_err_z)
-        print("D_ERR_Z:", d_err_z)
+        #print("INTERROR:", self.int_err_z)
+        #print("D_ERR_Z:", d_err_z)
 
         # PID thrust: Kp.e+Ki.int_e+Kd.de/dt
         delta = error[2]*pthrust + ithrust*self.int_err_z + dthrust*d_err_z + velthrust*errorvel[2]
 
-        print("PID DELTATHRUST:", delta)
+        #print("PID DELTATHRUST:", delta)
         
         # Thrust control signal = thrust required to hover + PID output.
         #u[2] = self.hover_thrust + delta
@@ -754,7 +754,7 @@ class Controller:
         dyaw = 0.0
 
         yaw_error = self.target_yaw - self.current_yaw
-        print("YAW_ERROR:", yaw_error)
+        #print("YAW_ERROR:", yaw_error)
         
         self.int_err_yaw += yaw_error
         d_err_yaw = (yaw_error - self.old_err_yaw)/dt
@@ -934,23 +934,23 @@ class Controller:
 
                 # Calculate LQR control action
                 control_input = self.lqr_control(state, self.K_thrust)  # control_input is (3,)
-                print("control_input:", control_input)
+                #print("control_input:", control_input)
 
                 # Compute adaptive control law
                 mrac_error = state  # Ensure `mrac_error` is the same dimension as `state`
                 v_ad = self.adaptive_control_thrust(state, mrac_error)
-                print("v_ad:", v_ad)
+                #print("v_ad:", v_ad)
 
                 # Combine LQR and adaptive control laws
                 control_total = control_input - v_ad  # Both should be (3,)
-                print("control_total:", control_total)
+                #print("control_total:", control_total)
 
                 # Define roll and pitch based on control action
                 u[0] = -math.radians(control_total[0])  # Roll
                 u[1] = -math.radians(control_total[1])  # Pitch
 
-                print("MRAC roll before clip:", u[0])
-                print("MRAC pitch before clip:", u[1])
+                #print("MRAC roll before clip:", u[0])
+                #print("MRAC pitch before clip:", u[1])
 
                 max = math.radians(20.0)
                 if u[0] > max:
@@ -980,10 +980,10 @@ class Controller:
                     u[2] = 80.0
 
 
-                print("MRAC roll after clip:", u[0])
-                print("MRAC pitch after clip:", u[1])
+                #print("MRAC roll after clip:", u[0])
+                #print("MRAC pitch after clip:", u[1])
 
-                print("MRAC THRUST:", u[2])
+                #print("MRAC THRUST:", u[2])
 
             if self.mode == "DMRAC":
                 print("======================MRAC DNN WITH THRUST CONTROL===============================================")
@@ -1133,6 +1133,7 @@ class Controller:
             self.actual_velocities.append(self.velocity)
             self.reference_velocities.append(self.targetvel)
             self.control_inputs.append([u[0], u[1], u[2]])
+            print("Points added")
 
         return (u, error[0], error[1], error[2])
 
