@@ -214,7 +214,7 @@ def generate_helix_trajectory(initial_point, radius=5.0, height=5.0, loops=3, po
     trajectory_points = []
 
     # Define uma altura mínima para evitar que a hélice entre no chão
-    min_height = 2.0  # Ajuste essa altura conforme necessário
+    min_height = 0.4  # Ajuste essa altura conforme necessário
 
     # Garantir que a altura inicial seja suficiente para a descida
     initial_z = max(initial_point[2], height * loops + min_height)
