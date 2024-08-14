@@ -698,19 +698,19 @@ class Controller:
         
         plt.figure(figsize=(10, 7), dpi=300)
         plt.subplot(3, 1, 1)
-        plt.plot(time, controls[:, 0], 'g-', label='Roll', linewidth=2)
+        plt.plot(time, controls[0], 'g-', label='Roll', linewidth=2)
         plt.ylabel('Roll (rad)', fontsize=14)
         plt.legend(fontsize=12)
         plt.grid(True)
 
         plt.subplot(3, 1, 2)
-        plt.plot(time, controls[:, 1], 'r-', label='Pitch', linewidth=2)
+        plt.plot(time, controls[1], 'r-', label='Pitch', linewidth=2)
         plt.ylabel('Pitch (rad)', fontsize=14)
         plt.legend(fontsize=12)
         plt.grid(True)
 
         plt.subplot(3, 1, 3)
-        plt.plot(time, controls[:, 2], 'b-', label='Thrust', linewidth=2)
+        plt.plot(time, controls[2], 'b-', label='Thrust', linewidth=2)
         plt.ylabel('Thrust (%)', fontsize=14)
         plt.xlabel('Time (s)', fontsize=14)
         plt.legend(fontsize=12)
