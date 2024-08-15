@@ -396,6 +396,8 @@ class Controller:
         self.plot_positions()
         self.plot_velocities()
         self.plot_control_inputs()
+        self.plot_position_errors()
+        self.plot_velocity_errors()
         return TriggerResponse(success=True, message="Dados plotados com sucesso.")
     
     # Implementação do serviço de cálculo de erros
@@ -655,6 +657,76 @@ class Controller:
         plt.savefig(file_path)
         print(f"Figura salva em: {file_path}")
         plt.close()
+
+    def plot_position_errors(self):
+        desired = np.array(self.desired_positions)
+        actual = np.array(self.actual_positions)
+        time = np.array(self.time_stamps)
+
+        errors = desired - actual
+        
+        plt.figure(figsize=(10, 7), dpi=300)
+        plt.subplot(3, 1, 1)
+        plt.plot(time, errors[:, 0], 'r-', label='X Error', linewidth=2)
+        plt.ylabel('X Error (m)', fontsize=14)
+        plt.legend(fontsize=12)
+        plt.grid(True)
+
+        plt.subplot(3, 1, 2)
+        plt.plot(time, errors[:, 1], 'g-', label='Y Error', linewidth=2)
+        plt.ylabel('Y Error (m)', fontsize=14)
+        plt.legend(fontsize=12)
+        plt.grid(True)
+
+        plt.subplot(3, 1, 3)
+        plt.plot(time, errors[:, 2], 'b-', label='Z Error', linewidth=2)
+        plt.ylabel('Z Error (m)', fontsize=14)
+        plt.xlabel('Time (s)', fontsize=14)
+        plt.legend(fontsize=12)
+        plt.grid(True)
+        
+        plt.suptitle('Position Errors Over Time', fontsize=16)
+        # Salvando a figura
+        file_path = os.path.join(save_dir, 'position_errors.png')
+        plt.savefig(file_path)
+        print(f"Figura salva em: {file_path}")
+        plt.close()
+
+    def plot_velocity_errors(self):
+        desired = np.array(self.desired_velocities)
+        actual = np.array(self.actual_velocities)
+        time = np.array(self.time_stamps)
+
+        errors = desired - actual
+        
+        plt.figure(figsize=(10, 7), dpi=300)
+        plt.subplot(3, 1, 1)
+        plt.plot(time, errors[:, 0], 'r-', label='Vx Error', linewidth=2)
+        plt.ylabel('X Velocity Error (m/s)', fontsize=14)
+        plt.legend(fontsize=12)
+        plt.grid(True)
+
+        plt.subplot(3, 1, 2)
+        plt.plot(time, errors[:, 1], 'g-', label='Vy Error', linewidth=2)
+        plt.ylabel('Y Velocity Error (m/s)', fontsize=14)
+        plt.legend(fontsize=12)
+        plt.grid(True)
+
+        plt.subplot(3, 1, 3)
+        plt.plot(time, errors[:, 2], 'b-', label='Vz Error', linewidth=2)
+        plt.ylabel('Z Velocity Error (m/s)', fontsize=14)
+        plt.xlabel('Time (s)', fontsize=14)
+        plt.legend(fontsize=12)
+        plt.grid(True)
+        
+        plt.suptitle('Velocity Errors Over Time', fontsize=16)
+        # Salvando a figura
+        file_path = os.path.join(save_dir, 'velocity_errors.png')
+        plt.savefig(file_path)
+        print(f"Figura salva em: {file_path}")
+        plt.close()
+
+
 
 
     def plot_velocities(self):
