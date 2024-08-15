@@ -207,7 +207,7 @@ class Controller:
         self.replay_buffer = []
         self.buffer_size = 1000
         self.batch_size = 64
-        self.zeta_tol = 0.1
+        self.zeta_tol = 0.00001
 
         #Counter for triggering DNN training
         self.new_samples_collected = 0
