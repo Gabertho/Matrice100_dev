@@ -197,7 +197,7 @@ class Controller:
         self.P_lyap_thrust = sp.solve_continuous_lyapunov(self.Am_thrust, self.Q_lyap_thrust)
         # Adaptive Parameters
         self.Wmrac_thrust = np.zeros((7,3))  # Adjust dimensions based on Phi(x)
-        self.Gammamrac_thrust = 0.3 * np.eye(7)  # Learning rate matrix, set to 0.1  # Learning rate matrix
+        self.Gammamrac_thrust = 0.03 * np.eye(7)  # Learning rate matrix, set to 0.1  # Learning rate matrix
 
         self.W_thrust = np.zeros((10,3))  # Adjust dimensions based on Phi(x)
         self.Gamma_thrust = 0.01 * np.eye(10)  # Learning rate matrix, set to 0.01  # Learning rate matrix
@@ -1043,7 +1043,7 @@ class Controller:
                 #print("v_ad:", v_ad)
 
                 # Combine LQR and adaptive control laws
-                control_total = control_input - v_ad  # Both should be (3,)
+                control_total = control_input + v_ad  # Both should be (3,)
                 #print("control_total:", control_total)
 
                 # Define roll and pitch based on control action
