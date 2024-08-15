@@ -84,6 +84,9 @@ class SplineTrajectory:
         try:
             if not self.have_initial_position_from_pose:
                 return
+            
+            if self.spline_x is not None:  # Já foi gerada uma vez
+                return
 
             time = [0.0]
             for i in range(len(self.targets)):
