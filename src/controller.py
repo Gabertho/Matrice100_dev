@@ -1046,7 +1046,7 @@ class Controller:
                 #print("v_ad:", v_ad)
 
                 # Combine LQR and adaptive control laws
-                control_total = control_input + v_ad  # Both should be (3,)
+                control_total = control_input - v_ad  # Both should be (3,)
                 #print("control_total:", control_total)
 
                 # Define roll and pitch based on control action
@@ -1124,7 +1124,7 @@ class Controller:
                 self.update_replay_buffer(state, v_ad)
                 print(f"Replay buffer length after update: {len(self.replay_buffer)}")
 
-                control_total = control_input + v_ad
+                control_total = control_input - v_ad
                 #print("control_total:", control_total)
 
                 u[0] = -math.radians(control_total[0])  # Roll
