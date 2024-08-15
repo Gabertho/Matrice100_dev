@@ -501,9 +501,11 @@ class Controller:
     def adaptive_control_thrust_dmrac(self, phi, e):
         # `phi` agora tem 10 elementos, ajustando o código para refletir isso
         phi = phi.reshape(-1, 1)  # `phi` agora é (10, 1)
+        print(f"Phi for DMRAC: {phi.flatten()}")
 
         # Calcular a lei de controle adaptativo
         v_ad = np.dot(self.W_thrust.T, phi).flatten()  # `v_ad` agora é (3,)
+        print(f"Adaptive control output (v_ad): {v_ad}")
         
         e = e.reshape(-1, 1)  # `e` deve ser (6, 1)
 
@@ -517,6 +519,7 @@ class Controller:
 
         # Atualiza `W_thrust` com as novas dimensões
         self.W_thrust += -adaptation_term
+        print(f"Updated W_thrust: {self.W_thrust}")
 
         return v_ad  # Retorna como um array 1D
 
@@ -534,15 +537,13 @@ class Controller:
 
 
     def calculate_independence_metric(self, x, y):
-        """
-        Calcula uma métrica de independência baseada na covariância.
-        """
         phi_x = self.get_dnn_features(x)
         y_pred = np.dot(self.W_thrust.T, phi_x)
 
-        # Usamos a diferença entre a predição e o valor real como proxy da independência
         independence_metric = np.linalg.norm(y - y_pred)
+        print(f"Calculated independence metric: {independence_metric}")
         return independence_metric
+
     
     def remove_least_representative(self):
         """
@@ -563,30 +564,30 @@ class Controller:
 
 
     def update_replay_buffer(self, x, y):
-        """
-        Atualiza o replay buffer com base na métrica de independência e realiza SVD se necessário.
-        """
         independence_metric = self.calculate_independence_metric(x, y)
+        print(f"Independence metric: {independence_metric}, Threshold (zeta_tol): {self.zeta_tol}")
 
         if independence_metric > self.zeta_tol:
-            # Adiciona o par (x, y) ao buffer
             self.replay_buffer.append((x, y))
-            self.new_samples_collected += 1  # Atualiza o contador de novas amostras
+            self.new_samples_collected += 1
+            print(f"Sample added to replay buffer. New buffer size: {len(self.replay_buffer)}")
 
-            # Remove o dado menos representativo se o buffer estiver cheio
             if len(self.replay_buffer) > self.buffer_size:
                 self.remove_least_representative()
 
-            # Treina a DNN após coletar um número significativo de novas amostras
             if self.new_samples_collected >= self.training_interval:
+                print("Training DNN...")
                 self.train_dnn()
                 self.new_samples_collected = 0  # Reseta o contador de amostras
+        else:
+            print("Sample not added. Independence metric below threshold.")
 
  
 
 
     def train_dnn(self):
         if len(self.replay_buffer) < self.batch_size:
+            print("Not enough samples to train DNN.")
             return
         # Converter a lista de tuplas em um array numpy
         replay_buffer_array = np.array(self.replay_buffer, dtype=object)
@@ -602,6 +603,8 @@ class Controller:
         loss = self.dnn.loss_fn(predictions, v_ads)
         loss.backward()
         self.dnn.optimizer.step()
+
+        print(f"Training step complete. Loss: {loss.item()}")
 
     def plot_trajectories(self):
         desired = np.array(self.desired_trajectory)
@@ -1107,19 +1110,19 @@ class Controller:
                 print("state:", state)
 
                 control_input = self.lqr_control(state, self.K_thrust)
-                print("lqr roll:", math.radians(control_input[0]))
-                print("lqr pitch:", math.radians(control_input[1]))
-                print("lqr thrust:", control_input[2])
+                #print("lqr roll:", math.radians(control_input[0]))
+                #print("lqr pitch:", math.radians(control_input[1]))
+                #print("lqr thrust:", control_input[2])
                 mrac_error = state
 
                 phi = self.get_dnn_features(state)
-                print("phi:", phi)
+                #print("phi:", phi)
                 v_ad = self.adaptive_control_thrust_dmrac(phi, mrac_error)
-                print("vad roll:", math.radians(v_ad[0]))
-                print("vad pitch:", math.radians(v_ad[1]))
-                print("vad thrust:", v_ad[2])
+                #print("vad roll:", math.radians(v_ad[0]))
+                #print("vad pitch:", math.radians(v_ad[1]))
+                #print("vad thrust:", v_ad[2])
                 self.update_replay_buffer(state, v_ad)
-                print("Replay buffer length:", len(self.replay_buffer))
+                print(f"Replay buffer length after update: {len(self.replay_buffer)}")
 
                 control_total = control_input - v_ad
                 #print("control_total:", control_total)
