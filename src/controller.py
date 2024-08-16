@@ -618,7 +618,7 @@ class Controller:
         ax.set_ylabel('Y (m)', fontsize=14)
         ax.set_zlabel('Z (m)', fontsize=14)
         ax.set_title('Reference vs Actual Trajectories', fontsize=16, pad=20)  # Ajusta a posição do título
-        ax.legend(fontsize=12, loc='upper left')  # Move a legenda para fora da área de plotagem
+        ax.legend(fontsize=12, loc='center left', bbox_to_anchor=(1, 0.5))  # Move a legenda para fora da área de plotagem
         ax.grid(True)
         file_path = os.path.join(save_dir, 'trajectories.png')
         plt.savefig(file_path, bbox_inches='tight')
