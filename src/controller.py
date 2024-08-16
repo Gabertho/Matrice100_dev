@@ -200,7 +200,7 @@ class Controller:
         self.Gammamrac_thrust = 0.01 * np.eye(7)  # Learning rate matrix, set to 0.01  # Learning rate matrix
 
         self.W_thrust = np.zeros((10,3))  # Adjust dimensions based on Phi(x)
-        self.Gamma_thrust = 0.05 * np.eye(10)  # Learning rate matrix, set to 0.01  # Learning rate matrix
+        self.Gamma_thrust = 0.001 * np.eye(10)  # Learning rate matrix, set to 0.01  # Learning rate matrix
 
         # DMRAC Parameters
         self.dnn = Net()
@@ -1124,7 +1124,7 @@ class Controller:
                 self.update_replay_buffer(state, v_ad)
                 print(f"Replay buffer length after update: {len(self.replay_buffer)}")
 
-                control_total = control_input - v_ad
+                control_total = control_input + v_ad
                 #print("control_total:", control_total)
 
                 u[0] = -math.radians(control_total[0])  # Roll
