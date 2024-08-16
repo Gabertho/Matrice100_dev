@@ -75,7 +75,7 @@ class Controller:
         self.old_err_yaw = 0.0
         self.old_err_z = 0.0
         self.yaw_control_flag = False
-        self.mode = "LQR_thrust"
+        self.mode = "MRAC_thrust"
         self.trajectory_flag = False
         self.full_trajectory_x = None
         self.full_trajectory_y = None
@@ -197,7 +197,7 @@ class Controller:
         self.P_lyap_thrust = sp.solve_continuous_lyapunov(self.Am_thrust, self.Q_lyap_thrust)
         # Adaptive Parameters
         self.Wmrac_thrust = np.zeros((7,3))  # Adjust dimensions based on Phi(x)
-        self.Gammamrac_thrust = 0.006 * np.eye(7)  # Learning rate matrix, set to 0.1  # Learning rate matrix
+        self.Gammamrac_thrust = 0.01 * np.eye(7)  # Learning rate matrix, set to 0.01  # Learning rate matrix
 
         self.W_thrust = np.zeros((10,3))  # Adjust dimensions based on Phi(x)
         self.Gamma_thrust = 0.05 * np.eye(10)  # Learning rate matrix, set to 0.01  # Learning rate matrix
