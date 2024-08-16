@@ -75,7 +75,7 @@ class Controller:
         self.old_err_yaw = 0.0
         self.old_err_z = 0.0
         self.yaw_control_flag = False
-        self.mode = "simple_pid"
+        self.mode = "MRAC_thrust"
         self.trajectory_flag = False
         self.full_trajectory_x = None
         self.full_trajectory_y = None
@@ -1046,7 +1046,7 @@ class Controller:
                 #print("v_ad:", v_ad)
 
                 # Combine LQR and adaptive control laws
-                control_total = control_input - v_ad  # Both should be (3,)
+                control_total = control_input + v_ad  # Both should be (3,)
                 #print("control_total:", control_total)
 
                 # Define roll and pitch based on control action
