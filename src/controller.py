@@ -37,7 +37,7 @@ class Net(nn.Module):
         self.HL1 = nn.Linear(6, 20)
         self.HL2 = nn.Linear(20, 10)  # Ajuste o tamanho de saída para 6
         self.OL = nn.Linear(10, 3)
-        self.optimizer = optim.Adam(self.parameters(), lr=0.009)
+        self.optimizer = optim.Adam(self.parameters(), lr=0.005)
         self.loss_fn = nn.MSELoss()
 
     def forward(self, x):
