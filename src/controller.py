@@ -807,7 +807,7 @@ class Controller:
         plt.suptitle('Control Inputs Over Time', fontsize=16)
 
         # Salvando a figura
-        file_path = '/home/gab/Desktop/plots/control_inputs.png'
+        file_path = '/home/lrs/lrs_ws/src/Matrice100_dev/plots/control_inputs.png'
         plt.savefig(file_path)
         print(f"Figura salva em: {file_path}")
         plt.close()
