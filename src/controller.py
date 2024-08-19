@@ -25,7 +25,7 @@ import time
 from mpl_toolkits.mplot3d import Axes3D
 
 # Diretório para salvar as figuras
-save_dir = '/home/gab/Desktop/plots/'
+save_dir = '/home/lrs/lrs_ws/src/Matrice100_dev/plots'
 
 # Certifique-se de que o diretório exista
 if not os.path.exists(save_dir):
