@@ -176,7 +176,7 @@ class Controller:
         #Brysons rule
         self.max_thrust = 80 #4 motors x 20N (maximum thrust per motor according to DJI)
         self.U1_max = self.max_thrust - (self.m*self.g) #
-        max_state_values_thrust = np.array([0.05, 0.02, 0.05, 0.02, 0.05, 0.02])  #maximum error for x, dx, y, dy, z, dz 
+        max_state_values_thrust = np.array([0.07, 0.05, 0.07, 0.05, 0.07, 0.05])  #maximum error for x, dx, y, dy, z, dz 
         max_control_values_thrust = np.array([0.349066, 0.349066, self.U1_max/100]) #20 degrees for roll and pitch and x% for thrust
 
         self.Q_thrust = np.diag(1.0 / max_state_values_thrust**2)
