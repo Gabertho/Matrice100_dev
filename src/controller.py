@@ -32,7 +32,7 @@ if not os.path.exists(save_dir):
     os.makedirs(save_dir)
 
 # Architecture 1
-class Net(nn.Module):
+"""class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
         self.HL1 = nn.Linear(6, 20)
@@ -45,10 +45,10 @@ class Net(nn.Module):
         OL_1 = torch.tanh(self.HL1(x))
         OL_2 = torch.tanh(self.HL2(OL_1))
         OL_3 = self.OL(OL_2)
-        return OL_2, OL_3
+        return OL_2, OL_3"""
 
 #Architecture 2
-"""class Net(nn.Module):
+class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
         self.HL1 = nn.Linear(6, 64)  # Aumentei o número de neurônios para 64
@@ -65,7 +65,7 @@ class Net(nn.Module):
         x = torch.relu(self.HL2(x))
         x = torch.relu(self.HL3(x))
         x = self.OL(x)  # Camada de saída sem ativação
-        return x"""
+        return x
 
 
 class Controller:
