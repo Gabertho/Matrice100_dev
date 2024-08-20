@@ -32,7 +32,7 @@ if not os.path.exists(save_dir):
     os.makedirs(save_dir)
 
 # Architecture 1
-class Net(nn.Module):
+"""class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
         self.HL1 = nn.Linear(6, 20)
@@ -45,27 +45,23 @@ class Net(nn.Module):
         OL_1 = torch.tanh(self.HL1(x))
         OL_2 = torch.tanh(self.HL2(OL_1))
         OL_3 = self.OL(OL_2)
-        return OL_2, OL_3
+        return OL_2, OL_3"""
 
 #Architecture 2
-"""class Net(nn.Module):
+class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.HL1 = nn.Linear(6, 64)  # Aumentei o número de neurônios para 64
-        self.HL2 = nn.Linear(64, 128)  # Camada intermediária com 128 neurônios
-        self.HL3 = nn.Linear(128, 64)  # Camada intermediária adicional
-        self.OL = nn.Linear(64, 3)  # Saída com 3 neurônios, mantendo a mesma saída
-
-        # Otimizador e função de perda
-        self.optimizer = optim.Adam(self.parameters(), lr=0.001)  # Taxa de aprendizado menor
+        self.HL1 = nn.Linear(6, 64)
+        self.HL2 = nn.Linear(64, 64)  # Ajuste o tamanho de saída para 6
+        self.OL = nn.Linear(64, 3)
+        self.optimizer = optim.Adam(self.parameters(), lr=0.001)
         self.loss_fn = nn.MSELoss()
 
     def forward(self, x):
-        x = torch.relu(self.HL1(x))  # ReLU em vez de tanh
-        x = torch.relu(self.HL2(x))
-        x = torch.relu(self.HL3(x))
-        x = self.OL(x)  # Camada de saída sem ativação
-        return x"""
+        OL_1 = torch.tanh(self.HL1(x))
+        OL_2 = torch.tanh(self.HL2(OL_1))
+        OL_3 = self.OL(OL_2)
+        return OL_2, OL_3
 
 
 class Controller:
@@ -220,8 +216,11 @@ class Controller:
         self.Wmrac_thrust = np.zeros((7,3))  # Adjust dimensions based on Phi(x)
         self.Gammamrac_thrust = 0.001 * np.eye(7)  # Learning rate matrix, set to 0.01  # Learning rate matrix
 
-        self.W_thrust = np.zeros((10,3))  # Adjust dimensions based on Phi(x)
-        self.Gamma_thrust = 0.001 * np.eye(10)  # Learning rate matrix, set to 0.01  # Learning rate matrix
+        #self.W_thrust = np.zeros((10,3))  # Adjust dimensions based on Phi(x)
+        #self.Gamma_thrust = 0.001 * np.eye(10)  # Learning rate matrix, set to 0.01  # Learning rate matrix
+
+        self.W_thrust = np.zeros((64,3))  # Adjust dimensions based on Phi(x)
+        self.Gamma_thrust = 0.001 * np.eye(64)  # Learning rate matrix, set to 0.01  # Learning rate matrix
 
         # DMRAC Parameters
         self.dnn = Net()
