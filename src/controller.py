@@ -51,10 +51,10 @@ if not os.path.exists(save_dir):
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.HL1 = nn.Linear(6, 64)
-        self.HL2 = nn.Linear(64, 10)  # Ajuste o tamanho de saída para 6
-        self.OL = nn.Linear(10, 3)
-        self.optimizer = optim.Adam(self.parameters(), lr=0.006)
+        self.HL1 = nn.Linear(6, 32)
+        self.HL2 = nn.Linear(32, 16)  # Ajuste o tamanho de saída para 6
+        self.OL = nn.Linear(16, 3)
+        self.optimizer = optim.Adam(self.parameters(), lr=0.005)
         self.loss_fn = nn.MSELoss()
 
     def forward(self, x):
@@ -216,8 +216,11 @@ class Controller:
         self.Wmrac_thrust = np.zeros((7,3))  # Adjust dimensions based on Phi(x)
         self.Gammamrac_thrust = 0.001 * np.eye(7)  # Learning rate matrix, set to 0.01  # Learning rate matrix
 
-        self.W_thrust = np.zeros((10,3))  # Adjust dimensions based on Phi(x)
-        self.Gamma_thrust = 0.001 * np.eye(10)  # Learning rate matrix, set to 0.01  # Learning rate matrix
+        #self.W_thrust = np.zeros((10,3))  # Adjust dimensions based on Phi(x)
+        s#elf.Gamma_thrust = 0.001 * np.eye(10)  # Learning rate matrix, set to 0.01  # Learning rate matrix
+
+        self.W_thrust = np.zeros((16,3))  # Adjust dimensions based on Phi(x)
+        self.Gamma_thrust = 0.001 * np.eye(16)  # Learning rate matrix, set to 0.01  # Learning rate matrix
 
         #self.W_thrust = np.zeros((64,3))  # Adjust dimensions based on Phi(x)
         #self.Gamma_thrust = 0.001 * np.eye(64)  # Learning rate matrix, set to 0.01  # Learning rate matrix
