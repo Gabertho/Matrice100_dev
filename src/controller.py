@@ -54,7 +54,7 @@ class Net(nn.Module):
         self.HL1 = nn.Linear(6, 32)
         self.HL2 = nn.Linear(32, 16)  # Ajuste o tamanho de saída para 6
         self.OL = nn.Linear(16, 3)
-        self.optimizer = optim.Adam(self.parameters(), lr=0.005)
+        self.optimizer = optim.Adam(self.parameters(), lr=0.001)
         self.loss_fn = nn.MSELoss()
 
     def forward(self, x):
@@ -230,7 +230,7 @@ class Controller:
         self.replay_buffer = []
         self.buffer_size = 1000
         self.batch_size = 64
-        self.zeta_tol = 0.0009
+        self.zeta_tol = 0.0006
 
         #Counter for triggering DNN training
         self.new_samples_collected = 0
