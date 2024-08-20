@@ -51,10 +51,9 @@ if not os.path.exists(save_dir):
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.HL1 = nn.Linear(6, 64)  # Aumentei o número de neurônios para 64
-        self.HL2 = nn.Linear(64, 128)  # Camada intermediária com 128 neurônios
-        self.HL3 = nn.Linear(128, 64)  # Camada intermediária adicional
-        self.OL = nn.Linear(64, 3)  # Saída com 3 neurônios, mantendo a mesma saída
+        self.HL1 = nn.Linear(6, 64)  # Camada com 64 neurônios
+        self.HL2 = nn.Linear(64, 64)  # Outra camada com 64 neurônios
+        self.OL = nn.Linear(64, 3)  # Saída com 3 neurônios
 
         # Otimizador e função de perda
         self.optimizer = optim.Adam(self.parameters(), lr=0.001)  # Taxa de aprendizado menor
@@ -63,9 +62,9 @@ class Net(nn.Module):
     def forward(self, x):
         x = torch.relu(self.HL1(x))  # ReLU em vez de tanh
         x = torch.relu(self.HL2(x))
-        x = torch.relu(self.HL3(x))
         x = self.OL(x)  # Camada de saída sem ativação
         return x
+
 
 
 class Controller:
