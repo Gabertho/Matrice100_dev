@@ -52,18 +52,20 @@ class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
         self.HL1 = nn.Linear(6, 64)  # Camada com 64 neurônios
-        self.HL2 = nn.Linear(64, 64)  # Outra camada com 64 neurônios
+        self.HL2 = nn.Linear(64, 128)  # Camada intermediária com 128 neurônios
+        self.HL3 = nn.Linear(128, 64)  # Outra camada com 64 neurônios
         self.OL = nn.Linear(64, 3)  # Saída com 3 neurônios
 
-        # Otimizador e função de perda
-        self.optimizer = optim.Adam(self.parameters(), lr=0.001)  # Taxa de aprendizado menor
+        self.optimizer = optim.Adam(self.parameters(), lr=0.001)  # Taxa de aprendizado
         self.loss_fn = nn.MSELoss()
 
     def forward(self, x):
-        x = torch.relu(self.HL1(x))  # ReLU em vez de tanh
-        x = torch.relu(self.HL2(x))
-        x = self.OL(x)  # Camada de saída sem ativação
-        return x
+        x = torch.relu(self.HL1(x))
+        features = torch.relu(self.HL2(x))  # Armazena as features intermediárias
+        x = torch.relu(self.HL3(features))
+        output = self.OL(x)  # Saída final
+        return features, output  # Retorna tanto as features quanto a saída final
+
 
 
 
