@@ -221,8 +221,14 @@ class Controller:
         self.Wmrac_thrust = np.zeros((7,3))  # Adjust dimensions based on Phi(x)
         self.Gammamrac_thrust = 0.001 * np.eye(7)  # Learning rate matrix, set to 0.01  # Learning rate matrix
 
-        self.W_thrust = np.zeros((10,3))  # Adjust dimensions based on Phi(x)
-        self.Gamma_thrust = 0.001 * np.eye(10)  # Learning rate matrix, set to 0.01  # Learning rate matrix
+        # = np.zeros((10,3))  # Adjust dimensions based on Phi(x)
+        #self.Gamma_thrust = 0.001 * np.eye(10)  # Learning rate matrix, set to 0.01  # Learning rate matrix
+        # Ajuste `self.W_thrust` para 129 elementos (128 + 1 para o bias)
+        self.W_thrust = np.zeros((129, 3))  # 129 elementos para 128 features + 1 bias
+
+        # Ajuste `self.Gamma_thrust` para corresponder
+        self.Gamma_thrust = 0.001 * np.eye(129)  # 129 x 129 matriz de aprendizado
+
 
         # DMRAC Parameters
         self.dnn = Net()
