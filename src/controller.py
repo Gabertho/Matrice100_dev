@@ -567,11 +567,14 @@ class Controller:
 
     def calculate_independence_metric(self, x, y):
         phi_x = self.get_dnn_features(x)
+        # Adicionar o termo de bias
+        phi_x = np.append(phi_x, 1)  # `phi_x` agora tem 129 elementos
         y_pred = np.dot(self.W_thrust.T, phi_x)
 
         independence_metric = np.linalg.norm(y - y_pred)
         print(f"Calculated independence metric: {independence_metric}")
         return independence_metric
+
 
     
     def remove_least_representative(self):
