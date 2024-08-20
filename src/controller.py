@@ -31,6 +31,7 @@ save_dir = '/home/lrs/lrs_ws/src/Matrice100_dev/plots'
 if not os.path.exists(save_dir):
     os.makedirs(save_dir)
 
+# Architecture 1
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
@@ -45,6 +46,26 @@ class Net(nn.Module):
         OL_2 = torch.tanh(self.HL2(OL_1))
         OL_3 = self.OL(OL_2)
         return OL_2, OL_3
+
+#Architecture 2
+"""class Net(nn.Module):
+    def __init__(self):
+        super(Net, self).__init__()
+        self.HL1 = nn.Linear(6, 64)  # Aumentei o número de neurônios para 64
+        self.HL2 = nn.Linear(64, 128)  # Camada intermediária com 128 neurônios
+        self.HL3 = nn.Linear(128, 64)  # Camada intermediária adicional
+        self.OL = nn.Linear(64, 3)  # Saída com 3 neurônios, mantendo a mesma saída
+
+        # Otimizador e função de perda
+        self.optimizer = optim.Adam(self.parameters(), lr=0.001)  # Taxa de aprendizado menor
+        self.loss_fn = nn.MSELoss()
+
+    def forward(self, x):
+        x = torch.relu(self.HL1(x))  # ReLU em vez de tanh
+        x = torch.relu(self.HL2(x))
+        x = torch.relu(self.HL3(x))
+        x = self.OL(x)  # Camada de saída sem ativação
+        return x"""
 
 
 class Controller:
@@ -75,7 +96,7 @@ class Controller:
         self.old_err_yaw = 0.0
         self.old_err_z = 0.0
         self.yaw_control_flag = False
-        self.mode = "MRAC_thrust"
+        self.mode = "DMRAC"
         self.trajectory_flag = False
         self.full_trajectory_x = None
         self.full_trajectory_y = None
