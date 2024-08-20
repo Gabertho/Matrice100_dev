@@ -51,10 +51,10 @@ if not os.path.exists(save_dir):
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.HL1 = nn.Linear(6, 32)
-        self.HL2 = nn.Linear(32, 10)  # Ajuste o tamanho de saída para 6
+        self.HL1 = nn.Linear(6, 64)
+        self.HL2 = nn.Linear(64, 10)  # Ajuste o tamanho de saída para 6
         self.OL = nn.Linear(10, 3)
-        self.optimizer = optim.Adam(self.parameters(), lr=0.0005)
+        self.optimizer = optim.Adam(self.parameters(), lr=0.006)
         self.loss_fn = nn.MSELoss()
 
     def forward(self, x):
