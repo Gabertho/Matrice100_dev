@@ -52,8 +52,8 @@ class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
         self.HL1 = nn.Linear(6, 64)
-        self.HL2 = nn.Linear(64, 64)  # Ajuste o tamanho de saída para 6
-        self.OL = nn.Linear(64, 3)
+        self.HL2 = nn.Linear(64, 10)  # Ajuste o tamanho de saída para 6
+        self.OL = nn.Linear(10, 3)
         self.optimizer = optim.Adam(self.parameters(), lr=0.0005)
         self.loss_fn = nn.MSELoss()
 
@@ -216,18 +216,18 @@ class Controller:
         self.Wmrac_thrust = np.zeros((7,3))  # Adjust dimensions based on Phi(x)
         self.Gammamrac_thrust = 0.001 * np.eye(7)  # Learning rate matrix, set to 0.01  # Learning rate matrix
 
-        #self.W_thrust = np.zeros((10,3))  # Adjust dimensions based on Phi(x)
-        #self.Gamma_thrust = 0.001 * np.eye(10)  # Learning rate matrix, set to 0.01  # Learning rate matrix
+        self.W_thrust = np.zeros((10,3))  # Adjust dimensions based on Phi(x)
+        self.Gamma_thrust = 0.001 * np.eye(10)  # Learning rate matrix, set to 0.01  # Learning rate matrix
 
-        self.W_thrust = np.zeros((64,3))  # Adjust dimensions based on Phi(x)
-        self.Gamma_thrust = 0.001 * np.eye(64)  # Learning rate matrix, set to 0.01  # Learning rate matrix
+        #self.W_thrust = np.zeros((64,3))  # Adjust dimensions based on Phi(x)
+        #self.Gamma_thrust = 0.001 * np.eye(64)  # Learning rate matrix, set to 0.01  # Learning rate matrix
 
         # DMRAC Parameters
         self.dnn = Net()
         self.replay_buffer = []
         self.buffer_size = 1000
         self.batch_size = 64
-        self.zeta_tol = 7 * 0.00001
+        self.zeta_tol = 5 * 0.00001
 
         #Counter for triggering DNN training
         self.new_samples_collected = 0
