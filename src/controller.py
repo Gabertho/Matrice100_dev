@@ -54,7 +54,7 @@ class Net(nn.Module):
         self.HL1 = nn.Linear(6, 32)
         self.HL2 = nn.Linear(32, 16)  # Ajuste o tamanho de saída para 6
         self.OL = nn.Linear(16, 3)
-        self.optimizer = optim.Adam(self.parameters(), lr=0.0001)
+        self.optimizer = optim.Adam(self.parameters(), lr=0.0005)
         self.loss_fn = nn.MSELoss()
 
     def forward(self, x):
@@ -220,7 +220,7 @@ class Controller:
         #self.Gamma_thrust = 0.001 * np.eye(10)  # Learning rate matrix, set to 0.01  # Learning rate matrix
 
         self.W_thrust = np.zeros((16,3))  # Adjust dimensions based on Phi(x)
-        self.Gamma_thrust = 0.0001 * np.eye(16)  # Learning rate matrix, set to 0.01  # Learning rate matrix
+        self.Gamma_thrust = 0.001 * np.eye(16)  # Learning rate matrix, set to 0.01  # Learning rate matrix
 
         #self.W_thrust = np.zeros((64,3))  # Adjust dimensions based on Phi(x)
         #self.Gamma_thrust = 0.001 * np.eye(64)  # Learning rate matrix, set to 0.01  # Learning rate matrix
