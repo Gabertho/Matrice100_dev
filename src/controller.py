@@ -58,8 +58,8 @@ class Net(nn.Module):
         self.loss_fn = nn.MSELoss()
 
     def forward(self, x):
-        OL_1 = torch.tanh(self.HL1(x))
-        OL_2 = torch.tanh(self.HL2(OL_1))
+        OL_1 = torch.relu(self.HL1(x))
+        OL_2 = torch.relu(self.HL2(OL_1))
         OL_3 = self.OL(OL_2)
         return OL_2, OL_3
 
@@ -220,7 +220,7 @@ class Controller:
         #self.Gamma_thrust = 0.001 * np.eye(10)  # Learning rate matrix, set to 0.01  # Learning rate matrix
 
         self.W_thrust = np.zeros((16,3))  # Adjust dimensions based on Phi(x)
-        self.Gamma_thrust = 0.0006 * np.eye(16)  # Learning rate matrix, set to 0.01  # Learning rate matrix
+        self.Gamma_thrust = 0.001 * np.eye(16)  # Learning rate matrix, set to 0.01  # Learning rate matrix
 
         #self.W_thrust = np.zeros((64,3))  # Adjust dimensions based on Phi(x)
         #self.Gamma_thrust = 0.001 * np.eye(64)  # Learning rate matrix, set to 0.01  # Learning rate matrix
@@ -230,7 +230,7 @@ class Controller:
         self.replay_buffer = []
         self.buffer_size = 1000
         self.batch_size = 64
-        self.zeta_tol = 0.0002
+        self.zeta_tol = 0.0003
 
         #Counter for triggering DNN training
         self.new_samples_collected = 0
