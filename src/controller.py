@@ -92,7 +92,7 @@ class Controller:
         self.old_err_yaw = 0.0
         self.old_err_z = 0.0
         self.yaw_control_flag = False
-        self.mode = "MRAC_thrust"
+        self.mode = "DMRAC"
         self.trajectory_flag = False
         self.full_trajectory_x = None
         self.full_trajectory_y = None
@@ -220,7 +220,7 @@ class Controller:
         #self.Gamma_thrust = 0.001 * np.eye(10)  # Learning rate matrix, set to 0.01  # Learning rate matrix
 
         self.W_thrust = np.zeros((16,3))  # Adjust dimensions based on Phi(x)
-        self.Gamma_thrust = 0.002 * np.eye(16)  # Learning rate matrix, set to 0.01  # Learning rate matrix
+        self.Gamma_thrust = 0.0006 * np.eye(16)  # Learning rate matrix, set to 0.01  # Learning rate matrix
 
         #self.W_thrust = np.zeros((64,3))  # Adjust dimensions based on Phi(x)
         #self.Gamma_thrust = 0.001 * np.eye(64)  # Learning rate matrix, set to 0.01  # Learning rate matrix
@@ -230,7 +230,7 @@ class Controller:
         self.replay_buffer = []
         self.buffer_size = 1000
         self.batch_size = 64
-        self.zeta_tol = 0.0002
+        self.zeta_tol = 0.0005
 
         #Counter for triggering DNN training
         self.new_samples_collected = 0
