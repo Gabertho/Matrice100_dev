@@ -32,7 +32,7 @@ if not os.path.exists(save_dir):
     os.makedirs(save_dir)
 
 # Architecture 1
-"""class Net(nn.Module):
+class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
         self.HL1 = nn.Linear(6, 20)
@@ -45,28 +45,27 @@ if not os.path.exists(save_dir):
         OL_1 = torch.tanh(self.HL1(x))
         OL_2 = torch.tanh(self.HL2(OL_1))
         OL_3 = self.OL(OL_2)
-        return OL_2, OL_3"""
+        return OL_2, OL_3
 
 #Architecture 2
-class Net(nn.Module):
+"""class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.HL1 = nn.Linear(6, 64)  # Camada com 64 neurônios
+        self.HL1 = nn.Linear(6, 64)  # Aumentei o número de neurônios para 64
         self.HL2 = nn.Linear(64, 128)  # Camada intermediária com 128 neurônios
-        self.HL3 = nn.Linear(128, 64)  # Outra camada com 64 neurônios
-        self.OL = nn.Linear(64, 3)  # Saída com 3 neurônios
+        self.HL3 = nn.Linear(128, 64)  # Camada intermediária adicional
+        self.OL = nn.Linear(64, 3)  # Saída com 3 neurônios, mantendo a mesma saída
 
-        self.optimizer = optim.Adam(self.parameters(), lr=0.001)  # Taxa de aprendizado
+        # Otimizador e função de perda
+        self.optimizer = optim.Adam(self.parameters(), lr=0.001)  # Taxa de aprendizado menor
         self.loss_fn = nn.MSELoss()
 
     def forward(self, x):
-        x = torch.relu(self.HL1(x))
-        features = torch.relu(self.HL2(x))  # Armazena as features intermediárias
-        x = torch.relu(self.HL3(features))
-        output = self.OL(x)  # Saída final
-        return features, output  # Retorna tanto as features quanto a saída final
-
-
+        x = torch.relu(self.HL1(x))  # ReLU em vez de tanh
+        x = torch.relu(self.HL2(x))
+        x = torch.relu(self.HL3(x))
+        x = self.OL(x)  # Camada de saída sem ativação
+        return x"""
 
 
 class Controller:
@@ -221,14 +220,8 @@ class Controller:
         self.Wmrac_thrust = np.zeros((7,3))  # Adjust dimensions based on Phi(x)
         self.Gammamrac_thrust = 0.001 * np.eye(7)  # Learning rate matrix, set to 0.01  # Learning rate matrix
 
-        # = np.zeros((10,3))  # Adjust dimensions based on Phi(x)
-        #self.Gamma_thrust = 0.001 * np.eye(10)  # Learning rate matrix, set to 0.01  # Learning rate matrix
-        # Ajuste `self.W_thrust` para 129 elementos (128 + 1 para o bias)
-        self.W_thrust = np.zeros((129, 3))  # 129 elementos para 128 features + 1 bias
-
-        # Ajuste `self.Gamma_thrust` para corresponder
-        self.Gamma_thrust = 0.001 * np.eye(129)  # 129 x 129 matriz de aprendizado
-
+        self.W_thrust = np.zeros((10,3))  # Adjust dimensions based on Phi(x)
+        self.Gamma_thrust = 0.001 * np.eye(10)  # Learning rate matrix, set to 0.01  # Learning rate matrix
 
         # DMRAC Parameters
         self.dnn = Net()
@@ -527,9 +520,9 @@ class Controller:
         return v_ad  # Return as a 1D array
     
     def adaptive_control_thrust_dmrac(self, phi, e):
-        # Adicionar o termo de bias a `phi`
-        phi = np.append(phi, 1).reshape(-1, 1)  # `phi` agora é (129, 1)
-        print(f"Phi for DMRAC (with bias): {phi.flatten()}")
+        # `phi` agora tem 10 elementos, ajustando o código para refletir isso
+        phi = phi.reshape(-1, 1)  # `phi` agora é (10, 1)
+        print(f"Phi for DMRAC: {phi.flatten()}")
 
         # Calcular a lei de controle adaptativo
         v_ad = np.dot(self.W_thrust.T, phi).flatten()  # `v_ad` agora é (3,)
@@ -540,17 +533,16 @@ class Controller:
         # Adaptar as dimensões para garantir a compatibilidade
         P_Bp = self.P_lyap_thrust @ self.B_thrust  # Resulta em uma matriz (6, 3)
         e_T_P_Bp = e.T @ P_Bp  # Resulta em (1, 3)
-        phi_e_T_P_Bp = phi @ e_T_P_Bp  # Resulta em (129, 3)
+        phi_e_T_P_Bp = phi @ e_T_P_Bp  # Resulta em (10, 3)
 
         # Termo de adaptação
-        adaptation_term = self.Gamma_thrust @ phi_e_T_P_Bp * self.dt  # Resulta em (129, 3)
+        adaptation_term = self.Gamma_thrust @ phi_e_T_P_Bp * self.dt  # Resulta em (10, 3)
 
         # Atualiza `W_thrust` com as novas dimensões
         self.W_thrust += -adaptation_term
         print(f"Updated W_thrust: {self.W_thrust}")
 
         return v_ad  # Retorna como um array 1D
-
 
     def get_dnn_features(self, state):
         state_tensor = torch.FloatTensor(state).unsqueeze(0)  # Convert to tensor and add batch dimension
@@ -567,14 +559,11 @@ class Controller:
 
     def calculate_independence_metric(self, x, y):
         phi_x = self.get_dnn_features(x)
-        # Adicionar o termo de bias
-        phi_x = np.append(phi_x, 1)  # `phi_x` agora tem 129 elementos
         y_pred = np.dot(self.W_thrust.T, phi_x)
 
         independence_metric = np.linalg.norm(y - y_pred)
         print(f"Calculated independence metric: {independence_metric}")
         return independence_metric
-
 
     
     def remove_least_representative(self):
