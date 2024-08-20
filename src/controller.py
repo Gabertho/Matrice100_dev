@@ -527,9 +527,9 @@ class Controller:
         return v_ad  # Return as a 1D array
     
     def adaptive_control_thrust_dmrac(self, phi, e):
-        # `phi` agora tem 10 elementos, ajustando o código para refletir isso
-        phi = phi.reshape(-1, 1)  # `phi` agora é (10, 1)
-        print(f"Phi for DMRAC: {phi.flatten()}")
+        # Adicionar o termo de bias a `phi`
+        phi = np.append(phi, 1).reshape(-1, 1)  # `phi` agora é (129, 1)
+        print(f"Phi for DMRAC (with bias): {phi.flatten()}")
 
         # Calcular a lei de controle adaptativo
         v_ad = np.dot(self.W_thrust.T, phi).flatten()  # `v_ad` agora é (3,)
@@ -540,16 +540,17 @@ class Controller:
         # Adaptar as dimensões para garantir a compatibilidade
         P_Bp = self.P_lyap_thrust @ self.B_thrust  # Resulta em uma matriz (6, 3)
         e_T_P_Bp = e.T @ P_Bp  # Resulta em (1, 3)
-        phi_e_T_P_Bp = phi @ e_T_P_Bp  # Resulta em (10, 3)
+        phi_e_T_P_Bp = phi @ e_T_P_Bp  # Resulta em (129, 3)
 
         # Termo de adaptação
-        adaptation_term = self.Gamma_thrust @ phi_e_T_P_Bp * self.dt  # Resulta em (10, 3)
+        adaptation_term = self.Gamma_thrust @ phi_e_T_P_Bp * self.dt  # Resulta em (129, 3)
 
         # Atualiza `W_thrust` com as novas dimensões
         self.W_thrust += -adaptation_term
         print(f"Updated W_thrust: {self.W_thrust}")
 
         return v_ad  # Retorna como um array 1D
+
 
     def get_dnn_features(self, state):
         state_tensor = torch.FloatTensor(state).unsqueeze(0)  # Convert to tensor and add batch dimension
