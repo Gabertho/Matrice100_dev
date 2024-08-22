@@ -353,7 +353,7 @@ class Controller:
 
     # Enable / disable yaw control.
     def set_yaw_control(self, flag):
-        self.yaw_control_flag = flag
+        self.yaw_control_flag = True
 
     # Set required thrust to hover.
     def set_hover_thrust(self, thrust):
@@ -980,10 +980,7 @@ class Controller:
         self.int_err_yaw += yaw_error
         d_err_yaw = (yaw_error - self.old_err_yaw)/dt
 
-        if self.yaw_control_flag:
-            u[3] = yaw_error*pyaw + dyaw*d_err_yaw
-        else:
-            u[3] = 0.0
+        u[3] = yaw_error*pyaw + dyaw*d_err_yaw
             
         if self.control_mode == "velocity":
             # print("ERROR:", error, self.target)
