@@ -81,7 +81,7 @@ class Controller:
         self.target0 = None
         self.targetvel = None
         self.target_speed = 1.0
-        self.target_yaw = 0.0
+        self.target_yaw = math.pi / 4
         self.have_target = False
         self.have_current_yaw = False
         self.hover_thrust = 38.0
@@ -91,7 +91,7 @@ class Controller:
         self.int_err_yaw = 0.0
         self.old_err_yaw = 0.0
         self.old_err_z = 0.0
-        self.yaw_control_flag = False
+        self.yaw_control_flag = True
         self.mode = "MRAC_thrust"
         self.trajectory_flag = False
         self.full_trajectory_x = None
@@ -375,7 +375,7 @@ class Controller:
 
     #Notify yaw trajectory: set actual yaw position from trajectory callback.
     def notify_yaw_trajectory(self, yaw):
-        self.target_yaw = yaw
+        self.target_yaw = math.pi / 4
 
     #Notify velocity: set actual velocity from velocity callback (vicon / IMU). 
     def notify_velocity(self, x, y, z):
