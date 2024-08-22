@@ -247,6 +247,9 @@ class Controller:
         self.actual_velocities = []
         self.control_inputs = []
 
+        self.desired_yaw = []
+        self.actual_yaw = []
+
         rospy.Service('plot_trajectories', Trigger, self.plot_service_callback)
         rospy.Service('calculate_errors', Trigger, self.calculate_errors_service_callback)
  
@@ -420,6 +423,7 @@ class Controller:
         self.plot_positions()
         self.plot_velocities()
         self.plot_control_inputs()
+        self.plot_yaw_rate()
         self.plot_position_errors()
         self.plot_velocity_errors()
         return TriggerResponse(success=True, message="Dados plotados com sucesso.")
@@ -686,6 +690,27 @@ class Controller:
         print(f"Figura salva em: {file_path}")
         plt.close()
 
+    def plot_yaw(self):
+        desired = np.array(self.desired_yaw)
+        actual = np.array(self.actual_yaw)
+        time = np.array(self.time_stamps)
+        
+        plt.figure(figsize=(10, 4), dpi=300)
+        plt.plot(time, desired, 'r-', label='Desired Yaw', linewidth=2)
+        plt.plot(time, actual, 'b--', label='Actual Yaw', linewidth=2)
+        plt.ylabel('Yaw (rad)', fontsize=14)
+        plt.xlabel('Time (s)', fontsize=14)
+        plt.legend(fontsize=12)
+        plt.grid(True)
+        plt.title('Desired vs Actual Yaw Over Time', fontsize=16)
+        
+        # Salvando a figura
+        file_path = os.path.join(save_dir, 'yaw.png')
+        plt.savefig(file_path)
+        print(f"Figura salva em: {file_path}")
+        plt.close()
+
+
     def plot_position_errors(self):
         desired = np.array(self.desired_positions)
         actual = np.array(self.actual_positions)
@@ -716,6 +741,27 @@ class Controller:
         plt.suptitle('Position Errors Over Time', fontsize=16)
         # Salvando a figura
         file_path = os.path.join(save_dir, 'position_errors.png')
+        plt.savefig(file_path)
+        print(f"Figura salva em: {file_path}")
+        plt.close()
+
+    def plot_yaw_error(self):
+        desired = np.array(self.desired_yaw)
+        actual = np.array(self.actual_yaw)
+        time = np.array(self.time_stamps)
+
+        errors = desired - actual
+        
+        plt.figure(figsize=(10, 4), dpi=300)
+        plt.plot(time, errors, 'c-', label='Yaw Error', linewidth=2)
+        plt.ylabel('Yaw Error (rad)', fontsize=14)
+        plt.xlabel('Time (s)', fontsize=14)
+        plt.legend(fontsize=12)
+        plt.grid(True)
+        plt.title('Yaw Error Over Time', fontsize=16)
+        
+        # Salvando a figura
+        file_path = os.path.join(save_dir, 'yaw_error.png')
         plt.savefig(file_path)
         print(f"Figura salva em: {file_path}")
         plt.close()
@@ -835,6 +881,36 @@ class Controller:
         plt.savefig(file_path)
         print(f"Figura salva em: {file_path}")
         plt.close()
+
+
+    def plot_yaw_rate(self):
+        if len(self.control_inputs) == 0:
+            print("Nenhum dado de controle disponível para plotar.")
+            return
+        
+        controls = np.array(self.control_inputs)
+        
+        if controls.ndim != 2 or controls.shape[1] != 4:
+            print("Os dados de controle não têm a estrutura esperada. Esperado: (N, 4). Recebido:", controls.shape)
+            return
+        
+        time = np.array(self.time_stamps)
+        
+        plt.figure(figsize=(10, 4), dpi=300)
+
+        plt.plot(time, controls[:, 3], 'm-', label='Yaw Rate', linewidth=2)
+        plt.ylabel('Yaw Rate (rad/s)', fontsize=14)
+        plt.xlabel('Time (s)', fontsize=14)
+        plt.legend(fontsize=12)
+        plt.grid(True)
+        plt.title('Yaw Rate Over Time', fontsize=16)
+
+        # Salvando a figura
+        file_path = os.path.join(save_dir, 'yaw_rate.png')
+        plt.savefig(file_path)
+        print(f"Figura salva em: {file_path}")
+        plt.close()
+
 
 
 
@@ -1297,6 +1373,8 @@ class Controller:
 
         # Coletando dados para plotagem
         self.desired_trajectory.append((self.target[0], self.target[1], self.target[2]))
+        self.desired_yaw.append((self.target_yaw))
+        self.actual_yaw.append((self.current_yaw))
         self.actual_trajectory.append((self.current_position[0], self.current_position[1], self.current_position[2]))
         self.desired_positions.append(self.target)
         self.actual_positions.append(self.current_position)
