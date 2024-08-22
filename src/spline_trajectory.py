@@ -34,7 +34,7 @@ class SplineTrajectory:
         self.joy_z = 0.0
         self.target_index = 0
         self.enabled_flag = False
-        self.target_yaw = math.pi / 4
+        self.target_yaw = 0.0
         self.x = 0.0
         self.y = 0.0
         self.z = 0.0
@@ -251,7 +251,7 @@ class SplineTrajectory:
 
     def get_target_yaw(self):
         msg = Float64()
-        msg.data = math.pi / 4
+        msg.data = self.target_yaw
         return msg
 
     def set_initial_position(self, x, y, z):

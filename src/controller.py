@@ -81,7 +81,7 @@ class Controller:
         self.target0 = None
         self.targetvel = None
         self.target_speed = 1.0
-        self.target_yaw = math.pi / 4
+        self.target_yaw = 0.0
         self.have_target = False
         self.have_current_yaw = False
         self.hover_thrust = 38.0
@@ -91,8 +91,8 @@ class Controller:
         self.int_err_yaw = 0.0
         self.old_err_yaw = 0.0
         self.old_err_z = 0.0
-        self.yaw_control_flag = True
-        self.mode = "MRAC_thrust"
+        self.yaw_control_flag = False
+        self.mode = "DMRAC"
         self.trajectory_flag = False
         self.full_trajectory_x = None
         self.full_trajectory_y = None
@@ -247,12 +247,8 @@ class Controller:
         self.actual_velocities = []
         self.control_inputs = []
 
-        self.desired_yaw = []
-        self.actual_yaw = []
-
         rospy.Service('plot_trajectories', Trigger, self.plot_service_callback)
         rospy.Service('calculate_errors', Trigger, self.calculate_errors_service_callback)
-        rospy.Service('calculate_yaw_errors', Trigger, self.calculate_yaw_errors_service_callback)  # Registrando o serviço para cálculo de erros de yaw
  
 
     def set_sync(self, flag):
@@ -353,7 +349,7 @@ class Controller:
 
     # Enable / disable yaw control.
     def set_yaw_control(self, flag):
-        self.yaw_control_flag = True
+        self.yaw_control_flag = flag
 
     # Set required thrust to hover.
     def set_hover_thrust(self, thrust):
@@ -375,7 +371,7 @@ class Controller:
 
     #Notify yaw trajectory: set actual yaw position from trajectory callback.
     def notify_yaw_trajectory(self, yaw):
-        self.target_yaw = math.pi / 4
+        self.target_yaw = yaw
 
     #Notify velocity: set actual velocity from velocity callback (vicon / IMU). 
     def notify_velocity(self, x, y, z):
@@ -385,7 +381,6 @@ class Controller:
     def notify_angles(self, roll, pitch, yaw):
         self.current_yaw = yaw
         self.have_current_yaw = True
-        print("current yaw: ", self.current_yaw)
     
     #Notify attittude: Set actual yaw transforming given quaterniuns to euler angles.
     def notify_attitude(self, qx, qy, qz, qw):
@@ -425,9 +420,6 @@ class Controller:
         self.plot_positions()
         self.plot_velocities()
         self.plot_control_inputs()
-        self.plot_yaw_rate()
-        self.plot_yaw()
-        self.plot_yaw_error()
         self.plot_position_errors()
         self.plot_velocity_errors()
         return TriggerResponse(success=True, message="Dados plotados com sucesso.")
@@ -446,19 +438,6 @@ class Controller:
             file.write(message + "\n")
         
         return TriggerResponse(success=True, message=message)
-    
-    def calculate_yaw_errors_service_callback(self, req):
-        mse_yaw, rmse_yaw = self.calculate_mse_rmse(self.desired_yaw, self.actual_yaw)
-        
-        message = (f"MSE Yaw: {mse_yaw:.4f}, RMSE Yaw: {rmse_yaw:.4f}")
-        
-        # Armazenar a mensagem em um arquivo de texto na pasta dos plots
-        file_path = os.path.join(save_dir, "yaw_error_metrics.txt")
-        with open(file_path, "a") as file:
-            file.write(message + "\n")
-        
-        return TriggerResponse(success=True, message=message)
-
 
 
     
@@ -707,27 +686,6 @@ class Controller:
         print(f"Figura salva em: {file_path}")
         plt.close()
 
-    def plot_yaw(self):
-        desired = np.array(self.desired_yaw)
-        actual = np.array(self.actual_yaw)
-        time = np.array(self.time_stamps)
-        
-        plt.figure(figsize=(10, 4), dpi=300)
-        plt.plot(time, desired, 'r-', label='Desired Yaw', linewidth=2)
-        plt.plot(time, actual, 'b--', label='Actual Yaw', linewidth=2)
-        plt.ylabel('Yaw (rad)', fontsize=14)
-        plt.xlabel('Time (s)', fontsize=14)
-        plt.legend(fontsize=12)
-        plt.grid(True)
-        plt.title('Desired vs Actual Yaw Over Time', fontsize=16)
-        
-        # Salvando a figura
-        file_path = os.path.join(save_dir, 'yaw.png')
-        plt.savefig(file_path)
-        print(f"Figura salva em: {file_path}")
-        plt.close()
-
-
     def plot_position_errors(self):
         desired = np.array(self.desired_positions)
         actual = np.array(self.actual_positions)
@@ -758,27 +716,6 @@ class Controller:
         plt.suptitle('Position Errors Over Time', fontsize=16)
         # Salvando a figura
         file_path = os.path.join(save_dir, 'position_errors.png')
-        plt.savefig(file_path)
-        print(f"Figura salva em: {file_path}")
-        plt.close()
-
-    def plot_yaw_error(self):
-        desired = np.array(self.desired_yaw)
-        actual = np.array(self.actual_yaw)
-        time = np.array(self.time_stamps)
-
-        errors = desired - actual
-        
-        plt.figure(figsize=(10, 4), dpi=300)
-        plt.plot(time, errors, 'c-', label='Yaw Error', linewidth=2)
-        plt.ylabel('Yaw Error (rad)', fontsize=14)
-        plt.xlabel('Time (s)', fontsize=14)
-        plt.legend(fontsize=12)
-        plt.grid(True)
-        plt.title('Yaw Error Over Time', fontsize=16)
-        
-        # Salvando a figura
-        file_path = os.path.join(save_dir, 'yaw_error.png')
         plt.savefig(file_path)
         print(f"Figura salva em: {file_path}")
         plt.close()
@@ -900,36 +837,6 @@ class Controller:
         plt.close()
 
 
-    def plot_yaw_rate(self):
-        if len(self.control_inputs) == 0:
-            print("Nenhum dado de controle disponível para plotar.")
-            return
-        
-        controls = np.array(self.control_inputs)
-        
-        if controls.ndim != 2 or controls.shape[1] != 4:
-            print("Os dados de controle não têm a estrutura esperada. Esperado: (N, 4). Recebido:", controls.shape)
-            return
-        
-        time = np.array(self.time_stamps)
-        
-        plt.figure(figsize=(10, 4), dpi=300)
-
-        plt.plot(time, controls[:, 3], 'm-', label='Yaw Rate', linewidth=2)
-        plt.ylabel('Yaw Rate (rad/s)', fontsize=14)
-        plt.xlabel('Time (s)', fontsize=14)
-        plt.legend(fontsize=12)
-        plt.grid(True)
-        plt.title('Yaw Rate Over Time', fontsize=16)
-
-        # Salvando a figura
-        file_path = os.path.join(save_dir, 'yaw_rate.png')
-        plt.savefig(file_path)
-        print(f"Figura salva em: {file_path}")
-        plt.close()
-
-
-
 
 
 
@@ -981,7 +888,10 @@ class Controller:
         self.int_err_yaw += yaw_error
         d_err_yaw = (yaw_error - self.old_err_yaw)/dt
 
-        u[3] = yaw_error*pyaw + dyaw*d_err_yaw
+        if self.yaw_control_flag:
+            u[3] = yaw_error*pyaw + dyaw*d_err_yaw
+        else:
+            u[3] = 0.0
             
         if self.control_mode == "velocity":
             # print("ERROR:", error, self.target)
@@ -1387,8 +1297,6 @@ class Controller:
 
         # Coletando dados para plotagem
         self.desired_trajectory.append((self.target[0], self.target[1], self.target[2]))
-        self.desired_yaw.append(self.target_yaw)
-        self.actual_yaw.append(self.current_yaw)
         self.actual_trajectory.append((self.current_position[0], self.current_position[1], self.current_position[2]))
         self.desired_positions.append(self.target)
         self.actual_positions.append(self.current_position)
@@ -1402,7 +1310,6 @@ class Controller:
             # Chamar os serviços automaticamente ao final do controle
             self.plot_service_callback(None)
             self.calculate_errors_service_callback(None)
-            self.calculate_yaw_errors_service_callback(None)
 
             # Marcar que os serviços foram chamados
             self.servicos_chamados = True
