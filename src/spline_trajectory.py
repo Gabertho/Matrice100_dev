@@ -251,7 +251,7 @@ class SplineTrajectory:
 
     def get_target_yaw(self):
         msg = Float64()
-        msg.data = self.target_yaw
+        msg.data = math.pi / 4
         return msg
 
     def set_initial_position(self, x, y, z):
