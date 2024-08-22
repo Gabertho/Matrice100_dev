@@ -385,6 +385,7 @@ class Controller:
     def notify_angles(self, roll, pitch, yaw):
         self.current_yaw = yaw
         self.have_current_yaw = True
+        print("current yaw: ", self.current_yaw)
     
     #Notify attittude: Set actual yaw transforming given quaterniuns to euler angles.
     def notify_attitude(self, qx, qy, qz, qw):
