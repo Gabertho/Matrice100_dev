@@ -252,6 +252,7 @@ class Controller:
 
         rospy.Service('plot_trajectories', Trigger, self.plot_service_callback)
         rospy.Service('calculate_errors', Trigger, self.calculate_errors_service_callback)
+        rospy.Service('calculate_yaw_errors', Trigger, self.calculate_yaw_errors_service_callback)  # Registrando o serviço para cálculo de erros de yaw
  
 
     def set_sync(self, flag):
@@ -424,6 +425,8 @@ class Controller:
         self.plot_velocities()
         self.plot_control_inputs()
         self.plot_yaw_rate()
+        self.plot_yaw()
+        self.plot_yaw_error()
         self.plot_position_errors()
         self.plot_velocity_errors()
         return TriggerResponse(success=True, message="Dados plotados com sucesso.")
@@ -442,6 +445,19 @@ class Controller:
             file.write(message + "\n")
         
         return TriggerResponse(success=True, message=message)
+    
+    def calculate_yaw_errors_service_callback(self, req):
+        mse_yaw, rmse_yaw = self.calculate_mse_rmse(self.desired_yaw, self.actual_yaw)
+        
+        message = (f"MSE Yaw: {mse_yaw:.4f}, RMSE Yaw: {rmse_yaw:.4f}")
+        
+        # Armazenar a mensagem em um arquivo de texto na pasta dos plots
+        file_path = os.path.join(save_dir, "yaw_error_metrics.txt")
+        with open(file_path, "a") as file:
+            file.write(message + "\n")
+        
+        return TriggerResponse(success=True, message=message)
+
 
 
     
@@ -1373,8 +1389,8 @@ class Controller:
 
         # Coletando dados para plotagem
         self.desired_trajectory.append((self.target[0], self.target[1], self.target[2]))
-        self.desired_yaw.append((self.target_yaw))
-        self.actual_yaw.append((self.current_yaw))
+        self.desired_yaw.append(self.target_yaw)
+        self.actual_yaw.append(self.current_yaw)
         self.actual_trajectory.append((self.current_position[0], self.current_position[1], self.current_position[2]))
         self.desired_positions.append(self.target)
         self.actual_positions.append(self.current_position)
@@ -1388,6 +1404,7 @@ class Controller:
             # Chamar os serviços automaticamente ao final do controle
             self.plot_service_callback(None)
             self.calculate_errors_service_callback(None)
+            self.calculate_yaw_errors_service_callback(None)
 
             # Marcar que os serviços foram chamados
             self.servicos_chamados = True
