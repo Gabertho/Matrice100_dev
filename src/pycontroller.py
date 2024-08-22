@@ -76,10 +76,10 @@ def joy_callback(data):
     if data.buttons[3]:
         controller.enable_full_trajectory()
     
-    if data.axes[7] < -0.5:
+    """if data.axes[7] < -0.5:
         controller.set_yaw_control(False)
     if data.axes[7] > 0.5:
-        controller.set_yaw_control(True)
+        controller.set_yaw_control(True)"""
 
     if data.buttons[6]:
         controller.enable_trajectory()
@@ -453,6 +453,7 @@ if __name__ == "__main__":
         controller.enable_full_trajectory()
 
     controller.set_sync(options.sync)
+    controller.set_yaw_control(True)
 
     battery_sub = rospy.Subscriber("dji_sdk/battery_state", BatteryState, battery_callback)
     dt = options.dt
